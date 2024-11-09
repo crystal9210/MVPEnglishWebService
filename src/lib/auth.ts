@@ -23,6 +23,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         strategy: "jwt",
         maxAge: 60 * 60 * 24,
     },
+    secret: process.env.AUTH_SECRET,
     callbacks: {
         async jwt({ token, account }) {
             if (account) {
@@ -41,7 +42,6 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         return session;
         },
     },
-    secret: process.env.AUTH_SECRET,
 });
 
 
