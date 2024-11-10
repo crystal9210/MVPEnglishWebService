@@ -18,7 +18,9 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
             checks: ["pkce"],
             authorization: {
                 params: {
-                    scope: "openid https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email",
+                    // scope変えたりしたときに発行できるサイトリンク
+                    // https://developers.google.com/oauthplayground/
+                    scope: "openid https://mail.google.com/ https://www.googleapis.com/auth/gmail.labels https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email",
                     access_type: "offline", // リフレッシュトークンを取得
                     prompt: "consent", // ユーザに許可を求める
                     redirect_uri: "http://localhost:3000/api/auth/callback/google",
@@ -107,4 +109,4 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
 // export default NextAuth(authOptions);
 
 // 【Auth.jsでパスワードベースの認証が推奨されていない理由】
-// リスト方攻撃やクレデンシャルスタッフィングt
+// リスト方攻撃やクレデンシャルスタッフィング

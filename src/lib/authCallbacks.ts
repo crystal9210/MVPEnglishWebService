@@ -21,6 +21,7 @@ export async function handleSignIn(user: any): Promise<boolean | string> {
       createdAt: new Date(), // 仮登録時のタイムスタンプを保持
     };
     await firestoreAdmin.collection("temporaryUsers").doc(user.email).set(tempUser);
+    console.log(`メールアドレス確認 user.email: ${user.email}`);
 
     // 確認メールリンクを生成して送信
     const actionCodeSettings = {
