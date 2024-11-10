@@ -28,7 +28,11 @@ export async function POST(request: Request) {
         });
 
         // 確認メールを送信
-        await sendVerificationEmail(email);
+        const actionCodeSettings = {
+            url: `${process.env.NEXT_PUBLIC_APP_URL}/confirm-email`, // 確認リンクのリダイレクト先
+            handleCodeInApp: true, // アプリ内で確認
+        };
+        await sendVerificationEmail(email, actionCodeSettings);
 
         return NextResponse.json({ message: "Registration successful. Please verify your email." });
     } catch (error) {

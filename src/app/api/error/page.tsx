@@ -1,5 +1,5 @@
-export default async function AuthErrorPage({ searchParams }) {
-    const error = await searchParams.error;
+export default function AuthErrorPage({ searchParams }: { searchParams: { error?: string } }) {
+    const error = searchParams.error; // await を削除
     const errorMessage =
         error === "AccessDenied"
             ? "権限が不足しています。GoogleまたはGitHubアカウントを確認してください。"

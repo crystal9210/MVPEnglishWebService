@@ -3,24 +3,22 @@ import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import GitHubProvider from "next-auth/providers/github";
 import { FirestoreAdapter } from "@auth/firebase-adapter";
-import { firestore } from "@/lib/firebase";
-import { doc, setDoc, getDoc } from "firebase/firestore";
+import { handleSignIn, initializeUserData } from "@/lib/authCallbacks";
 import { firestoreAdmin } from "./firebaseAdmin";
-import { sendVerificationEmail } from "./sendVerificationEmail";
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
     debug: true,
     adapter: FirestoreAdapter(firestoreAdmin),
     providers: [
         // リンクメモ
-        // https://accounts.google.com/o/oauth2/auth?client_id=406930035276-8rqhfui4de5arfks1ae8rhfjb92em1s4.apps.googleusercontent.com&redirect_uri=http://localhost:3000/api/auth/callback/google&response_type=code&scope=https://mail.google.com/ https://www.googleapis.com/auth/userinfo.email&access_type=offline&prompt=consent
+        // https://accounts.google.com/o/oauth2/auth?client_id=406930035276-8rqhfui4de5arfks1ae8rhfjb92em1s4.apps.googleusercontent.com&redirect_uri=http://localhost:3000/api/auth/callback/google&response_type=code&scope=https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/userinfo.email&access_type=offline&prompt=consent
         GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID!,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-            // checks: ["pkce"],
+            checks: ["pkce"],
             authorization: {
                 params: {
-                    scope: "openid email profile https://mail.google.com/ https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email",
+                    scope: "openid https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email",
                     access_type: "offline", // リフレッシュトークンを取得
                     prompt: "consent", // ユーザに許可を求める
                     redirect_uri: "http://localhost:3000/api/auth/callback/google",
@@ -38,36 +36,13 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
     },
     secret: process.env.AUTH_SECRET,
     callbacks: {
+        // サインイン時の処理
         async signIn({ user }) {
-            const userRef = firestoreAdmin.collection("users").doc(user.id!);
-            const userSnap = await userRef.get();
-
-            if (!userSnap.exists) {
-                throw new Error("NOT_REGISTERED");
-            }
-            return true;
+            return await handleSignIn(user);
         },
+        // JWTトークン生成時の処理
         async jwt({ token, account }) {
-            if (account) {
-                const userRef = doc(firestore, "users", token.sub!);
-                const userSnap = await getDoc(userRef);
-
-                if (!userSnap.exists()) {
-                    await setDoc(userRef, {
-                        email: token.email,
-                        name: token.name,
-                        avatar: token.picture,
-                        role: "user",
-                        emailVerified: false,
-                        permissions: ["read"],
-                        createdAt: new Date(),
-                    },
-                    { merge: true } // マージで既存データ保持
-                    );
-                    await sendVerificationEmail(token.email!); // 初回登録時に確認メール送信
-                }
-            }
-            return token;
+            return await initializeUserData(token, account);
         },
         async session({ session, token }) {
         session.user.role = token.role as string | undefined;

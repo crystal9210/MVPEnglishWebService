@@ -2,14 +2,19 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
-  env: {
-    AUTH_SECRET: process.env.AUTH_SECRET,
-    AUTH_GOOGLE_ID: process.env.AUTH_GOOGLE_ID,
-    AUTH_GOOGLE_SECRET: process.env.AUTH_GOOGLE_SECRET,
-    EMAIL_USER: process.env.EMAIL_USER,
-    EMAIL_PASSWORD: process.env.EMAIL_PASSWORD,
-    EMAIL_FROM: process.env.EMAIL_FROM,
-    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+  async headers() {
+    const isDev = process.env.NODE_ENV === "development"; // 開発環境判定
+    return [
+      {
+        source: "/api/:path*", // `/api/` 以下のすべてのパス
+        headers: [
+          {
+            key: "Set-Cookie",
+            value: `SameSite=Lax; HttpOnly${isDev ? "" : "; Secure"}`, // 開発環境では Secure を除外
+          },
+        ],
+      },
+    ];
   },
 };
 
