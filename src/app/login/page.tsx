@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { signIn, useSession } from "next-auth/react";
+import { useRouter } from "next/navigation"; // ルーターを使用
 import { FcGoogle } from "react-icons/fc"; // Googleアイコン
 import { FaGithub } from "react-icons/fa"; // GitHubアイコン
 
@@ -9,6 +10,7 @@ export default function LoginPage() {
     const { data: session, status } = useSession();
     const [loadingProvider, setLoadingProvider] = useState<string | null>(null); // ログイン中のプロバイダーを追跡
     const [error, setError] = useState<string | null>(null);
+    const router = useRouter(); // ルーターを使用
 
     // ローディング中の表示
     if (status === "loading") {
@@ -32,10 +34,29 @@ export default function LoginPage() {
         setLoadingProvider(provider); // 現在ログイン中のプロバイダーを設定
         setError(null); // エラーをリセット
         try {
-            await signIn(provider, { redirectTo: "/dashboard" });
-        } catch (err) {
-            console.error(err);
-            setError("ログインに失敗しました。もう一度お試しください。");
+            const result = await signIn(provider, { redirect: false });
+            // エラーが OAuthAccountNotLinked の場合は登録ページへ遷移
+            if (result?.error === "OAuthAccountNotLinked") {
+                router.push("/register");
+                return;
+            }
+            // その他のエラーがある場合はエラーメッセージを設定
+            if (result?.error) {
+                throw new Error(result.error);
+            }
+            // ログイン成功時にダッシュボードにリダイレクト
+            if (result?.ok) {
+                router.push("/dashboard");
+                return;
+            }
+        } catch (err: unknown) {
+            console.error("ログインエラー:", err);
+            // エラーを文字列に変換して設定
+            if (err instanceof Error) {
+                setError(err.message);
+            } else {
+                setError("ログインに失敗しました。もう一度お試しください。");
+            }
         } finally {
             setLoadingProvider(null); // ログイン処理終了時にリセット
         }

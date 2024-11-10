@@ -11,3 +11,4 @@ if (!admin.apps.length) {
 }
 
 export const firestoreAdmin = admin.firestore();
+export const authAdmin = admin.auth(); // initialization of firebase authentication
