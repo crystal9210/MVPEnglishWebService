@@ -25,7 +25,7 @@ export async function handleSignIn(user: any): Promise<boolean | string> {
 
     // 確認メールリンクを生成して送信
     const actionCodeSettings = {
-      url: `${process.env.NEXT_PUBLIC_APP_URL}/confirm-email`, // リダイレクト先URL
+      url: `${process.env.NEXT_PUBLIC_APP_URL}/api/confirm-email`, // リダイレクト先URL
       handleCodeInApp: true, // アプリ内で確認
     };
     const verificationLink = await sendVerificationEmail(user.email, actionCodeSettings);
@@ -64,7 +64,7 @@ export async function initializeUserData(token: any, account: any): Promise<any>
 
     // 初回登録時に確認メールを送信
     const actionCodeSettings = {
-      url: `${process.env.NEXT_PUBLIC_APP_URL}/confirm-email`, // リダイレクト先URL
+      url: `${process.env.NEXT_PUBLIC_APP_URL}/api/confirm-email`, // リダイレクト先URL
       handleCodeInApp: true, // アプリ内で確認
     };
     await sendVerificationEmail(token.email, actionCodeSettings);

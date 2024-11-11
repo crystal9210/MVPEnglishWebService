@@ -7,7 +7,7 @@ import { handleSignIn, initializeUserData } from "@/lib/authCallbacks";
 import { firestoreAdmin } from "./firebaseAdmin";
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
-    debug: true,
+    // debug: true,
     adapter: FirestoreAdapter(firestoreAdmin),
     providers: [
         // リンクメモ

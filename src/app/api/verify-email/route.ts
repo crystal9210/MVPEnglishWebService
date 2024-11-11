@@ -11,7 +11,7 @@ export async function POST(req: Request) {
 
     try {
         const actionCodeSettings = {
-            url: `${process.env.NEXT_PUBLIC_APP_URL}/confirm-email`,
+            url: `${process.env.NEXT_PUBLIC_APP_URL}/api/confirm-email`,
             handleCodeInApp: true,
         };
 

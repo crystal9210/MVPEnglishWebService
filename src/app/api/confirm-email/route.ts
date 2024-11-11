@@ -1,42 +1,57 @@
-import { firestoreAdmin, authAdmin } from "@/lib/firebaseAdmin";
+import { firestoreAdmin } from "@/lib/firebaseAdmin";
 
 export async function POST(req: Request) {
     try {
-        const { token } = await req.json();
-
-        if (!token) {
-            return new Response("Token is required", { status: 400 });
-        }
-
-        // トークンを検証してメールアドレスを取得
-        const email = await authAdmin.verifyIdToken(token).then((decoded) => decoded.email);
+        const { email } = await req.json();
 
         if (!email) {
-            return new Response("Invalid token", { status: 400 });
+            return new Response(JSON.stringify({ error: "Email is required" }), {
+                status: 400,
+                headers: { "Content-Type": "application/json" },
+            });
         }
 
-        // 仮登録ユーザーを取得
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return new Response(JSON.stringify({ error: "Invalid email format" }), {
+                status: 400,
+                headers: { "Content-Type": "application/json" },
+            });
+        }
+
         const tempUserRef = firestoreAdmin.collection("temporaryUsers").doc(email);
-        const tempUser = await tempUserRef.get();
 
-        if (!tempUser.exists) {
-            return new Response("Temporary user not found", { status: 400 });
-        }
+        await firestoreAdmin.runTransaction(async (transaction) => {
+            const tempUserSnapshot = await transaction.get(tempUserRef);
 
-        const tempUserData = tempUser.data();
-        if (!tempUserData) {
-            return new Response("Temporary user data is empty", { status: 500 });
-        }
+            if (!tempUserSnapshot.exists) {
+                throw new Error("Temporary user not found");
+            }
 
-        // 本登録として保存
-        await firestoreAdmin.collection("users").doc(email).set(tempUserData);
+            const tempUserData = tempUserSnapshot.data();
+            if (!tempUserData) {
+                throw new Error("Temporary user data is empty");
+            }
 
-        // 仮登録データを削除
-        await tempUserRef.delete();
+            // 本登録として保存
+            transaction.set(firestoreAdmin.collection("users").doc(email), {
+                ...tempUserData,
+                verified: true, // 確認済みとしてフラグを更新
+            });
 
-        return new Response("Email confirmed successfully", { status: 200 });
+            // 仮登録データを削除
+            transaction.delete(tempUserRef);
+        });
+
+        return new Response(JSON.stringify({ message: "Email confirmed successfully" }), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+        });
     } catch (error) {
         console.error("Error confirming email:", error);
-        return new Response("Failed to confirm email", { status: 500 });
+        return new Response(JSON.stringify({ error: "Failed to confirm email" }), {
+            status: 500,
+            headers: { "Content-Type": "application/json" },
+        });
     }
 }

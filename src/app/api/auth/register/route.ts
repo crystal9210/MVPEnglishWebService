@@ -29,7 +29,7 @@ export async function POST(request: Request) {
 
         // 確認メールを送信
         const actionCodeSettings = {
-            url: `${process.env.NEXT_PUBLIC_APP_URL}/confirm-email`, // 確認リンクのリダイレクト先
+            url: `${process.env.NEXT_PUBLIC_APP_URL}/api/confirm-email`, // 確認リンクのリダイレクト先
             handleCodeInApp: true, // アプリ内で確認
         };
         await sendVerificationEmail(email, actionCodeSettings);
