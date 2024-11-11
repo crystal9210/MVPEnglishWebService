@@ -7,8 +7,7 @@ import { sendEmail } from "@/lib/sendEmail";
  * @param actionCodeSettings - メール確認リンク設定
  */
 export async function sendVerificationEmail(
-  email: string,
-  actionCodeSettings: { url: string; handleCodeInApp: boolean }
+  email: string
 ): Promise<string> {
   try {
     console.log("=== メールアドレス確認処理を開始 ===");
@@ -34,7 +33,8 @@ export async function sendVerificationEmail(
     }
 
     // 確認メールリンクを生成
-    const verificationLink = `${actionCodeSettings.url}?email=${encodeURIComponent(email)}`;
+    // const verificationLink = `${actionCodeSettings.url}?email=${encodeURIComponent(email)}`;
+    const verificationLink = `http://localhost:3000/api/confirm-registration?email=${encodeURIComponent(email)}`;
 
     console.log("生成した確認リンク:", verificationLink);
 

@@ -3,7 +3,7 @@ import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import GitHubProvider from "next-auth/providers/github";
 import { FirestoreAdapter } from "@auth/firebase-adapter";
-import { handleSignIn, initializeUserData } from "@/lib/authCallbacks";
+import { handleSignIn, handleSignUp, initializeUserData } from "@/lib/authCallbacks";
 import { firestoreAdmin } from "./firebaseAdmin";
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
@@ -40,8 +40,37 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
     callbacks: {
         // サインイン時の処理
         async signIn({ user }) {
-            return await handleSignIn(user);
-        },
+            if (!user?.email) {
+              console.error("サインイン失敗: メールアドレスが存在しません。");
+              return false;
+            }
+        
+            const loginResult = await handleSignIn(user.email);
+        
+            if (loginResult === true) {
+              return true;
+            }
+        
+            if (typeof loginResult === "string") {
+              console.log(`ユーザー ${user.email} は未登録または未確認。登録処理を実行します。`);
+        
+              const signUpResult = await handleSignUp({
+                email: user.email,
+                name: user.name || "Unknown",
+                image: user.image || "",
+              });
+        
+              if (typeof signUpResult === "string") {
+                console.log(`確認メール送信済み。リダイレクト先: ${signUpResult}`);
+                return signUpResult;
+              }
+        
+              console.error(`登録処理中にエラーが発生しました: ${signUpResult}`);
+              return false;
+            }
+        
+            return false;
+          },
         // JWTトークン生成時の処理
         async jwt({ token, account }) {
             return await initializeUserData(token, account);
