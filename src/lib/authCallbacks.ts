@@ -40,6 +40,10 @@ export async function handleSignUp({
 }: HandleSignUpArgs): Promise<boolean | string> {
   try {
     console.log(`handleSignUp開始: ${email}`);
+    console.log(`idToken: ${idToken}`);
+    console.log(`accessToken: ${accessToken}`);
+    console.log(`refreshToken: ${refreshToken}`);
+    console.log(`expiresAt: ${expiresAt}`);
 
     // 型ガード
     if (!idToken || !accessToken || !refreshToken || !expiresAt) {
