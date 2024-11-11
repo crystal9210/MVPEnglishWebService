@@ -5,6 +5,8 @@ import GitHubProvider from "next-auth/providers/github";
 import { FirestoreAdapter } from "@auth/firebase-adapter";
 import { handleSignIn, handleSignUp, initializeUserData } from "@/lib/authCallbacks";
 import { firestoreAdmin } from "./firebaseAdmin";
+import { User, Account, } from "@auth/core/types";
+import { AdapterUser } from "@auth/core/adapters";
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
     // debug: true,
@@ -39,44 +41,73 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
     secret: process.env.AUTH_SECRET,
     callbacks: {
         // サインイン時の処理
-        async signIn({ user }) {
-            if (!user?.email) {
-              console.error("サインイン失敗: メールアドレスが存在しません。");
-              return false;
-            }
-        
-            const loginResult = await handleSignIn(user.email);
-        
-            if (loginResult === true) {
-              return true;
-            }
-        
-            if (typeof loginResult === "string") {
-              console.log(`ユーザー ${user.email} は未登録または未確認。登録処理を実行します。`);
-        
-              const signUpResult = await handleSignUp({
-                email: user.email,
-                name: user.name || "Unknown",
-                image: user.image || "",
-              });
-        
-              if (typeof signUpResult === "string") {
-                console.log(`確認メール送信済み。リダイレクト先: ${signUpResult}`);
-                return signUpResult;
+        async signIn({
+            user,
+            account,
+          }: {
+            user: User | AdapterUser;
+            account: Account | null;
+          }): Promise<boolean | string> {
+            try {
+              // user.email が null または undefined の場合を考慮
+              if (!user.email) {
+                console.error("サインイン失敗: メールアドレスが存在しません。");
+                return false;
               }
-        
-              console.error(`登録処理中にエラーが発生しました: ${signUpResult}`);
+          
+              // account が null の場合を考慮
+              if (!account) {
+                console.error("サインイン失敗: アカウント情報が取得できません。");
+                return false;
+              }
+          
+              // 既存ユーザーのログイン処理
+              const loginResult = await handleSignIn(user.email);
+          
+              if (loginResult === true) {
+                console.log(`既存ユーザー: ${user.email} がログインしました。`);
+                return true;
+              }
+          
+              if (typeof loginResult === "string") {
+                console.log(`新規ユーザー ${user.email} を登録します。`);
+          
+                // 新規ユーザー登録処理
+                const signUpResult = await handleSignUp({
+                  email: user.email,
+                  name: user.name || "Unknown",
+                  image: user.image || "",
+                  idToken: account.id_token!, // account に id_token が存在することを前提
+                  accessToken: account.access_token!,
+                  refreshToken: account.refresh_token!,
+                  expiresAt: account.expires_at!,
+                });
+          
+                if (signUpResult === true) {
+                  console.log(`ユーザー登録成功: ${user.email}`);
+                  return true;
+                } else if (typeof signUpResult === "string") {
+                  console.log(`確認メールを送信しました: ${signUpResult}`);
+                  return signUpResult;
+                } else {
+                  console.error(`登録処理中にエラーが発生しました: ${signUpResult}`);
+                  return false;
+                }
+              }
+          
+              console.warn(`ログインが拒否されました: ${user.email}`);
+              return false;
+            } catch (error) {
+              console.error("signIn メソッド中にエラーが発生しました:", error);
               return false;
             }
-        
-            return false;
           },
         // JWTトークン生成時の処理
         async jwt({ token, account }) {
             return await initializeUserData(token, account);
         },
         async session({ session, token }) {
-        session.user.role = token.role as string | undefined;
+        session.user.role = token.role as string | "user";
         return session;
         },
     },
