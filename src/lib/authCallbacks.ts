@@ -103,72 +103,84 @@ export async function handleSignIn(email: string): Promise<boolean | string> {
     console.log(`handleSignIn開始: ${email}`);
 
     // Firestore 参照
-    const userRef = firestoreAdmin.collection("users").doc(email);
-    const userSnap = await userRef.get();
+    const usersCollection = firestoreAdmin.collection("users");
+    const userQuery = await usersCollection.where("email", "==", email).limit(1).get();
 
-    if (!userSnap.exists) {
-      console.log(`ユーザー ${email} が見つかりません。登録が必要です。`);
+    if (userQuery.empty) {
+      console.log(`Firestore: ユーザー ${email} が見つかりません。登録が必要です。`);
       return "/register"; // 未登録ユーザーの場合は登録ページへリダイレクト
     }
 
-    // ユーザーデータ取得と型チェック
-    const userData = userSnap.data() as FirestoreUserData;
+    const userDoc = userQuery.docs[0];
+    const userData = userDoc.data() as FirestoreUserData | undefined;
 
     if (!userData) {
-      console.error(`Firestoreから取得したデータが無効です: ${email}`);
+      console.error(`Firestore: データが無効です: ${email}`);
       return false;
     }
 
+    console.log(`Firestore: ユーザーデータを取得しました: ${JSON.stringify(userData)}`);
+
     // 確認済みでない場合の処理
     if (!userData.verified) {
-      console.log(`ユーザー ${email} は未確認です。確認メールを再送します。`);
+      console.warn(`Firestore: ユーザー ${email} は未確認です。確認メールを再送します。`);
       const verificationLink = await sendVerificationEmail(email);
       console.log(`確認メールを送信しました: ${verificationLink}`);
       return `/verify-email-sent?email=${email}`; // 確認メールページへリダイレクト
     }
 
-    // プロバイダの一致を確認
-    if (userData.provider !== "google") {
-      console.error(`ユーザー ${email} はGoogle認証以外のプロバイダで登録されています。`);
-      return "/error"; // プロバイダが一致しない場合はエラー
-    }
-
-    console.log(`ユーザー ${email} のログインが成功しました。`);
+    console.log(`ログイン成功: ユーザー ${email}`);
     return true; // ログイン成功
-  } catch (error) {
-    console.error("handleSignInエラー:", error);
+  } catch (error: any) {
+    console.error("handleSignInエラー:", error.message);
     return false; // サインインを拒否
   }
 }
+
+
 
 
 /**
  * JWT生成時の処理を管理
  */
 export async function initializeUserData(token: any, account: any): Promise<any> {
-  if (!account) return token;
+  try {
+    console.log("initializeUserData開始:", { token, account });
 
-  const userRef = firestoreAdmin.collection("users").doc(token.email);
-  const userSnap = await userRef.get();
+    if (!account) {
+      console.warn("アカウント情報が存在しません。トークンのみを返します。");
+      return token;
+    }
 
-  if (!userSnap.exists) {
-    // 新規ユーザーを登録
-    console.log(`初回ログイン: ユーザー ${token.email} を登録します。`);
-    const newUser = {
-      email: token.email,
-      name: token.name || "Unknown",
-      avatar: token.picture || "", // 'avatar'として保存
-      verified: false, // 初期状態は未確認
-      provider: account.provider, // 認証プロバイダ（Googleなど）
-      permissions: ["read"], // 初期権限
-      createdAt: new Date().toISOString(), // ISO形式で登録
-    };
-    await userRef.set(newUser);
+    const email = token.email;
+    if (!email) {
+      console.error("トークンにメールアドレスが含まれていません。");
+      throw new Error("無効なトークンです");
+    }
 
-    // 確認メールを送信
-    const verificationLink = await sendVerificationEmail(token.email);
-    console.log(`確認メールを送信しました: ${verificationLink}`);
+    // Firestoreからユーザーをクエリ
+    const usersCollection = firestoreAdmin.collection("users");
+    const userQuery = await usersCollection.where("email", "==", email).limit(1).get();
+
+    if (userQuery.empty) {
+      console.warn(`Firestoreにユーザー ${email} が存在しません。`);
+      throw new Error("ユーザーが存在しません");
+    }
+
+    const userDoc = userQuery.docs[0];
+    const userData = userDoc.data();
+    console.log(`Firestore: ユーザーデータを取得しました: ${JSON.stringify(userData)}`);
+
+    if (!userData?.emailVerified) {
+      console.warn(`ユーザー ${email} は未確認です。`);
+      throw new Error("ユーザーが未確認です");
+    }
+
+    console.log(`トークン生成完了: ユーザー ${email}`);
+    return token; // 必要に応じてトークンに追加情報を設定可能
+  } catch (error: any) {
+    console.error("initializeUserDataエラー:", error.message);
+    throw error; // 呼び出し元でエラー処理
   }
-
-  return token;
 }
+

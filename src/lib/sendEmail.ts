@@ -27,6 +27,7 @@ export const sendEmail = async (to: string, subject: string, html: string) => {
 
   try {
     console.log("Nodemailerトランスポートを初期化...");
+    console.log("Debugging access_token error, ACCESS_TOKEN:",ACCESS_TOKEN);
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {

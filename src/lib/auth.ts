@@ -45,38 +45,42 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         // サインイン時の処理
         async signIn({ user, account }) {
             if (!account || account.provider !== "google") {
-              console.warn("Google 認証以外のリクエストを拒否しました。");
+              console.warn("現在、GoogleおよびGithubアカウント連携以外での本サービスアカウント登録・ログインは提供されていません。");
               return false;
             }
-      
             if (!user.email) {
-              console.error("サインイン失敗: メールアドレスが存在しません。");
+              console.error("サインイン失敗: メールアドレスが送信されたデータに含まれていません。");
               return false;
             }
-      
+
             const userRef = firestoreAdmin.collection("users").doc(user.email);
             const userSnap = await userRef.get();
-      
+            console.log(`Firestoreのユーザーデータ:`, userSnap.data()); //
+            console.log(`ユーザーが存在するか:`, userSnap.exists); //
+
             if (userSnap.exists) {
               const userData = userSnap.data();
-      
-              if (!userData?.verified) {
-                console.warn(`仮登録状態のユーザー: ${user.email}`);
-                await userRef.delete(); // 仮登録データを削除
-                return "/register"; // 登録画面にリダイレクト
+              if (!userData) {
+                console.log("There's no data in 'userData' variable.");
               }
-      
-              // 仮登録済みかつ確認完了
-              console.log(`確認済みのユーザー: ${user.email}`);
-              await userRef.delete(); // 仮登録データを削除
-              return true; // デフォルトの処理を続行
+              if (userData?.verified == false) {
+                console.warn(`仮登録状態のユーザー: ${user.email}`);
+                await userRef.delete();
+                return "/register"; // 登録画面にリダイレクト
+              } else if (userData?.verified == true) {
+                // userSnap.exists && userData.verified: true
+                console.log(`確認済みのユーザー: ${user.email}`);
+                await userRef.delete(); // 仮登録データを削除
+                return true; // デフォルトの処理を続行
+              }
+            } else {
+              // 新規ユーザー: 確認メールを送信
+              console.log(`新規ユーザー: ${user.email} を仮登録します。`);
+              await sendVerificationEmail(user.email);
+              return "/verify-email-sent";
             }
-      
-            // 新規ユーザー: 確認メールを送信
-            console.log(`新規ユーザー: ${user.email} を仮登録します。`);
-            await sendVerificationEmail(user.email);
-            return "/verify-email-sent";
-          },     // JWTトークン生成時の処理
+        },
+        // JWTトークン生成時の処理
         async jwt({ token, account }) {
             return await initializeUserData(token, account);
         },
