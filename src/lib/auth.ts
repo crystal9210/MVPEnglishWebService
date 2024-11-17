@@ -9,8 +9,12 @@ import { firestoreAdmin } from "./firebaseAdmin";
 // import { AdapterUser } from "@auth/core/adapters";
 import { sendVerificationEmail } from "./sendVerificationEmail";
 import { initializeUserData } from "./authCallbacks";
+import { profile } from "console";
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
+  // let url = new URL(req.url!, `http://${req.headers.get("host")}`);
+  // let processType = url.searchParams.get("processType") || undefined; // デフォルトを "login" に設定
+  // console.log("ProcessType:", processType);
     // debug: true,
     adapter: FirestoreAdapter(firestoreAdmin),
     providers: [
@@ -28,7 +32,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
                     access_type: "offline", // リフレッシュトークンを取得
                     prompt: "consent", // ユーザに許可を求める
                     redirect_uri: "http://localhost:3000/api/auth/callback/google",
-                },
+                  },
             },
         }),
         GitHubProvider({
@@ -44,42 +48,87 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
     callbacks: {
         // サインイン時の処理
         async signIn({ user, account }) {
-            if (!account || account.provider !== "google") {
-              console.warn("現在、GoogleおよびGithubアカウント連携以外での本サービスアカウント登録・ログインは提供されていません。");
-              return false;
+        if (account?.state) {
+          // JSON文字列をパース
+          const state = JSON.parse(account.state);
+          const processType = state.processType;
+
+          console.log("ProcessType:", processType);
+
+          if (!["register", "login"].includes(processType)) {
+            throw new Error(`Invalid processType: ${processType}`);
+          }
+
+          // processTypeに応じた処理
+          if (processType === "register") {
+            console.log("Registration logic here...");
+          } else if (processType === "login") {
+            console.log("Login logic here...");
+          }
+
+
+        if (!account || account.provider !== "google") {
+          console.warn("現在、Googleアカウント以外の認証はサポートされていません。");
+          return false;
+        }
+
+        if (!user.email) {
+          console.error("サインイン失敗: メールアドレスが提供されていません。");
+          return false;
+        }
+
+        const email = user.email;
+
+        try {
+          const userCollection = firestoreAdmin.collection("users");
+          const userQuerySnapshot = await userCollection
+            .where("email", "==", email)
+            .where("provider", "==", "google")
+            .limit(1)
+            .get();
+          const userDocs = userQuerySnapshot.docs;
+
+          if (processType === "signIn") {
+            if (userDocs.length === 0) {
+              console.warn(`ユーザー ${email} はFirestoreに存在しません。`);
+              return "";
             }
-            if (!user.email) {
-              console.error("サインイン失敗: メールアドレスが送信されたデータに含まれていません。");
+
+            const userData = userDocs[0].data();
+            if (!userData.emailVerified) {
+              console.log(`ユーザー ${email} のメールアドレスが未確認です。確認メールを送信します。`);
+              await sendVerificationEmail(email);
               return false;
             }
 
-            const userRef = firestoreAdmin.collection("users").doc(user.email);
-            const userSnap = await userRef.get();
-            console.log(`Firestoreのユーザーデータ:`, userSnap.data()); //
-            console.log(`ユーザーが存在するか:`, userSnap.exists); //
+            console.log(`確認済みユーザー: ${email}`);
+            return true;
+          }
 
-            if (userSnap.exists) {
-              const userData = userSnap.data();
-              if (!userData) {
-                console.log("There's no data in 'userData' variable.");
+          if (processType === "register") {
+            if (userDocs.length > 0) {
+              const userData = userDocs[0].data();
+              if (userData.emailVerified) {
+                console.log(`ユーザー ${email} は既に登録されています。`);
+                return false;
               }
-              if (userData?.verified == false) {
-                console.warn(`仮登録状態のユーザー: ${user.email}`);
-                await userRef.delete();
-                return "/register"; // 登録画面にリダイレクト
-              } else if (userData?.verified == true) {
-                // userSnap.exists && userData.verified: true
-                console.log(`確認済みのユーザー: ${user.email}`);
-                await userRef.delete(); // 仮登録データを削除
-                return true; // デフォルトの処理を続行
-              }
-            } else {
-              // 新規ユーザー: 確認メールを送信
-              console.log(`新規ユーザー: ${user.email} を仮登録します。`);
-              await sendVerificationEmail(user.email);
-              return "/verify-email-sent";
+
+              console.log(`ユーザー ${email} の登録が未完了です。確認メールを再送信します。`);
+              await sendVerificationEmail(email);
+              return false;
             }
-        },
+
+            console.log(`新規ユーザー ${email} を登録します。`);
+            await sendVerificationEmail(email);
+            return true;
+          }
+
+          throw new Error("無効な processType が指定されました。");
+        } catch (error) {
+          console.error("サインイン処理中にエラーが発生しました:", error.message);
+          return false;
+        }
+      }},
         // JWTトークン生成時の処理
         async jwt({ token, account }) {
             return await initializeUserData(token, account);

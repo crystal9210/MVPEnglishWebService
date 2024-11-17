@@ -6,6 +6,11 @@ import { useRouter } from "next/navigation"; // ルーターを使用
 import { FcGoogle } from "react-icons/fc"; // Googleアイコン
 import { FaGithub } from "react-icons/fa"; // GitHubアイコン
 
+interface StateType {
+    processType: "register" | "login";
+}
+
+
 export default function LoginPage() {
     const { data: session, status } = useSession();
     const [loadingProvider, setLoadingProvider] = useState<string | null>(null); // ログイン中のプロバイダーを追跡
@@ -34,7 +39,10 @@ export default function LoginPage() {
         setLoadingProvider(provider); // 現在ログイン中のプロバイダーを設定
         setError(null); // エラーをリセット
         try {
-            const result = await signIn(provider, { redirect: false });
+            const processType = "login";
+            const state: StateType = {processType};
+            const result = await signIn(provider, undefined, {
+                state: JSON.stringify({ processType })});
             // エラーが OAuthAccountNotLinked の場合は登録ページへ遷移
             if (result?.error === "OAuthAccountNotLinked") {
                 router.push("/register");
