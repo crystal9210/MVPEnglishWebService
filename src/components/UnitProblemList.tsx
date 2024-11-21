@@ -74,9 +74,6 @@ export default function UnitProblemList({ units, initialUnitName }: Props) {
   const prevUnit = units[currentUnitIndex - 1];
   const nextUnit = units[currentUnitIndex + 1];
 
-  // ボタンの表示を常に true に設定
-  const showPrevButton = Boolean(prevUnit);
-  const showNextButton = Boolean(nextUnit);
 
   return (
     <div className="relative" ref={containerRef}>
