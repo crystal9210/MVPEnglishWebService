@@ -43,7 +43,24 @@ export async function GET(request: Request) {
       );
     }
 
-    const userDocRef = firestoreAdmin.collection("users").doc(email);
+    const userCollection = firestoreAdmin.collection("users");
+    console.log("Firestoreコレクションの中身を表示:");
+
+    const allDocs = await userCollection.get();
+    allDocs.forEach(doc => {
+      console.log(`Doc ID: ${doc.id}, Data:`, doc.data());
+    });
+    const userQuerySnapshot = await userCollection
+      .where("email", "==", email)
+      .limit(1)
+      .get();
+
+    if(userQuerySnapshot.empty) {
+      console.error(`該当ユーザがFirestoreに存在しません: ${email}`);
+      throw new Error("該当ユーザは存在しません。");
+    }
+
+    const userDocRef = await userQuerySnapshot.docs[0].ref;
 
     // Firestoreトランザクションを実行
     await firestoreAdmin.runTransaction(async (transaction) => {
@@ -55,7 +72,7 @@ export async function GET(request: Request) {
       }
 
       // ユーザーを確認済みに更新
-      transaction.update(userDocRef, { verified: true });
+      transaction.update(userDocRef, { emailVerified: true });
     });
 
     // リダイレクト先を設定

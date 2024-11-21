@@ -9,12 +9,8 @@ import { firestoreAdmin } from "./firebaseAdmin";
 // import { AdapterUser } from "@auth/core/adapters";
 import { sendVerificationEmail } from "./sendVerificationEmail";
 import { initializeUserData } from "./authCallbacks";
-import { profile } from "console";
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
-  // let url = new URL(req.url!, `http://${req.headers.get("host")}`);
-  // let processType = url.searchParams.get("processType") || undefined; // デフォルトを "login" に設定
-  // console.log("ProcessType:", processType);
     // debug: true,
     adapter: FirestoreAdapter(firestoreAdmin),
     providers: [
@@ -41,31 +37,13 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         }),
     ],
     session: {
-        strategy: "jwt",
+        strategy: "jwt", // デフォルトでjweを利用し最適化されるようになっている
         maxAge: 60 * 60 * 24, // 1day
     },
     secret: process.env.AUTH_SECRET,
     callbacks: {
         // サインイン時の処理
         async signIn({ user, account }) {
-        if (account?.state) {
-          // JSON文字列をパース
-          const state = JSON.parse(account.state);
-          const processType = state.processType;
-
-          console.log("ProcessType:", processType);
-
-          if (!["register", "login"].includes(processType)) {
-            throw new Error(`Invalid processType: ${processType}`);
-          }
-
-          // processTypeに応じた処理
-          if (processType === "register") {
-            console.log("Registration logic here...");
-          } else if (processType === "login") {
-            console.log("Login logic here...");
-          }
-
 
         if (!account || account.provider !== "google") {
           console.warn("現在、Googleアカウント以外の認証はサポートされていません。");
@@ -76,67 +54,103 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
           console.error("サインイン失敗: メールアドレスが提供されていません。");
           return false;
         }
-
         const email = user.email;
 
         try {
           const userCollection = firestoreAdmin.collection("users");
           const userQuerySnapshot = await userCollection
             .where("email", "==", email)
-            .where("provider", "==", "google")
             .limit(1)
             .get();
           const userDocs = userQuerySnapshot.docs;
 
-          if (processType === "signIn") {
-            if (userDocs.length === 0) {
-              console.warn(`ユーザー ${email} はFirestoreに存在しません。`);
-              return "";
-            }
-
-            const userData = userDocs[0].data();
-            if (!userData.emailVerified) {
-              console.log(`ユーザー ${email} のメールアドレスが未確認です。確認メールを送信します。`);
-              await sendVerificationEmail(email);
-              return false;
-            }
-
-            console.log(`確認済みユーザー: ${email}`);
+          if (userDocs.length === 0) {
+            console.warn(`ユーザー ${email} はFirestoreに存在しません。仮登録と同時に確認メールを送信します。`);
+            await sendVerificationEmail(email);
             return true;
           }
-
-          if (processType === "register") {
-            if (userDocs.length > 0) {
-              const userData = userDocs[0].data();
-              if (userData.emailVerified) {
-                console.log(`ユーザー ${email} は既に登録されています。`);
-                return false;
-              }
-
+          if (userDocs.length > 1) {
+            console.error(`ユーザ ${email} が存在しますが複数アカウントあり規約に違反しています。`);
+            return false;
+          }
+          if (userDocs.length === 1 && userDocs[0].data().emailVerified !== true) {
               console.log(`ユーザー ${email} の登録が未完了です。確認メールを再送信します。`);
               await sendVerificationEmail(email);
               return false;
             }
-
-            console.log(`新規ユーザー ${email} を登録します。`);
-            await sendVerificationEmail(email);
-            return true;
-          }
-
-          throw new Error("無効な processType が指定されました。");
+          console.log(`ユーザー ${email} : 登録済み。ログイン処理を開始します。`);
+          return true;
         } catch (error) {
           console.error("サインイン処理中にエラーが発生しました:", error.message);
           return false;
         }
-      }},
+      },
         // JWTトークン生成時の処理
-        async jwt({ token, account }) {
-            return await initializeUserData(token, account);
+        async jwt({ token, account, user }) {
+          console.log("JWTコールバック開始:", { token, account, user });
+
+          if (account) {
+            // アカウント情報が存在する場合（ログイン時）
+            console.log("ログイン時にアクセストークンとリフレッシュトークンを設定します。");
+            token.accessToken = account.access_token;
+            token.refreshToken = account.refresh_token;
+            token.provider = account.provider;
+          } else {
+            // 再生成時（既存トークンの検証または更新）
+            console.log("既存トークンを使用してJWTを再生成します。");
+          }
+
+          if (user) {
+            // ユーザー情報が存在する場合（ログイン時）
+            console.log("ログイン時: ユーザー情報をトークンに追加します。");
+            token.email = user.email;
+            token.name = user.name;
+            token.picture = user.image;
+          } else {
+            // 再生成時（ユーザー情報はトークン内に既存の値として存在）
+            console.log("再生成時: ユーザー情報は既存トークンから読み込みます。");
+          }
+
+          // Firestoreから追加情報を取得してトークンに反映
+          const email = token.email;
+          if (email) {
+            console.log(`Firestoreからユーザー (${email}) の情報を取得します。`);
+            const userDocs = await firestoreAdmin.collection("users").
+              where("email", "==", email)
+              .limit(1)
+              .get();
+            const userDoc = userDocs.docs[0];
+
+            if (userDoc.exists) {
+              const userData = userDoc.data();
+              token.role = userData?.permissions?.includes("admin") ? "admin" : "user";
+              console.log(`ユーザー (${email}) のロールは: ${token.role}`);
+            } else {
+              console.warn(`Firestoreにユーザー (${email}) の情報が存在しません。`);
+            }
+          } else {
+            console.warn("トークンにメールアドレス情報が存在しません。Firestoreの確認はスキップします。");
+          }
+
+          console.log("JWTコールバック終了: 更新されたトークン", token);
+
+          return token;
         },
         async session({ session, token }) {
-        session.user.role = token.role as string | "user";
-        return session;
-        },
+          console.log("セッションコールバック:", { session, token });
+
+          // セッションにトークン情報をコピー
+          session.user.email = token.email as string;
+          session.user.name = token.name;
+          session.user.image = token.picture;
+          session.user.role = "user";
+
+          // 必要に応じてトークンデータを追加
+          // session.accessToken = token.accessToken;
+          // session.refreshToken = token.refreshToken;
+
+          return session;
+        }
     },
 });
 

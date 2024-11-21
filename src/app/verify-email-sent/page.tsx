@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 export default function VerifyEmailSent() {
   const [isVerified, setIsVerified] = useState<boolean | null>(null);
   const [email, setEmail] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const checkVerificationStatus = async () => {
@@ -13,15 +14,22 @@ export default function VerifyEmailSent() {
 
       if (!emailParam) {
         setIsVerified(false);
+        setError("メールアドレスが指定されていません。");
         return;
       }
 
       try {
         const res = await fetch(`/api/check-registration?email=${emailParam}`);
+        if (!res.ok) {
+          throw new Error("登録ステータスの確認に失敗しました。");
+        }
+
         const data = await res.json();
-        setIsVerified(data.verified);
-      } catch {
+        setIsVerified(data.emailVerified);
+      } catch (err: any) {
+        console.error("エラー:", err.message);
         setIsVerified(false);
+        setError("登録ステータスの確認に失敗しました。");
       }
     };
 
@@ -31,7 +39,10 @@ export default function VerifyEmailSent() {
   if (isVerified === null) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-50 text-gray-700">
-        <p className="text-lg font-semibold">確認中...</p>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-gray-700 mb-4"></div>
+          <p className="text-lg font-semibold">確認中...</p>
+        </div>
       </div>
     );
   }
@@ -44,7 +55,18 @@ export default function VerifyEmailSent() {
             対象メールアドレス: <span className="font-medium text-gray-800">{email}</span>
           </p>
         )}
-        {isVerified ? (
+        {error ? (
+          <div>
+            <h1 className="text-3xl font-bold text-red-600">エラー発生</h1>
+            <p className="mt-4 text-lg text-gray-700">{error}</p>
+            <a
+              href="/register"
+              className="mt-6 inline-block px-6 py-3 text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+            >
+              登録ページへ戻る
+            </a>
+          </div>
+        ) : isVerified ? (
           <div>
             <h1 className="text-3xl font-bold text-green-600">登録完了</h1>
             <p className="mt-4 text-lg text-gray-700">登録が完了しました。</p>
@@ -58,7 +80,9 @@ export default function VerifyEmailSent() {
         ) : (
           <div>
             <h1 className="text-3xl font-bold text-red-600">登録未完了</h1>
-            <p className="mt-4 text-lg text-gray-700">登録が完了していません。</p>
+            <p className="mt-4 text-lg text-gray-700">
+              登録が完了していません。確認メールを再送信してください。
+            </p>
             <a
               href="/register"
               className="mt-6 inline-block px-6 py-3 text-white bg-blue-600 rounded-lg hover:bg-blue-700"

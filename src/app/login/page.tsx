@@ -1,15 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation"; // ルーターを使用
 import { FcGoogle } from "react-icons/fc"; // Googleアイコン
 import { FaGithub } from "react-icons/fa"; // GitHubアイコン
-
-interface StateType {
-    processType: "register" | "login";
-}
-
 
 export default function LoginPage() {
     const { data: session, status } = useSession();
@@ -17,56 +12,39 @@ export default function LoginPage() {
     const [error, setError] = useState<string | null>(null);
     const router = useRouter(); // ルーターを使用
 
-    // ローディング中の表示
-    if (status === "loading") {
-        return <div>セッションを確認中...</div>;
-    }
+    useEffect(() => {
+        if(status === "authenticated") {
+            router.push("/dashboard");
+        }
+    }, [status, router]);
 
     // ログイン済みの場合
-    if (session) {
+    if (status === "loading" || status === "authenticated") {
         return (
             <div className="flex flex-col items-center justify-center h-screen bg-gray-100">
-                <h1 className="text-2xl font-bold mb-4">ログイン済みです</h1>
-                <p className="text-gray-700">
-                    ようこそ、<span className="font-semibold">{session.user?.email}</span> さん
-                </p>
+                <h1 className="text-2xl font-bold mb-4">Loading...</h1>
+
             </div>
         );
     }
 
     // ログインボタンのクリック処理
     const handleSignIn = async (provider: string) => {
-        setLoadingProvider(provider); // 現在ログイン中のプロバイダーを設定
-        setError(null); // エラーをリセット
+        setLoadingProvider(provider);
+        setError(null);
         try {
-            const processType = "login";
-            const state: StateType = {processType};
-            const result = await signIn(provider, undefined, {
-                state: JSON.stringify({ processType })});
-            // エラーが OAuthAccountNotLinked の場合は登録ページへ遷移
-            if (result?.error === "OAuthAccountNotLinked") {
-                router.push("/register");
-                return;
-            }
-            // その他のエラーがある場合はエラーメッセージを設定
+            const result = await signIn(provider);
             if (result?.error) {
                 throw new Error(result.error);
             }
-            // ログイン成功時にダッシュボードにリダイレクト
-            if (result?.ok) {
-                router.push("/dashboard");
-                return;
-            }
         } catch (err: unknown) {
-            console.error("ログインエラー:", err);
-            // エラーを文字列に変換して設定
             if (err instanceof Error) {
                 setError(err.message);
             } else {
                 setError("ログインに失敗しました。もう一度お試しください。");
             }
         } finally {
-            setLoadingProvider(null); // ログイン処理終了時にリセット
+            setLoadingProvider(null);
         }
     };
 

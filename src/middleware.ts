@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/register"], // `/register` を追加
+  matcher: ["/dashboard", "/dashboard/:path*", "/register"], // `/register` を追加
 };
 
 export async function middleware(req: NextRequest) {

@@ -7,10 +7,6 @@ import { FcGoogle } from "react-icons/fc"; // Googleアイコン
 import { FaGithub } from "react-icons/fa"; // GitHubアイコン
 import { Modal } from "./_components/Modal";
 
-interface StateType {
-    processType: "register" | "login";
-}
-
 export default function RegisterPage() {
     const [email, setEmail] = useState("");
     const [loadingProvider, setLoadingProvider] = useState<string | null>(null);
@@ -57,11 +53,7 @@ export default function RegisterPage() {
         setError(null);
 
         try {
-            const processType = "register";
-            const state: StateType = {processType};
-            const result = await signIn(provider,undefined ,
-                {
-                state: JSON.stringify(state) }
+            const result = await signIn(provider
             );
 
             if (result?.error) {

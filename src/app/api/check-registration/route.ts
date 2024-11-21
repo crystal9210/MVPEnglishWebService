@@ -13,15 +13,24 @@ export async function GET(request: Request) {
   }
 
   try {
-    const userDocRef = firestoreAdmin.collection("users").doc(email);
-    const userDoc = await userDocRef.get();
+    // メールアドレスに基づいてユーザーデータを検索
+    const userQuerySnapshot = await firestoreAdmin
+      .collection("users")
+      .where("email", "==", email)
+      .limit(1)
+      .get();
 
-    if (!userDoc.exists) {
-      return NextResponse.json({ verified: false });
+    // クエリ結果を確認
+    if (userQuerySnapshot.empty) {
+      return NextResponse.json({ emailVerified: false });
     }
 
+    // ユーザーデータを取得
+    const userDoc = userQuerySnapshot.docs[0];
     const userData = userDoc.data();
-    return NextResponse.json({ verified: !!userData?.verified });
+
+    // `emailVerified`フィールドを確認
+    return NextResponse.json({ emailVerified: !!userData?.emailVerified });
   } catch (error) {
     console.error("登録確認エラー:", error);
     return NextResponse.json(

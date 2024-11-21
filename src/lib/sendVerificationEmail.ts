@@ -1,22 +1,8 @@
-import { firestoreAdmin } from "@/lib/firebaseAdmin";
 import { sendEmail } from "@/lib/sendEmail";
 import { sign } from "jsonwebtoken";
 
 export async function sendVerificationEmail(email: string): Promise<string> {
   try {
-    const userDocRef = firestoreAdmin.collection("users").doc(email);
-
-    const userDoc = await userDocRef.get();
-    if (!userDoc.exists) {
-      await userDocRef.set(
-        {
-          email,
-          verified: false,
-          createdAt: new Date(),
-        },
-        { merge: true }
-      );
-    }
 
     const secret = process.env.JWT_SECRET!;
     const registrationToken = sign({ email }, secret, { expiresIn: "1h", algorithm: "HS256" });
