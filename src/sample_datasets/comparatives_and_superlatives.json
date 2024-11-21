@@ -1,0 +1,282 @@
+[
+  {
+    "id": "1",
+    "problem": "Choose the correct form: 'This is the ___ book I have ever read.'",
+    "answer": "Best (最上級)",
+    "options": ["Good (原級)", "Better (比較級)", "Best (最上級)"],
+    "details": "'Best' は 'good' の最上級形です。"
+  },
+  {
+    "id": "2",
+    "problem": "Choose the correct form: 'She is ___ than her sister.'",
+    "answer": "Taller (比較級)",
+    "options": ["Tall (原級)", "Taller (比較級)", "Tallest (最上級)"],
+    "details": "'Taller' は 'tall' の比較級形です。"
+  },
+  {
+    "id": "3",
+    "problem": "Choose the correct form: 'This test is ___ than the previous one.'",
+    "answer": "Easier (比較級)",
+    "options": ["Easy (原級)", "Easier (比較級)", "Easiest (最上級)"],
+    "details": "'Easier' は 'easy' の比較級形です。"
+  },
+  {
+    "id": "4",
+    "problem": "Choose the correct form: 'He is the ___ player in the team.'",
+    "answer": "Fastest (最上級)",
+    "options": ["Fast (原級)", "Faster (比較級)", "Fastest (最上級)"],
+    "details": "'Fastest' は 'fast' の最上級形です。"
+  },
+  {
+    "id": "5",
+    "problem": "Choose the correct form: 'She is a ___ dancer.'",
+    "answer": "Good (原級)",
+    "options": ["Good (原級)", "Better (比較級)", "Best (最上級)"],
+    "details": "'Good' は形容詞の原級です。"
+  },
+  {
+    "id": "6",
+    "problem": "Choose the correct form: 'This is a ___ problem.'",
+    "answer": "Difficult (原級)",
+    "options": ["Difficult (原級)", "More difficult (比較級)", "Most difficult (最上級)"],
+    "details": "'Difficult' は形容詞の原級です。"
+  },
+  {
+    "id": "7",
+    "problem": "Choose the correct form: 'He is ___ than I am.'",
+    "answer": "Smarter (比較級)",
+    "options": ["Smart (原級)", "Smarter (比較級)", "Smartest (最上級)"],
+    "details": "'Smarter' は 'smart' の比較級形です。"
+  },
+  {
+    "id": "8",
+    "problem": "Choose the correct form: 'This is the ___ day of my life.'",
+    "answer": "Happiest (最上級)",
+    "options": ["Happy (原級)", "Happier (比較級)", "Happiest (最上級)"],
+    "details": "'Happiest' は 'happy' の最上級形です。"
+  },
+  {
+    "id": "9",
+    "problem": "Choose the correct form: 'She is ___ than her friend.'",
+    "answer": "More beautiful (比較級)",
+    "options": ["Beautiful (原級)", "More beautiful (比較級)", "Most beautiful (最上級)"],
+    "details": "'More beautiful' は 'beautiful' の比較級形です。"
+  },
+  {
+    "id": "10",
+    "problem": "Choose the correct form: 'This is the ___ place to relax.'",
+    "answer": "Most peaceful (最上級)",
+    "options": ["Peaceful (原級)", "More peaceful (比較級)", "Most peaceful (最上級)"],
+    "details": "'Most peaceful' は 'peaceful' の最上級形です。"
+  },
+  {
+    "id": "11",
+    "problem": "Choose the correct form: 'He is ___ than his brother.'",
+    "answer": "Stronger (比較級)",
+    "options": ["Strong (原級)", "Stronger (比較級)", "Strongest (最上級)"],
+    "details": "'Stronger' は 'strong' の比較級形です。"
+  },
+  {
+    "id": "12",
+    "problem": "Choose the correct form: 'This is a ___ book.'",
+    "answer": "Interesting (原級)",
+    "options": ["Interesting (原級)", "More interesting (比較級)", "Most interesting (最上級)"],
+    "details": "'Interesting' は形容詞の原級です。"
+  },
+  {
+    "id": "13",
+    "problem": "Choose the correct form: 'She is the ___ student in the class.'",
+    "answer": "Most diligent (最上級)",
+    "options": ["Diligent (原級)", "More diligent (比較級)", "Most diligent (最上級)"],
+    "details": "'Most diligent' は 'diligent' の最上級形です。"
+  },
+  {
+    "id": "14",
+    "problem": "Choose the correct form: 'This task is ___ than the last one.'",
+    "answer": "Harder (比較級)",
+    "options": ["Hard (原級)", "Harder (比較級)", "Hardest (最上級)"],
+    "details": "'Harder' は 'hard' の比較級形です。"
+  },
+  {
+    "id": "15",
+    "problem": "Choose the correct form: 'He is the ___ of the twins.'",
+    "answer": "Older (比較級)",
+    "options": ["Old (原級)", "Older (比較級)", "Oldest (最上級)"],
+    "details": "'Older' は 'old' の比較級形です。"
+  },
+  {
+    "id": "16",
+    "problem": "Choose the correct form: 'This soup is ___ than that one.'",
+    "answer": "Hotter (比較級)",
+    "options": ["Hot (原級)", "Hotter (比較級)", "Hottest (最上級)"],
+    "details": "'Hotter' は 'hot' の比較級形です。"
+  },
+  {
+    "id": "17",
+    "problem": "Choose the correct form: 'She is the ___ singer in the competition.'",
+    "answer": "Best (最上級)",
+    "options": ["Good (原級)", "Better (比較級)", "Best (最上級)"],
+    "details": "'Best' は 'good' の最上級形です。"
+  },
+  {
+    "id": "18",
+    "problem": "Choose the correct form: 'This road is ___ than the other one.'",
+    "answer": "Wider (比較級)",
+    "options": ["Wide (原級)", "Wider (比較級)", "Widest (最上級)"],
+    "details": "'Wider' は 'wide' の比較級形です。"
+  },
+  {
+    "id": "19",
+    "problem": "Choose the correct form: 'He is the ___ runner in the race.'",
+    "answer": "Fastest (最上級)",
+    "options": ["Fast (原級)", "Faster (比較級)", "Fastest (最上級)"],
+    "details": "'Fastest' は 'fast' の最上級形です。"
+  },
+  {
+    "id": "20",
+    "problem": "Choose the correct form: 'She is ___ than her brother.'",
+    "answer": "More intelligent (比較級)",
+    "options": ["Intelligent (原級)", "More intelligent (比較級)", "Most intelligent (最上級)"],
+    "details": "'More intelligent' は 'intelligent' の比較級形です。"
+  },
+  {
+    "id": "21",
+    "problem": "Choose the correct form: 'This problem is ___ than the previous one.'",
+    "answer": "More complex (比較級)",
+    "options": ["Complex (原級)", "More complex (比較級)", "Most complex (最上級)"],
+    "details": "'More complex' は 'complex' の比較級形です。"
+  },
+  {
+    "id": "22",
+    "problem": "Choose the correct form: 'He is the ___ person I know.'",
+    "answer": "Kindest (最上級)",
+    "options": ["Kind (原級)", "Kinder (比較級)", "Kindest (最上級)"],
+    "details": "'Kindest' は 'kind' の最上級形です。"
+  },
+  {
+    "id": "23",
+    "problem": "Choose the correct form: 'This lesson is ___ than the last one.'",
+    "answer": "Easier (比較級)",
+    "options": ["Easy (原級)", "Easier (比較級)", "Easiest (最上級)"],
+    "details": "'Easier' は 'easy' の比較級形です。"
+  },
+  {
+    "id": "24",
+    "problem": "Choose the correct form: 'She is the ___ girl in the school.'",
+    "answer": "Prettiest (最上級)",
+    "options": ["Pretty (原級)", "Prettier (比較級)", "Prettiest (最上級)"],
+    "details": "'Prettiest' は 'pretty' の最上級形です。"
+  },
+  {
+    "id": "25",
+    "problem": "Choose the correct form: 'He is ___ than his friend.'",
+    "answer": "More athletic (比較級)",
+    "options": ["Athletic (原級)", "More athletic (比較級)", "Most athletic (最上級)"],
+    "details": "'More athletic' は 'athletic' の比較級形です。"
+  },
+  {
+    "id": "26",
+    "problem": "Choose the correct form: 'This is the ___ mountain in the region.'",
+    "answer": "Highest (最上級)",
+    "options": ["High (原級)", "Higher (比較級)", "Highest (最上級)"],
+    "details": "'Highest' は 'high' の最上級形です。"
+  },
+  {
+    "id": "27",
+    "problem": "Choose the correct form: 'She is ___ than her classmates.'",
+    "answer": "More popular (比較級)",
+    "options": ["Popular (原級)", "More popular (比較級)", "Most popular (最上級)"],
+    "details": "'More popular' は 'popular' の比較級形です。"
+  },
+  {
+    "id": "28",
+    "problem": "Choose the correct form: 'This is the ___ car I have ever driven.'",
+    "answer": "Most expensive (最上級)",
+    "options": ["Expensive (原級)", "More expensive (比較級)", "Most expensive (最上級)"],
+    "details": "'Most expensive' は 'expensive' の最上級形です。"
+  },
+  {
+    "id": "29",
+    "problem": "Choose the correct form: 'He is ___ than his neighbor.'",
+    "answer": "Friendlier (比較級)",
+    "options": ["Friendly (原級)", "Friendlier (比較級)", "Friendliest (最上級)"],
+    "details": "'Friendlier' は 'friendly' の比較級形です。"
+  },
+  {
+    "id": "30",
+    "problem": "Choose the correct form: 'This is the ___ story I have ever heard.'",
+    "answer": "Saddest (最上級)",
+    "options": ["Sad (原級)", "Sadder (比較級)", "Saddest (最上級)"],
+    "details": "'Saddest' は 'sad' の最上級形です。"
+  },
+  {
+    "id": "31",
+    "problem": "Choose the correct form: 'She is ___ than her co-workers.'",
+    "answer": "More diligent (比較級)",
+    "options": ["Diligent (原級)", "More diligent (比較級)", "Most diligent (最上級)"],
+    "details": "'More diligent' は 'diligent' の比較級形です。"
+  },
+  {
+    "id": "32",
+    "problem": "Choose the correct form: 'This is the ___ project I have worked on.'",
+    "answer": "Most challenging (最上級)",
+    "options": ["Challenging (原級)", "More challenging (比較級)", "Most challenging (最上級)"],
+    "details": "'Most challenging' は 'challenging' の最上級形です。"
+  },
+  {
+    "id": "33",
+    "problem": "Choose the correct form: 'He is ___ than me.'",
+    "answer": "More creative (比較級)",
+    "options": ["Creative (原級)", "More creative (比較級)", "Most creative (最上級)"],
+    "details": "'More creative' は 'creative' の比較級形です。"
+  },
+  {
+    "id": "34",
+    "problem": "Choose the correct form: 'This is the ___ room in the house.'",
+    "answer": "Biggest (最上級)",
+    "options": ["Big (原級)", "Bigger (比較級)", "Biggest (最上級)"],
+    "details": "'Biggest' は 'big' の最上級形です。"
+  },
+  {
+    "id": "35",
+    "problem": "Choose the correct form: 'She is ___ than her sister.'",
+    "answer": "Kinder (比較級)",
+    "options": ["Kind (原級)", "Kinder (比較級)", "Kindest (最上級)"],
+    "details": "'Kinder' は 'kind' の比較級形です。"
+  },
+  {
+    "id": "36",
+    "problem": "Choose the correct form: 'This puzzle is ___ than the previous one.'",
+    "answer": "More difficult (比較級)",
+    "options": ["Difficult (原級)", "More difficult (比較級)", "Most difficult (最上級)"],
+    "details": "'More difficult' は 'difficult' の比較級形です。"
+  },
+  {
+    "id": "37",
+    "problem": "Choose the correct form: 'He is the ___ boy in his class.'",
+    "answer": "Smartest (最上級)",
+    "options": ["Smart (原級)", "Smarter (比較級)", "Smartest (最上級)"],
+    "details": "'Smartest' は 'smart' の最上級形です。"
+  },
+  {
+    "id": "38",
+    "problem": "Choose the correct form: 'This is the ___ movie I have ever seen.'",
+    "answer": "Most interesting (最上級)",
+    "options": ["Interesting (原級)", "More interesting (比較級)", "Most interesting (最上級)"],
+    "details": "'Most interesting' は 'interesting' の最上級形です。"
+  },
+  {
+    "id": "39",
+    "problem": "Choose the correct form: 'She is ___ than her friend.'",
+    "answer": "More talented (比較級)",
+    "options": ["Talented (原級)", "More talented (比較級)", "Most talented (最上級)"],
+    "details": "'More talented' は 'talented' の比較級形です。"
+  },
+  {
+    "id": "40",
+    "problem": "Choose the correct form: 'This is the ___ cake I have ever tasted.'",
+    "answer": "Most delicious (最上級)",
+    "options": ["Delicious (原級)", "More delicious (比較級)", "Most delicious (最上級)"],
+    "details": "'Most delicious' は 'delicious' の最上級形です。"
+  }
+]

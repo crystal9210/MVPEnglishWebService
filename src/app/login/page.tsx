@@ -7,7 +7,7 @@ import { FcGoogle } from "react-icons/fc"; // Googleアイコン
 import { FaGithub } from "react-icons/fa"; // GitHubアイコン
 
 export default function LoginPage() {
-    const { data: session, status } = useSession();
+    const { status } = useSession();
     const [loadingProvider, setLoadingProvider] = useState<string | null>(null); // ログイン中のプロバイダーを追跡
     const [error, setError] = useState<string | null>(null);
     const router = useRouter(); // ルーターを使用

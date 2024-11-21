@@ -1,0 +1,282 @@
+[
+  {
+    "id": "1",
+    "problem": "Choose the correct demonstrative: '___ is my book.'",
+    "answer": "This (これ)",
+    "options": ["This (これ)", "That (それ)", "These (これら)"],
+    "details": "'This' は話し手の近くにある単数のものを指します。"
+  },
+  {
+    "id": "2",
+    "problem": "Choose the correct demonstrative: '___ are my friends.'",
+    "answer": "These (これら)",
+    "options": ["This (これ)", "That (それ)", "These (これら)"],
+    "details": "'These' は話し手の近くにある複数のものを指します。"
+  },
+  {
+    "id": "3",
+    "problem": "Choose the correct demonstrative: '___ is my house over there.'",
+    "answer": "That (あれ)",
+    "options": ["This (これ)", "That (あれ)", "Those (あれら)"],
+    "details": "'That' は話し手から離れた単数のものを指します。"
+  },
+  {
+    "id": "4",
+    "problem": "Choose the correct demonstrative: '___ are beautiful flowers.'",
+    "answer": "Those (あれら)",
+    "options": ["This (これ)", "That (あれ)", "Those (あれら)"],
+    "details": "'Those' は話し手から離れた複数のものを指します。"
+  },
+  {
+    "id": "5",
+    "problem": "Choose the correct demonstrative: '___ is a difficult question.'",
+    "answer": "This (これ)",
+    "options": ["This (これ)", "That (あれ)", "These (これら)"],
+    "details": "'This' は話し手の近くにある単数のものを指します。"
+  },
+  {
+    "id": "6",
+    "problem": "Choose the correct demonstrative: 'Can you see ___ stars in the sky?'",
+    "answer": "Those (あれら)",
+    "options": ["This (これ)", "These (これら)", "Those (あれら)"],
+    "details": "'Those' は話し手から離れた複数のものを指します。"
+  },
+  {
+    "id": "7",
+    "problem": "Choose the correct demonstrative: '___ is my pen on the desk.'",
+    "answer": "That (あれ)",
+    "options": ["This (これ)", "That (あれ)", "These (これら)"],
+    "details": "'That' は話し手から離れた単数のものを指します。"
+  },
+  {
+    "id": "8",
+    "problem": "Choose the correct demonstrative: '___ are my shoes by the door.'",
+    "answer": "Those (あれら)",
+    "options": ["This (これ)", "That (あれ)", "Those (あれら)"],
+    "details": "'Those' は話し手から離れた複数のものを指します。"
+  },
+  {
+    "id": "9",
+    "problem": "Choose the correct demonstrative: '___ is a picture of my family.'",
+    "answer": "This (これ)",
+    "options": ["This (これ)", "That (あれ)", "These (これら)"],
+    "details": "'This' は話し手の近くにある単数のものを指します。"
+  },
+  {
+    "id": "10",
+    "problem": "Choose the correct demonstrative: '___ are the books I borrowed.'",
+    "answer": "These (これら)",
+    "options": ["This (これ)", "That (あれ)", "These (これら)"],
+    "details": "'These' は話し手の近くにある複数のものを指します。"
+  },
+  {
+    "id": "11",
+    "problem": "Choose the correct demonstrative: '___ is my car over there.'",
+    "answer": "That (あれ)",
+    "options": ["This (これ)", "That (あれ)", "Those (あれら)"],
+    "details": "'That' は話し手から離れた単数のものを指します。"
+  },
+  {
+    "id": "12",
+    "problem": "Choose the correct demonstrative: '___ are my keys on the table.'",
+    "answer": "Those (あれら)",
+    "options": ["This (これ)", "That (あれ)", "Those (あれら)"],
+    "details": "'Those' は話し手から離れた複数のものを指します。"
+  },
+  {
+    "id": "13",
+    "problem": "Choose the correct demonstrative: '___ is my favorite movie.'",
+    "answer": "This (これ)",
+    "options": ["This (これ)", "That (あれ)", "These (これら)"],
+    "details": "'This' は話し手の近くにある単数のものを指します。"
+  },
+  {
+    "id": "14",
+    "problem": "Choose the correct demonstrative: '___ are my gloves on the chair.'",
+    "answer": "Those (あれら)",
+    "options": ["This (これ)", "That (あれ)", "Those (あれら)"],
+    "details": "'Those' は話し手から離れた複数のものを指します。"
+  },
+  {
+    "id": "15",
+    "problem": "Choose the correct demonstrative: '___ is a famous landmark.'",
+    "answer": "That (あれ)",
+    "options": ["This (これ)", "That (あれ)", "These (これら)"],
+    "details": "'That' は話し手から離れた単数のものを指します。"
+  },
+  {
+    "id": "16",
+    "problem": "Choose the correct demonstrative: '___ are my earrings on the dresser.'",
+    "answer": "These (これら)",
+    "options": ["This (これ)", "That (あれ)", "These (これら)"],
+    "details": "'These' は話し手の近くにある複数のものを指します。"
+  },
+  {
+    "id": "17",
+    "problem": "Choose the correct demonstrative: '___ is my jacket hanging on the wall.'",
+    "answer": "That (あれ)",
+    "options": ["This (これ)", "That (あれ)", "Those (あれら)"],
+    "details": "'That' は話し手から離れた単数のものを指します。"
+  },
+  {
+    "id": "18",
+    "problem": "Choose the correct demonstrative: '___ are the apples I bought.'",
+    "answer": "These (これら)",
+    "options": ["This (これ)", "That (あれ)", "These (これら)"],
+    "details": "'These' は話し手の近くにある複数のものを指します。"
+  },
+  {
+    "id": "19",
+    "problem": "Choose the correct demonstrative: '___ is a good idea.'",
+    "answer": "This (これ)",
+    "options": ["This (これ)", "That (あれ)", "These (これら)"],
+    "details": "'This' は話し手の近くにある単数のものを指します。"
+  },
+  {
+    "id": "20",
+    "problem": "Choose the correct demonstrative: '___ are my socks on the floor.'",
+    "answer": "Those (あれら)",
+    "options": ["This (これ)", "That (あれ)", "Those (あれら)"],
+    "details": "'Those' は話し手から離れた複数のものを指します。"
+  },
+  {
+    "id": "21",
+    "problem": "Choose the correct demonstrative: '___ is the best restaurant in town.'",
+    "answer": "This (これ)",
+    "options": ["This (これ)", "That (あれ)", "These (これら)"],
+    "details": "'This' は話し手の近くにある単数のものを指します。"
+  },
+  {
+    "id": "22",
+    "problem": "Choose the correct demonstrative: '___ are my cousins over there.'",
+    "answer": "Those (あれら)",
+    "options": ["This (これ)", "That (あれ)", "Those (あれら)"],
+    "details": "'Those' は話し手から離れた複数のものを指します。"
+  },
+  {
+    "id": "23",
+    "problem": "Choose the correct demonstrative: '___ is my laptop on the desk.'",
+    "answer": "That (あれ)",
+    "options": ["This (これ)", "That (あれ)", "These (これら)"],
+    "details": "'That' は話し手から離れた単数のものを指します。"
+  },
+  {
+    "id": "24",
+    "problem": "Choose the correct demonstrative: '___ are my notes from the meeting.'",
+    "answer": "These (これら)",
+    "options": ["This (これ)", "That (あれ)", "These (これら)"],
+    "details": "'These' は話し手の近くにある複数のものを指します。"
+  },
+  {
+    "id": "25",
+    "problem": "Choose the correct demonstrative: '___ is my umbrella by the door.'",
+    "answer": "That (あれ)",
+    "options": ["This (これ)", "That (あれ)", "Those (あれら)"],
+    "details": "'That' は話し手から離れた単数のものを指します。"
+  },
+  {
+    "id": "26",
+    "problem": "Choose the correct demonstrative: '___ are the tickets for the concert.'",
+    "answer": "These (これら)",
+    "options": ["This (これ)", "That (あれ)", "These (これら)"],
+    "details": "'These' は話し手の近くにある複数のものを指します。"
+  },
+  {
+    "id": "27",
+    "problem": "Choose the correct demonstrative: '___ is my favorite photograph.'",
+    "answer": "This (これ)",
+    "options": ["This (これ)", "That (あれ)", "These (これら)"],
+    "details": "'This' は話し手の近くにある単数のものを指します。"
+  },
+  {
+    "id": "28",
+    "problem": "Choose the correct demonstrative: '___ are my shoes under the bed.'",
+    "answer": "Those (あれら)",
+    "options": ["This (これ)", "That (あれ)", "Those (あれら)"],
+    "details": "'Those' は話し手から離れた複数のものを指します。"
+  },
+  {
+    "id": "29",
+    "problem": "Choose the correct demonstrative: '___ is my favorite song.'",
+    "answer": "This (これ)",
+    "options": ["This (これ)", "That (あれ)", "These (これら)"],
+    "details": "'This' は話し手の近くにある単数のものを指します。"
+  },
+  {
+    "id": "30",
+    "problem": "Choose the correct demonstrative: '___ are my assignments for the week.'",
+    "answer": "These (これら)",
+    "options": ["This (これ)", "That (あれ)", "These (これら)"],
+    "details": "'These' は話し手の近くにある複数のものを指します。"
+  },
+  {
+    "id": "31",
+    "problem": "Choose the correct demonstrative: '___ is my bicycle in the garage.'",
+    "answer": "That (あれ)",
+    "options": ["This (これ)", "That (あれ)", "Those (あれら)"],
+    "details": "'That' は話し手から離れた単数のものを指します。"
+  },
+  {
+    "id": "32",
+    "problem": "Choose the correct demonstrative: '___ are the clothes I washed.'",
+    "answer": "These (これら)",
+    "options": ["This (これ)", "That (あれ)", "These (これら)"],
+    "details": "'These' は話し手の近くにある複数のものを指します。"
+  },
+  {
+    "id": "33",
+    "problem": "Choose the correct demonstrative: '___ is my phone on the table.'",
+    "answer": "That (あれ)",
+    "options": ["This (これ)", "That (あれ)", "These (これら)"],
+    "details": "'That' は話し手から離れた単数のものを指します。"
+  },
+  {
+    "id": "34",
+    "problem": "Choose the correct demonstrative: '___ are the plans for the new project.'",
+    "answer": "These (これら)",
+    "options": ["This (これ)", "That (あれ)", "These (これら)"],
+    "details": "'These' は話し手の近くにある複数のものを指します。"
+  },
+  {
+    "id": "35",
+    "problem": "Choose the correct demonstrative: '___ is the house we used to live in.'",
+    "answer": "That (あれ)",
+    "options": ["This (これ)", "That (あれ)", "Those (あれら)"],
+    "details": "'That' は話し手から離れた単数のものを指します。"
+  },
+  {
+    "id": "36",
+    "problem": "Choose the correct demonstrative: '___ are the cookies I baked.'",
+    "answer": "These (これら)",
+    "options": ["This (これ)", "That (あれ)", "These (これら)"],
+    "details": "'These' は話し手の近くにある複数のものを指します。"
+  },
+  {
+    "id": "37",
+    "problem": "Choose the correct demonstrative: '___ is my favorite chair.'",
+    "answer": "This (これ)",
+    "options": ["This (これ)", "That (あれ)", "These (これら)"],
+    "details": "'This' は話し手の近くにある単数のものを指します。"
+  },
+  {
+    "id": "38",
+    "problem": "Choose the correct demonstrative: '___ are the documents you requested.'",
+    "answer": "These (これら)",
+    "options": ["This (これ)", "That (あれ)", "These (これら)"],
+    "details": "'These' は話し手の近くにある複数のものを指します。"
+  },
+  {
+    "id": "39",
+    "problem": "Choose the correct demonstrative: '___ is the museum we visited.'",
+    "answer": "That (あれ)",
+    "options": ["This (これ)", "That (あれ)", "Those (あれら)"],
+    "details": "'That' は話し手から離れた単数のものを指します。"
+  },
+  {
+    "id": "40",
+    "problem": "Choose the correct demonstrative: '___ are my pens on the desk.'",
+    "answer": "Those (あれら)",
+    "options": ["This (これ)", "That (あれ)", "Those (あれら)"],
+    "details": "'Those' は話し手から離れた複数のものを指します。"
+  }
+]

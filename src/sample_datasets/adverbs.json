@@ -1,0 +1,282 @@
+[
+  {
+    "id": "1",
+    "problem": "Choose the correct adverb: 'She sings ___.'",
+    "answer": "Beautifully (美しく)",
+    "options": ["Beautifully (美しく)", "Beautiful (美しい)", "Beautify (美化する)"],
+    "details": "'Beautifully' は動詞を修飾する副詞です。"
+  },
+  {
+    "id": "2",
+    "problem": "Choose the correct adverb: 'He ran ___.'",
+    "answer": "Quickly (速く)",
+    "options": ["Quick (速い)", "Quickly (速く)", "Quicker (より速い)"],
+    "details": "'Quickly' は動詞を修飾する副詞です。"
+  },
+  {
+    "id": "3",
+    "problem": "Choose the correct adverb: 'They arrived ___.'",
+    "answer": "Late (遅く)",
+    "options": ["Lately (最近)", "Late (遅く)", "Later (後で)"],
+    "details": "'Late' は動詞を修飾する副詞です。"
+  },
+  {
+    "id": "4",
+    "problem": "Choose the correct adverb: 'She speaks English ___.'",
+    "answer": "Fluently (流暢に)",
+    "options": ["Fluent (流暢な)", "Fluently (流暢に)", "Fluency (流暢さ)"],
+    "details": "'Fluently' は動詞を修飾する副詞です。"
+  },
+  {
+    "id": "5",
+    "problem": "Choose the correct adverb: 'He completed the task ___.'",
+    "answer": "Easily (簡単に)",
+    "options": ["Easy (簡単な)", "Easily (簡単に)", "Ease (簡単さ)"],
+    "details": "'Easily' は動詞を修飾する副詞です。"
+  },
+  {
+    "id": "6",
+    "problem": "Choose the correct adverb: 'She dances ___.'",
+    "answer": "Gracefully (優雅に)",
+    "options": ["Grace (優雅)", "Gracefully (優雅に)", "Gracious (優雅な)"],
+    "details": "'Gracefully' は動詞を修飾する副詞です。"
+  },
+  {
+    "id": "7",
+    "problem": "Choose the correct adverb: 'They worked ___.'",
+    "answer": "Hard (熱心に)",
+    "options": ["Hard (熱心に)", "Hardly (ほとんど～ない)", "Harden (固くする)"],
+    "details": "'Hard' は動詞を修飾する副詞です。"
+  },
+  {
+    "id": "8",
+    "problem": "Choose the correct adverb: 'He listens ___.'",
+    "answer": "Attentively (注意深く)",
+    "options": ["Attentive (注意深い)", "Attentively (注意深く)", "Attention (注意)"],
+    "details": "'Attentively' は動詞を修飾する副詞です。"
+  },
+  {
+    "id": "9",
+    "problem": "Choose the correct adverb: 'She arrived ___.'",
+    "answer": "Promptly (迅速に)",
+    "options": ["Prompt (迅速な)", "Promptly (迅速に)", "Prompting (促す)"],
+    "details": "'Promptly' は動詞を修飾する副詞です。"
+  },
+  {
+    "id": "10",
+    "problem": "Choose the correct adverb: 'He ___ accepted the invitation.'",
+    "answer": "Graciously (丁重に)",
+    "options": ["Gracious (丁重な)", "Graciously (丁重に)", "Grace (優雅)"],
+    "details": "'Graciously' は動詞を修飾する副詞です。"
+  },
+  {
+    "id": "11",
+    "problem": "Choose the correct adverb: 'She reads ___.'",
+    "answer": "Quickly (速く)",
+    "options": ["Quick (速い)", "Quickly (速く)", "Quickest (最も速い)"],
+    "details": "'Quickly' は動詞を修飾する副詞です。"
+  },
+  {
+    "id": "12",
+    "problem": "Choose the correct adverb: 'He solved the problem ___.'",
+    "answer": "Easily (簡単に)",
+    "options": ["Easy (簡単な)", "Easily (簡単に)", "Ease (簡単さ)"],
+    "details": "'Easily' は動詞を修飾する副詞です。"
+  },
+  {
+    "id": "13",
+    "problem": "Choose the correct adverb: 'They waited ___.'",
+    "answer": "Patiently (忍耐強く)",
+    "options": ["Patient (忍耐強い)", "Patiently (忍耐強く)", "Patience (忍耐)"],
+    "details": "'Patiently' は動詞を修飾する副詞です。"
+  },
+  {
+    "id": "14",
+    "problem": "Choose the correct adverb: 'She writes ___.'",
+    "answer": "Neatly (きれいに)",
+    "options": ["Neat (きれいな)", "Neatly (きれいに)", "Neatness (きれいさ)"],
+    "details": "'Neatly' は動詞を修飾する副詞です。"
+  },
+  {
+    "id": "15",
+    "problem": "Choose the correct adverb: 'He speaks ___.'",
+    "answer": "Softly (優しく)",
+    "options": ["Soft (優しい)", "Softly (優しく)", "Softness (優しさ)"],
+    "details": "'Softly' は動詞を修飾する副詞です。"
+  },
+  {
+    "id": "16",
+    "problem": "Choose the correct adverb: 'They answered the questions ___.'",
+    "answer": "Correctly (正しく)",
+    "options": ["Correct (正しい)", "Correctly (正しく)", "Correction (訂正)"],
+    "details": "'Correctly' は動詞を修飾する副詞です。"
+  },
+  {
+    "id": "17",
+    "problem": "Choose the correct adverb: 'She sings ___.'",
+    "answer": "Beautifully (美しく)",
+    "options": ["Beautiful (美しい)", "Beautifully (美しく)", "Beautify (美化する)"],
+    "details": "'Beautifully' は動詞を修飾する副詞です。"
+  },
+  {
+    "id": "18",
+    "problem": "Choose the correct adverb: 'He drives ___.'",
+    "answer": "Carefully (注意深く)",
+    "options": ["Careful (注意深い)", "Carefully (注意深く)", "Care (注意)"],
+    "details": "'Carefully' は動詞を修飾する副詞です。"
+  },
+  {
+    "id": "19",
+    "problem": "Choose the correct adverb: 'They played ___.'",
+    "answer": "Happily (幸せに)",
+    "options": ["Happy (幸せな)", "Happily (幸せに)", "Happiness (幸せ)"],
+    "details": "'Happily' は動詞を修飾する副詞です。"
+  },
+  {
+    "id": "20",
+    "problem": "Choose the correct adverb: 'She finished the work ___.'",
+    "answer": "Efficiently (効率的に)",
+    "options": ["Efficient (効率的な)", "Efficiently (効率的に)", "Efficiency (効率)"],
+    "details": "'Efficiently' は動詞を修飾する副詞です。"
+  },
+  {
+    "id": "21",
+    "problem": "Choose the correct adverb: 'He laughed ___.'",
+    "answer": "Loudly (大声で)",
+    "options": ["Loud (大声)", "Loudly (大声で)", "Loudness (大声)"],
+    "details": "'Loudly' は動詞を修飾する副詞です。"
+  },
+  {
+    "id": "22",
+    "problem": "Choose the correct adverb: 'They whispered ___.'",
+    "answer": "Quietly (静かに)",
+    "options": ["Quiet (静かな)", "Quietly (静かに)", "Quietness (静けさ)"],
+    "details": "'Quietly' は動詞を修飾する副詞です。"
+  },
+  {
+    "id": "23",
+    "problem": "Choose the correct adverb: 'She explained the concept ___.'",
+    "answer": "Clearly (明確に)",
+    "options": ["Clear (明確な)", "Clearly (明確に)", "Clearest (最も明確な)"],
+    "details": "'Clearly' は動詞を修飾する副詞です。"
+  },
+  {
+    "id": "24",
+    "problem": "Choose the correct adverb: 'He waited ___.'",
+    "answer": "Patiently (忍耐強く)",
+    "options": ["Patient (忍耐強い)", "Patiently (忍耐強く)", "Patience (忍耐)"],
+    "details": "'Patiently' は動詞を修飾する副詞です。"
+  },
+  {
+    "id": "25",
+    "problem": "Choose the correct adverb: 'They sang ___.'",
+    "answer": "Joyfully (喜びに満ちて)",
+    "options": ["Joyful (喜びに満ちた)", "Joyfully (喜びに満ちて)", "Joyfulness (喜び)"],
+    "details": "'Joyfully' は動詞を修飾する副詞です。"
+  },
+  {
+    "id": "26",
+    "problem": "Choose the correct adverb: 'She ran ___.'",
+    "answer": "Swiftly (素早く)",
+    "options": ["Swift (素早い)", "Swiftly (素早く)", "Swiftness (素早さ)"],
+    "details": "'Swiftly' は動詞を修飾する副詞です。"
+  },
+  {
+    "id": "27",
+    "problem": "Choose the correct adverb: 'He speaks French ___.'",
+    "answer": "Fluently (流暢に)",
+    "options": ["Fluent (流暢な)", "Fluently (流暢に)", "Fluency (流暢さ)"],
+    "details": "'Fluently' は動詞を修飾する副詞です。"
+  },
+  {
+    "id": "28",
+    "problem": "Choose the correct adverb: 'They worked ___.'",
+    "answer": "Diligently (勤勉に)",
+    "options": ["Diligent (勤勉な)", "Diligently (勤勉に)", "Diligence (勤勉)"],
+    "details": "'Diligently' は動詞を修飾する副詞です。"
+  },
+  {
+    "id": "29",
+    "problem": "Choose the correct adverb: 'She looked ___.'",
+    "answer": "Carefully (注意深く)",
+    "options": ["Careful (注意深い)", "Carefully (注意深く)", "Care (注意)"],
+    "details": "'Carefully' は動詞を修飾する副詞です。"
+  },
+  {
+    "id": "30",
+    "problem": "Choose the correct adverb: 'He arrived ___.'",
+    "answer": "Punctually (時間通りに)",
+    "options": ["Punctual (時間通りの)", "Punctually (時間通りに)", "Punctuality (時間厳守)"],
+    "details": "'Punctually' は動詞を修飾する副詞です。"
+  },
+  {
+    "id": "31",
+    "problem": "Choose the correct adverb: 'They responded ___.'",
+    "answer": "Promptly (迅速に)",
+    "options": ["Prompt (迅速な)", "Promptly (迅速に)", "Prompting (促す)"],
+    "details": "'Promptly' は動詞を修飾する副詞です。"
+  },
+  {
+    "id": "32",
+    "problem": "Choose the correct adverb: 'She did the work ___.'",
+    "answer": "Accurately (正確に)",
+    "options": ["Accurate (正確な)", "Accurately (正確に)", "Accuracy (正確さ)"],
+    "details": "'Accurately' は動詞を修飾する副詞です。"
+  },
+  {
+    "id": "33",
+    "problem": "Choose the correct adverb: 'He walked ___.'",
+    "answer": "Slowly (ゆっくりと)",
+    "options": ["Slow (ゆっくりと)", "Slowly (ゆっくりと)", "Slowness (遅さ)"],
+    "details": "'Slowly' は動詞を修飾する副詞です。"
+  },
+  {
+    "id": "34",
+    "problem": "Choose the correct adverb: 'They played ___.'",
+    "answer": "Energetically (元気に)",
+    "options": ["Energetic (元気な)", "Energetically (元気に)", "Energy (元気)"],
+    "details": "'Energetically' は動詞を修飾する副詞です。"
+  },
+  {
+    "id": "35",
+    "problem": "Choose the correct adverb: 'She answered ___.'",
+    "answer": "Politely (礼儀正しく)",
+    "options": ["Polite (礼儀正しい)", "Politely (礼儀正しく)", "Politeness (礼儀正しさ)"],
+    "details": "'Politely' は動詞を修飾する副詞です。"
+  },
+  {
+    "id": "36",
+    "problem": "Choose the correct adverb: 'He listens ___.'",
+    "answer": "Carefully (注意深く)",
+    "options": ["Careful (注意深い)", "Carefully (注意深く)", "Care (注意)"],
+    "details": "'Carefully' は動詞を修飾する副詞です。"
+  },
+  {
+    "id": "37",
+    "problem": "Choose the correct adverb: 'They talked ___.'",
+    "answer": "Excitedly (興奮して)",
+    "options": ["Excited (興奮した)", "Excitedly (興奮して)", "Excitement (興奮)"],
+    "details": "'Excitedly' は動詞を修飾する副詞です。"
+  },
+  {
+    "id": "38",
+    "problem": "Choose the correct adverb: 'She finished the race ___.'",
+    "answer": "Easily (簡単に)",
+    "options": ["Easy (簡単な)", "Easily (簡単に)", "Ease (簡単さ)"],
+    "details": "'Easily' は動詞を修飾する副詞です。"
+  },
+  {
+    "id": "39",
+    "problem": "Choose the correct adverb: 'He answered the question ___.'",
+    "answer": "Correctly (正しく)",
+    "options": ["Correct (正しい)", "Correctly (正しく)", "Correction (訂正)"],
+    "details": "'Correctly' は動詞を修飾する副詞です。"
+  },
+  {
+    "id": "40",
+    "problem": "Choose the correct adverb: 'They spoke ___.'",
+    "answer": "Clearly (明確に)",
+    "options": ["Clear (明確な)", "Clearly (明確に)", "Clearest (最も明確な)"],
+    "details": "'Clearly' は動詞を修飾する副詞です。"
+  }
+]

@@ -1,9 +1,11 @@
+// app/dashboard/page.tsx
 "use client";
 
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { SignOutButton } from "@/components/signout_button";
+import Link from "next/link";
 
 export default function DashboardPage() {
     const { data: session, status } = useSession();
@@ -48,6 +50,14 @@ export default function DashboardPage() {
                 <p className="text-gray-600 mb-2">メールアドレス: {session?.user?.email}</p>
                 <p className="text-gray-600 mb-2">ユーザーID: {session?.user?.id || "未設定"}</p>
                 <p className="text-gray-600 mb-6">ロール: {session?.user?.role || "未設定"}</p>
+
+                {/* 追加: /grammar/list へのナビゲーションボタン */}
+                <Link href="/grammar/list">
+                    <button className="block w-full text-center bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-2 px-4 rounded mb-4 transition duration-200">
+                        文法問題一覧へ
+                    </button>
+                </Link>
+
                 <SignOutButton />
             </div>
 
