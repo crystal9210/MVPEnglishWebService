@@ -12,15 +12,16 @@ type Problem = {
   details: string;
 };
 
-export default function ProblemDetailPage({
+export default async function ProblemDetailPage({
   params,
   searchParams,
 }: {
   params: { id: string };
   searchParams: { unit: string };
 }) {
-  const { id } = params;
-  const unitName = searchParams.unit;
+  const { id } = await params;
+  const p = await searchParams;
+  const unitName = p.unit;
 
   if (!unitName) {
     return <p>単元が指定されていません。</p>;
