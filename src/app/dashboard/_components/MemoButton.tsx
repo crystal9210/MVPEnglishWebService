@@ -31,12 +31,12 @@ const MemoButton: React.FC = () => {
 
   return (
     <>
-      {/* メモボタン */}
-      <div className="fixed bottom-4 right-4 z-50">
+      {/* メモボタンとメモパネルを一つのコンテナ内に配置 */}
+      <div className="flex flex-col items-end space-y-4">
         {/* メモ表示トグルボタン */}
         <button
           onClick={() => setIsVisible(!isVisible)}
-          className="mb-2 p-3 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600 transition"
+          className="p-3 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600 transition"
           aria-label="メモを開閉"
         >
           {isVisible ? <XMarkIcon className="h-6 w-6" /> : <PlusIcon className="h-6 w-6" />}

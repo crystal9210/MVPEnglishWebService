@@ -46,9 +46,10 @@ export default function DashboardPage() {
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-100 via-white to-blue-200 p-4">
             {/* ナビゲーションバー */}
-            <div className="flex justify-between items-center mb-8">
+            <div className="flex justify-between items-center mb-12 mt-8">
                 <h1 className="text-4xl font-bold text-indigo-600">User&apos;s ダッシュボード</h1>
-                <div className="flex items-center space-x-4">
+                {/* NavigationButtons と MemoButton を一つの固定コンテナにまとめる */}
+                <div className="fixed top-4 right-4 flex flex-col space-y-4 z-50">
                     <NavigationButtons />
                     <MemoButton />
                 </div>
@@ -56,7 +57,7 @@ export default function DashboardPage() {
 
             {/* メインコンテンツ */}
             <div className="flex flex-col">
-                <div className="flex flex-col md:flex-row md:space-x-6">
+                <div className="flex flex-col md:flex-row md:space-x-6 mb-12">
                     {/* プロフィール領域 */}
                     <div className="flex-1 bg-white shadow-lg rounded-lg p-8 mb-6 md:mb-0 flex flex-col items-center">
                         <p className="text-gray-600 mb-6 text-center">

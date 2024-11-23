@@ -7,7 +7,7 @@ import { AcademicCapIcon, ClipboardIcon, Cog6ToothIcon } from "@heroicons/react/
 
 export default function NavigationButtons() {
   return (
-    <div className="fixed top-4 right-4 flex flex-col space-y-4 z-50">
+    <div className="flex flex-col space-y-4">
       {/* 文法ダッシュボードへ */}
       <Link href="/grammar/dashboard">
         <button className="flex items-center bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded transition duration-200">

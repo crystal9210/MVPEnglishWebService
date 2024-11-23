@@ -8,7 +8,7 @@ import { useMemoContext } from "@/app/contexts/MemoContext";
 interface MemoModalProps {
   isOpen: boolean;
   onClose: () => void;
-  memo?: { id: string; content: string };
+  memo?: { id: string; content: string } | null;
 }
 
 const MemoModal: React.FC<MemoModalProps> = ({ isOpen, onClose, memo }) => {
