@@ -30,7 +30,7 @@ const HistoryPanel: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-white shadow-lg rounded-lg p-4">
+    <div className="flex flex-col h-full bg-white p-4">
       <div className="flex items-center mb-4">
         <FaHistory className="h-6 w-6 text-indigo-600 mr-2" />
         <h2 className="text-xl font-semibold text-gray-800">最新の履歴</h2>
