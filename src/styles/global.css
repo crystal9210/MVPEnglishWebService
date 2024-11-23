@@ -1,0 +1,27 @@
+/* styles/globals.css または適切なCSSファイル */
+
+/* Webkitブラウザ（Chrome, Safariなど）用のスクロールバー */
+.scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    /* スクロールバーの幅 */
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+    background: #f3f4f6;
+    /* トラックの色 */
+    border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: #cbd5e0;
+    /* スクロールバーのつまみの色 */
+    border-radius: 3px;
+    border: 1px solid #f3f4f6;
+    /* つまみとトラックの間にスペースを作る */
+}
+
+/* Firefox用のスクロールバースタイル */
+.scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e0 #f3f4f6;
+}
