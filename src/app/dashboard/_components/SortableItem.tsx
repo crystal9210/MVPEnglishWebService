@@ -1,11 +1,8 @@
-// app/dashboard/_components/SortableItem.tsx
-
 import React from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { CSSProperties } from "react";
 import { TodoItem } from "./mockData";
-import { FiMenu } from "react-icons/fi"; // 正しいアイコンをインポート
 
 type SortableItemProps = {
     id: string;
@@ -39,12 +36,15 @@ export const SortableItem: React.FC<SortableItemProps> = ({
         opacity: isDragging ? 0.5 : 1,
     };
 
-    // イベント伝播を停止する関数
+    const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        toggleCompletion(todo.id);
+    };
+
     const handleButtonClick = (
         e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
         action: () => void
     ) => {
-        e.stopPropagation(); // イベントの伝播を停止
+        e.stopPropagation(); // ボタンのクリックイベントがドラッグと競合しないように停止
         action();
     };
 
@@ -56,54 +56,41 @@ export const SortableItem: React.FC<SortableItemProps> = ({
                 isDragging ? "bg-blue-100 shadow-lg" : ""
             }`}
         >
-            {/* ドラッグハンドル */}
-            <div
-                {...attributes}
-                {...listeners}
-                className="mr-2 cursor-grab"
-                style={{ display: "flex", alignItems: "center" }}
-            >
-                <FiMenu className="h-5 w-5 text-gray-500" /> {/* 正しいアイコンを使用 */}
-            </div>
+            {/* チェックボックス */}
+            <input
+                type="checkbox"
+                checked={todo.completed}
+                onChange={handleCheckboxChange}
+                className="h-5 w-5 text-indigo-600"
+            />
 
             {/* タスク内容 */}
-            <div className="flex items-center flex-grow">
-                <input
-                    type="checkbox"
-                    checked={todo.completed}
-                    onChange={() => toggleCompletion(todo.id)}
-                    className="h-5 w-5 text-indigo-600"
-                />
-                {todo.completed ? (
-                    <span className="ml-3 text-lg line-through text-black">
-                        {todo.task}
-                    </span>
-                ) : (
-                    <span
-                        className="ml-3 text-lg cursor-pointer text-black"
-                        onDoubleClick={() => startEditing(todo)}
-                    >
-                        {todo.task}
-                    </span>
-                )}
-            </div>
+            <span
+                {...attributes}
+                {...listeners}
+                className={`ml-3 text-lg cursor-grab flex-grow ${
+                    todo.completed ? "line-through text-gray-500" : "text-black"
+                }`}
+            >
+                {todo.task}
+            </span>
 
             {/* 編集および削除ボタン */}
             <div className="flex space-x-2 z-10">
                 {!isEditing && (
                     <>
                         <button
-                            onClick={(e) =>
-                                handleButtonClick(e, () => startEditing(todo))
-                            }
+                            onClick={(e) => {
+                                handleButtonClick(e, () => startEditing(todo));
+                            }}
                             className="text-blue-500 hover:text-blue-700 focus:outline-none"
                         >
                             編集
                         </button>
                         <button
-                            onClick={(e) =>
-                                handleButtonClick(e, () => deleteTodo(todo.id))
-                            }
+                            onClick={(e) => {
+                                handleButtonClick(e, () => deleteTodo(todo.id));
+                            }}
                             className="text-red-500 hover:text-red-700 focus:outline-none"
                         >
                             削除
