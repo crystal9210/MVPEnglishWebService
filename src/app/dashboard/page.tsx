@@ -45,7 +45,7 @@ export default function DashboardPage() {
         <div className="min-h-screen bg-gradient-to-br from-blue-100 via-white to-blue-200 p-4">
             {/* ナビゲーションバー */}
             <div className="flex justify-between items-center mb-8">
-                <h1 className="text-4xl font-bold text-indigo-600">管理者ダッシュボード</h1>
+                <h1 className="text-4xl font-bold text-indigo-600">User&apos;s ダッシュボード</h1>
                 <div className="flex items-center space-x-4">
                     <NavigationButtons />
                 </div>
