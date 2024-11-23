@@ -1,9 +1,7 @@
-// app/dashboard/_components/MemoButton.tsx
-
 "use client";
 
 import React, { useState } from "react";
-import { PlusIcon, PencilIcon, XMarkIcon } from "@heroicons/react/24/solid";
+import { DocumentTextIcon, PencilIcon, XMarkIcon, PlusIcon } from "@heroicons/react/24/solid";
 import { useMemoContext } from "@/app/contexts/MemoContext";
 import MemoModal from "./MemoModal";
 
@@ -31,7 +29,6 @@ const MemoButton: React.FC = () => {
 
   return (
     <>
-      {/* メモボタンとメモパネルを一つのコンテナ内に配置 */}
       <div className="flex flex-col items-end space-y-4">
         {/* メモ表示トグルボタン */}
         <button
@@ -39,7 +36,7 @@ const MemoButton: React.FC = () => {
           className="p-3 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600 transition"
           aria-label="メモを開閉"
         >
-          {isVisible ? <XMarkIcon className="h-6 w-6" /> : <PlusIcon className="h-6 w-6" />}
+          {isVisible ? <XMarkIcon className="h-6 w-6" /> : <DocumentTextIcon className="h-6 w-6" />}
         </button>
 
         {/* メモ一覧 */}
