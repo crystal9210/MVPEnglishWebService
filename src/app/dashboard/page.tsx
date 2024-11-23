@@ -2,7 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { SignOutButton } from "@/components/signout_button";
 import NavigationButtons from "./_components/NavigationButtons";
 import MemoButton from "./_components/MemoButton";

@@ -1,78 +1,31 @@
 "use client";
 
-import { useState } from 'react';
-import Image from 'next/image';
-import { questions } from './begginning/_components/mockData'; // 問題データをインポート
+import { useRouter } from "next/navigation";
+import { FaBook, FaClipboard } from "react-icons/fa"; // 必要なアイコンをインポート
 
-export default function QuizPage() {
-  const [currentProblemIndex, setCurrentProblemIndex] = useState(0); // 現在の問題のインデックス
-  const [showAnswer, setShowAnswer] = useState(false); // 答えを表示するかどうか
-
-  const currentProblem = questions[currentProblemIndex]; // 現在の問題を取得
-
-  const handleNext = () => {
-    setShowAnswer(false); // 答えを非表示にリセット
-    setCurrentProblemIndex((prev) => (prev + 1) % questions.length); // 次の問題へ
-  };
+export default function BasisHomePage() {
+  const router = useRouter();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-100 via-blue-100 to-purple-100 flex items-center justify-center p-4">
-      <div className="max-w-xl w-full bg-white shadow-lg rounded-lg p-6">
-        <h1 className="text-2xl font-bold mb-4 text-gray-800">Quiz</h1>
-
-        {/* 問題を表示 */}
-        <div className="mb-4">
-          {currentProblem.image && (
-            <Image
-              src={currentProblem.image}
-              alt="Problem Image"
-              width={500} // 必須のプロパティ
-              height={300} // 必須のプロパティ
-              className="w-full h-auto rounded-md mb-2"
-            />
-          )}
-
-          {currentProblem.example && (
-            <p className="text-lg font-medium text-lime-700">
-              {currentProblem.example.replace('___', '_____')}
-            </p>
-          )}
-
-          {currentProblem.options && (
-            <ul className="mt-2">
-              {currentProblem.options.map((option, index) => (
-                <li
-                  key={index}
-                  className="p-2 bg-gray-100 rounded-md mb-2 cursor-pointer hover:bg-gray-200"
-                >
-                  {option}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
-        {/* 答えと詳細の表示 */}
-        {showAnswer ? (
-          <div>
-            <p className="text-green-500 font-semibold">Answer: {currentProblem.answer}</p>
-            <p className="text-gray-600 mt-2">{currentProblem.explanation}</p>
-          </div>
-        ) : (
-          <button
-            onClick={() => setShowAnswer(true)}
-            className="w-full py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600"
-          >
-            Show Answer
-          </button>
-        )}
-
-        {/* 次の問題ボタン */}
+    <div className="min-h-screen bg-gradient-to-br from-green-100 to-blue-100 flex flex-col items-center justify-center p-4">
+      <h1 className="text-3xl font-bold mb-8 text-gray-800">学習形式を選択してください</h1>
+      <div className="flex flex-col md:flex-row md:space-x-4 space-y-4 md:space-y-0">
+        {/* to / for の基礎 */}
         <button
-          onClick={handleNext}
-          className="w-full py-2 mt-4 bg-gray-500 text-white rounded-md hover:bg-gray-600"
+          onClick={() => router.push("/basis/quiz/begginning")}
+          className="flex-1 p-6 bg-gray-200 text-gray-800 rounded-lg shadow-lg hover:bg-blue-500 hover:text-white transition-all duration-300 flex flex-col items-center"
         >
-          Next Problem
+          <FaBook className="w-16 h-16 mb-4 text-blue-500 hover:text-white" />
+          <p className="text-lg font-semibold">to / for の基礎</p>
+        </button>
+
+        {/* 別カテゴリの学習 */}
+        <button
+          onClick={() => router.push("/basis/other-category")}
+          className="flex-1 p-6 bg-gray-200 text-gray-800 rounded-lg shadow-lg hover:bg-green-500 hover:text-white transition-all duration-300 flex flex-col items-center"
+        >
+          <FaClipboard className="w-16 h-16 mb-4 text-green-500 hover:text-white" />
+          <p className="text-lg font-semibold">別カテゴリの問題</p>
         </button>
       </div>
     </div>
