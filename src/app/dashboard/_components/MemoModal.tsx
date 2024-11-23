@@ -1,5 +1,3 @@
-// app/dashboard/_components/MemoModal.tsx
-
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -23,6 +21,11 @@ const MemoModal: React.FC<MemoModalProps> = ({ isOpen, onClose, memo }) => {
     }
   }, [memo]);
 
+  const handleClose = () => {
+    setContent(""); // モーダルを閉じるときに内容をクリア
+    onClose();
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (memo) {
@@ -30,7 +33,8 @@ const MemoModal: React.FC<MemoModalProps> = ({ isOpen, onClose, memo }) => {
     } else {
       addMemo(content);
     }
-    onClose();
+    setContent(""); // フォーム送信後に内容をクリア
+    handleClose();
   };
 
   if (!isOpen) return null;
@@ -41,7 +45,7 @@ const MemoModal: React.FC<MemoModalProps> = ({ isOpen, onClose, memo }) => {
         <h2 className="text-2xl font-semibold mb-4">{memo ? "メモ編集" : "メモ追加"}</h2>
         <form onSubmit={handleSubmit}>
           <textarea
-            className="w-full h-32 p-2 border border-gray-300 rounded-md mb-4 resize-none"
+            className="w-full h-32 p-2 border border-gray-300 text-black rounded-md mb-4 resize-none"
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="メモの内容を入力してください"
@@ -50,7 +54,7 @@ const MemoModal: React.FC<MemoModalProps> = ({ isOpen, onClose, memo }) => {
           <div className="flex justify-end space-x-2">
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleClose}
               className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition"
             >
               キャンセル

@@ -9,7 +9,7 @@ const MemoButton: React.FC = () => {
   const { memos, deleteMemo } = useMemoContext();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingMemo, setEditingMemo] = useState<{ id: string; content: string } | undefined>(undefined);
-  const [isVisible, setIsVisible] = useState(true);
+  const [isVisible, setIsVisible] = useState(false);
 
   const handleAdd = () => {
     setEditingMemo(undefined);
