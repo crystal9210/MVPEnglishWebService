@@ -3,7 +3,7 @@
 "use client";
 
 import Link from "next/link";
-import { AcademicCapIcon, ClipboardIcon, Cog6ToothIcon, UserCircleIcon } from "@heroicons/react/24/solid";
+import { AcademicCapIcon, ClipboardIcon, Cog6ToothIcon } from "@heroicons/react/24/solid";
 
 export default function NavigationButtons() {
   return (
