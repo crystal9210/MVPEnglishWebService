@@ -30,7 +30,7 @@ export default function QuizResults({ unitName, selectedProblems, answers }: Qui
 
   return (
     <div>
-      <h2 className="text-2xl font-semibold mb-4 text-center">クイズ結果</h2>
+      <h2 className="text-2xl font-semibold mb-4 text-center">${unitName} クイズ結果</h2>
       <p className="text-center mb-6 text-lg">
         {`あなたのスコア: ${correctAnswers} / ${totalQuestions}`}
       </p>
