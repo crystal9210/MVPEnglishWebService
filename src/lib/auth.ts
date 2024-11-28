@@ -8,23 +8,18 @@ import { firestoreAdmin } from "./firebaseAdmin";
 // import { User, Account, } from "@auth/core/types";
 // import { AdapterUser } from "@auth/core/adapters";
 import { sendVerificationEmail } from "./sendVerificationEmail";
-import { initializeUserData } from "./authCallbacks";
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
     // debug: true,
     adapter: FirestoreAdapter(firestoreAdmin),
     providers: [
-        // リンクメモ
-        // https://accounts.google.com/o/oauth2/auth?client_id=406930035276-8rqhfui4de5arfks1ae8rhfjb92em1s4.apps.googleusercontent.com&redirect_uri=http://localhost:3000/api/auth/callback/google&response_type=code&scope=https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/userinfo.email&access_type=offline&prompt=consent
         GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID!,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-            checks: ["pkce"],
+            checks: ["pkce", "nonce"],
             authorization: {
                 params: {
-                    // scope変えたりしたときに発行できるサイトリンク
-                    // https://developers.google.com/oauthplayground/
-                    scope: "openid https://mail.google.com/ https://www.googleapis.com/auth/gmail.labels https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email",
+                    scope: "openid https://www.googleapis.com/auth/gmail.labels https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email",
                     access_type: "offline", // リフレッシュトークンを取得
                     prompt: "consent", // ユーザに許可を求める
                     redirect_uri: "http://localhost:3000/api/auth/callback/google",
@@ -38,8 +33,11 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
     ],
     session: {
         strategy: "jwt", // デフォルトでjweを利用し最適化されるようになっている
-        maxAge: 60 * 60 * 24, // 1day
+        maxAge: 60 * 60 , // セッション有効期限:1h
+        updateAge: 60 * 60, // セッションを1時間ごとに更新
     },
+    // jwt: ,
+    // events: ,
     secret: process.env.AUTH_SECRET,
     callbacks: {
         // サインイン時の処理
@@ -54,6 +52,12 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
           console.error("サインイン失敗: メールアドレスが提供されていません。");
           return false;
         }
+        console.log(`user.email: ${user.email}`);
+        if(!user.email.endsWith("@gmail.com")) {
+          console.error("サインイン失敗: お使いのメールアドレスは標準のメールアドレス規格を満たしていません。 許容規格：...@gmail.com");
+          return false;
+        }
+
         const email = user.email;
 
         try {
@@ -87,63 +91,86 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       },
         // JWTトークン生成時の処理
         async jwt({ token, account, user }) {
-          console.log("JWTコールバック開始:", { token, account, user });
+          console.log("JWTコールバック開始:", { token, account }); // TODO (修正)account:undefined
+          console.log(`debug: user: ${JSON.stringify(user, null, 2)}`);
+          // if(user) {
+            token.role = "user";
+            token.subscriptionType = "free";
+            token.id = user?.id;
+          // }
+          console.log(`costomized JWT: ${JSON.stringify(token, null, 2)}`);
 
-          if (account) {
-            // アカウント情報が存在する場合（ログイン時）
-            console.log("ログイン時にアクセストークンとリフレッシュトークンを設定します。");
-            token.accessToken = account.access_token;
-            token.refreshToken = account.refresh_token;
-            token.provider = account.provider;
-          } else {
-            // 再生成時（既存トークンの検証または更新）
-            console.log("既存トークンを使用してJWTを再生成します。");
+          if(token.exp === undefined) {
+            console.error("Invalid token, you must not  ")
+            // return token;
           }
 
-          if (user) {
-            // ユーザー情報が存在する場合（ログイン時）
-            console.log("ログイン時: ユーザー情報をトークンに追加します。");
-            token.email = user.email;
-            token.name = user.name;
-            token.picture = user.image;
-          } else {
-            // 再生成時（ユーザー情報はトークン内に既存の値として存在）
-            console.log("再生成時: ユーザー情報は既存トークンから読み込みます。");
-          }
+          // if(Date.now() < token.exp!) {
+
+          // }
+          return token;
+
+
+          // // 初回ログイン時
+          // if (account) {
+          //   // アカウント情報が存在する場合（ログイン時）
+          //   console.log("ログイン時にアクセストークンとリフレッシュトークンを設定します。");
+          //   token.accessToken = account.access_token;
+          //   token.refreshToken = account.refresh_token;
+          //   token.exp = Date.now() + 40 * 60 * 1000, // 40min
+          //   token.provider = account.provider;
+          //   console.log(`token: ${JSON.stringify(token, null, 2)}`);
+          // }
+
+          // if(token.exp && Date.now() < token.exp) {
+          //   return token;
+          // }
+
+          // return await refreshToken(token);
+
+          // if (user) {
+          //   // ユーザー情報が存在する場合（ログイン時）
+          //   console.log("ログイン時: ユーザー情報をトークンに追加します。");
+          //   token.email = user.email;
+          //   token.name = user.name;
+          //   token.picture = user.image;
+          //   console.log(`token: ${JSON.stringify(token, null, 2)}`);
+          // }
 
           // Firestoreから追加情報を取得してトークンに反映
-          const email = token.email;
-          if (email) {
-            console.log(`Firestoreからユーザー (${email}) の情報を取得します。`);
-            const userDocs = await firestoreAdmin.collection("users").
-              where("email", "==", email)
-              .limit(1)
-              .get();
-            const userDoc = userDocs.docs[0];
+          // const email = token.email;
+          // if (email) {
+          //   console.log(`Firestoreからユーザー (${email}) の情報を取得します。`);
+          //   const userDocs = await firestoreAdmin.collection("users").
+          //     where("email", "==", email)
+          //     .limit(1)
+          //     .get();
+          //   const userDoc = userDocs.docs[0];
 
-            if (userDoc.exists) {
-              const userData = userDoc.data();
-              token.role = userData?.permissions?.includes("admin") ? "admin" : "user";
-              console.log(`ユーザー (${email}) のロールは: ${token.role}`);
-            } else {
-              console.warn(`Firestoreにユーザー (${email}) の情報が存在しません。`);
-            }
-          } else {
-            console.warn("トークンにメールアドレス情報が存在しません。Firestoreの確認はスキップします。");
-          }
+          //   if (userDoc.exists) {
+          //     const userData = userDoc.data();
+          //     token.role = userData?.permissions?.includes("admin") ? "admin" : "user";
+          //     console.log(`ユーザー (${email}) のロールは: ${token.role}`);
+          //   } else {
+          //     console.warn(`Firestoreにユーザー (${email}) の情報が存在しません。`);
+          //   }
+          // } else {
+          //   console.warn("トークンにメールアドレス情報が存在しません。Firestoreの確認はスキップします。");
+          // }
 
-          console.log("JWTコールバック終了: 更新されたトークン", token);
+          // console.log("JWTコールバック終了: 更新されたトークン", token);
 
-          return token;
+          // return token;
         },
         async session({ session, token }) {
           console.log("セッションコールバック:", { session, token });
 
           // セッションにトークン情報をコピー
-          session.user.email = token.email as string;
-          session.user.name = token.name;
-          session.user.image = token.picture;
+          // session.user.email = token.email as string;
+          // session.user.name = token.name;
+          // session.user.image = token.picture;
           session.user.role = "user";
+          session.user.id = token.id as string ?? undefined;
 
           // 必要に応じてトークンデータを追加
           // session.accessToken = token.accessToken;

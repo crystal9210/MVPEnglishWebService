@@ -32,6 +32,12 @@ yarn-error.log*
 # env files (can opt-in for commiting if needed)
 .env*
 
+# privateKey, publicKey
+private.key
+private.key.base64
+public.key
+public.key.base64
+
 # vercel
 .vercel
 

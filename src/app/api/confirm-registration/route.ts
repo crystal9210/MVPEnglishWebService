@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { firestoreAdmin } from "@/lib/firebaseAdmin";
 import { verify } from "jsonwebtoken";
+import { publicKey } from "@/utils/keys";
 
 export async function GET(request: Request) {
   try {
@@ -18,19 +19,22 @@ export async function GET(request: Request) {
       );
     }
 
-    const secret = process.env.JWT_SECRET!;
     let decoded;
 
     // トークンの検証
     try {
-      decoded = verify(registrationToken, secret, { algorithms: ["HS256"] }) as { email: string };
-    } catch (error: any) {
+      decoded = verify(registrationToken, publicKey, { algorithms: ["RS256"] }) as { email: string };
+    } catch (error) {
+    if (error instanceof Error) {
       console.error("トークンの検証に失敗:", error.message);
-      return NextResponse.json(
-        { error: "無効なトークンです。" },
-        { status: 400 }
-      );
+    } else {
+      console.error("トークンの検証中に予期しないエラーが発生しました。");
     }
+    return NextResponse.json(
+      { error: "無効なトークンです。" },
+      { status: 400 }
+    );
+  }
 
     const email = decoded.email;
 
@@ -77,8 +81,12 @@ export async function GET(request: Request) {
 
     // リダイレクト先を設定
     return NextResponse.redirect(`http://localhost:3000/verify-email-sent?email=${encodeURIComponent(email)}`);
-  } catch (error: any) {
-    console.error("登録確認エラー:", error.message);
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error("登録確認エラー:", error.message);
+    } else {
+      console.error("登録確認中に予期しないエラーが発生しました");
+    }
     return NextResponse.json(
       { error: "登録確認処理に失敗しました。" },
       { status: 500 }
