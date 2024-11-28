@@ -81,7 +81,7 @@ export default function VerifyEmailSent() {
           <div>
             <h1 className="text-3xl font-bold text-red-600">登録未完了</h1>
             <p className="mt-4 text-lg text-gray-700">
-              登録が完了していません。確認メールを再送信してください。
+              登録が完了していません。確認メールからリンクを踏むか、サインイン/サインアップ画面から再度ステップを踏み、メールの再送信をしてください。
             </p>
             <a
               href="/register"

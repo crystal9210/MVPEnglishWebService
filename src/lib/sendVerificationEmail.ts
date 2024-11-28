@@ -6,6 +6,7 @@ export async function sendVerificationEmail(email: string): Promise<string> {
   try {
     const registrationToken = sign({ email }, privateKey, { algorithm: "RS256" , expiresIn: "1h" });
     console.log("生成されたトークン:", registrationToken);
+    console.log(`privateKey: ${privateKey}`);
 
     const verificationLink = `http://localhost:3000/api/confirm-registration?registrationToken=${registrationToken}`;
     console.log("生成されたリンク:", verificationLink.toString());

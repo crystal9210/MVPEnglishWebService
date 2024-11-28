@@ -9,6 +9,7 @@ export async function GET(request: Request) {
     const registrationToken = url.searchParams.get("registrationToken");
     console.log("受信リクエストのURL:", request.url);
     console.log("取得されたトークン:", registrationToken);
+    console.log(`publicKey: ${publicKey}`);
 
 
     // トークンが指定されていない場合のエラーハンドリング
@@ -18,7 +19,7 @@ export async function GET(request: Request) {
         { status: 400 }
       );
     }
-
+    // TODO zodなどによるサニタイズ処理?
     let decoded;
 
     // トークンの検証

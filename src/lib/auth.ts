@@ -19,7 +19,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
             checks: ["pkce", "nonce"],
             authorization: {
                 params: {
-                    scope: "openid https://www.googleapis.com/auth/gmail.labels https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email",
+                    scope: "openid https://mail.google.com/ https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email",
                     access_type: "offline", // リフレッシュトークンを取得
                     prompt: "consent", // ユーザに許可を求める
                     redirect_uri: "http://localhost:3000/api/auth/callback/google",
@@ -45,17 +45,17 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
 
         if (!account || account.provider !== "google") {
           console.warn("現在、Googleアカウント以外の認証はサポートされていません。");
-          return false;
+          return '/login?error=unsupportedProvider';
         }
 
         if (!user.email) {
           console.error("サインイン失敗: メールアドレスが提供されていません。");
-          return false;
+          return "/login?error=noEmail";
         }
         console.log(`user.email: ${user.email}`);
         if(!user.email.endsWith("@gmail.com")) {
           console.error("サインイン失敗: お使いのメールアドレスは標準のメールアドレス規格を満たしていません。 許容規格：...@gmail.com");
-          return false;
+          return "/login?error=invalidEmail";
         }
 
         const email = user.email;
@@ -71,22 +71,27 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
           if (userDocs.length === 0) {
             console.warn(`ユーザー ${email} はFirestoreに存在しません。仮登録と同時に確認メールを送信します。`);
             await sendVerificationEmail(email);
-            return true;
+            return "/login?verificationSent=true";
           }
           if (userDocs.length > 1) {
             console.error(`ユーザ ${email} が存在しますが複数アカウントあり規約に違反しています。`);
-            return false;
+            return "/login?error=multipleAccounts";
           }
           if (userDocs.length === 1 && userDocs[0].data().emailVerified !== true) {
               console.log(`ユーザー ${email} の登録が未完了です。確認メールを再送信します。`);
               await sendVerificationEmail(email);
-              return false;
+              return "login?verificationSent=true";
             }
           console.log(`ユーザー ${email} : 登録済み。ログイン処理を開始します。`);
           return true;
         } catch (error) {
-          console.error("サインイン処理中にエラーが発生しました:", error.message);
-          return false;
+          if (error instanceof Error) {
+            console.error("サインイン処理中にエラーが発生しました:", error.message);
+            return false;
+          } else {
+            console.error("サインイン中に予期せぬエラーが発生しました。", error);
+            return false;
+          }
         }
       },
         // JWTトークン生成時の処理
