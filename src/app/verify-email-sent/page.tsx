@@ -26,8 +26,12 @@ export default function VerifyEmailSent() {
 
         const data = await res.json();
         setIsVerified(data.emailVerified);
-      } catch (err: any) {
-        console.error("エラー:", err.message);
+      } catch (error) {
+        if (error instanceof Error) {
+          console.error("エラー:", error.message);
+        } else {
+          console.error("予期しないエラーが発生しました:", error);
+        }
         setIsVerified(false);
         setError("登録ステータスの確認に失敗しました。");
       }

@@ -55,11 +55,14 @@ export const sendEmail = async (to: string, subject: string, html: string) => {
 
     console.log("=== メール送信処理が完了しました ===");
     return result;
-  } catch (error: any) {
-    console.error("メール送信エラー:", error.message);
-
-    if (error.message.includes("invalid_grant")) {
-      console.error("アクセストークンが無効である可能性があります。");
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error("メール送信エラー:", error.message);
+      if (error.message.includes("invalid_grant")) {
+        console.error("アクセストークンが無効である可能性があります。");
+      }
+    } else {
+      console.error("予期しないエラーが発生しました:", error);
     }
 
     throw error;
