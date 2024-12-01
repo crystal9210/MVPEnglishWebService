@@ -1,4 +1,4 @@
-import admin from "firebase-admin";
+import * as admin from "firebase-admin"; // TODO * as がない場合と何が違う？
 
 if (!admin.apps.length) {
     admin.initializeApp({

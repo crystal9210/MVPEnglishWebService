@@ -1,31 +1,23 @@
 import { Adapter, AdapterUser } from "next-auth/adapters";
-import { firestoreAdmin, authAdmin } from "./firebaseAdmin";
+import { firestoreAdmin } from "./firebaseAdmin";
 import { FieldValue } from "firebase-admin/firestore";
-import { FirebaseError } from "firebase/app";
+import { getUserByEmail, createUser } from "./authService";
 
 export function CustomFirestoreAdapter(): Adapter {
     return {
         async createUser(user) {
             const { email, name, image } = user;
 
-            let firebaseUser;
-            try {
-                firebaseUser = await authAdmin.getUserByEmail(email!);
-                console.log(`取得済み Firebase ユーザ UUID: ${firebaseUser.uid}`);
-            } catch (error) {
-                if(error instanceof FirebaseError && error.code === "auth/user-not-found") {
-                    firebaseUser = await authAdmin.createUser({
-                        email,
-                        displayName: name,
-                        photoURL: image,
-                        emailVerified: false,
-                    });
-                    console.log(`新規作成されたFirebase ユーザ UID: ${firebaseUser.uid}`);
-                } else {
-                    throw error; // 予期しない場合
-                }
+            // Firebase Authentication でユーザーを確認または作成
+            let firebaseUser = await getUserByEmail(email!);
+            if (!firebaseUser) {
+                firebaseUser = await createUser(email!, name || undefined, image || undefined);
+                console.log(`新規作成された Firebase ユーザー UID: ${firebaseUser.uid}`);
+            } else {
+                console.log(`取得済み Firebase ユーザー UID: ${firebaseUser.uid}`);
             }
 
+            // Firestore にユーザーを保存
             const userDocRef = firestoreAdmin.collection("users").doc(firebaseUser.uid);
             await userDocRef.set({
                 email,
@@ -41,7 +33,7 @@ export function CustomFirestoreAdapter(): Adapter {
                 email,
                 name,
                 image,
-                emailVerified: firebaseUser.emailVerified ? new Date() : undefined,
+                emailVerified: firebaseUser.emailVerified ? new Date() : null,
                 createdAt: new Date(),
                 updatedAt: new Date(),
             } as AdapterUser;
@@ -90,6 +82,12 @@ export function CustomFirestoreAdapter(): Adapter {
             if (accountQuerySnapshot.empty) return null;
 
             const accountData = accountQuerySnapshot.docs[0].data();
+            if(!accountData.userId) {
+                throw new Error("Account data does not contain a valid userId.");
+            }
+            if(typeof this.getUser !== "function") {
+                throw new Error("getUser method is not implemented in the adapter.");
+            }
             return await this.getUser(accountData.userId);
         },
         async updateUser(user: Partial<AdapterUser> & Pick<AdapterUser, "id">): Promise<AdapterUser> {
@@ -113,7 +111,7 @@ export function CustomFirestoreAdapter(): Adapter {
 
             return {
                 id: user.id,
-                email: data.email || "", // `email` フィールドを適切に初期化
+                email: data.email || "",
                 name: data.name || null,
                 image: data.image || null,
                 emailVerified: data.emailVerified || null,
@@ -121,5 +119,5 @@ export function CustomFirestoreAdapter(): Adapter {
                 updatedAt: data.updatedAt?.toDate() || new Date(),
             } as AdapterUser;
         }
-    }
+    };
 }

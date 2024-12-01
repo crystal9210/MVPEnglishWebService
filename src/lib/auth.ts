@@ -4,10 +4,11 @@ import GoogleProvider from "next-auth/providers/google";
 import GitHubProvider from "next-auth/providers/github";
 import { CustomFirestoreAdapter } from "./customFirestoreAdapter";
 // import { handleSignIn, handleSignUp, initializeUserData } from "@/lib/authCallbacks";
-import { firestoreAdmin } from "./firebaseAdmin";
+import { authAdmin, firestoreAdmin } from "./firebaseAdmin";
 // import { User, Account, } from "@auth/core/types";
 // import { AdapterUser } from "@auth/core/adapters";
 import { sendVerificationEmail } from "./sendVerificationEmail";
+import { FirebaseError } from "firebase/app";
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
     // debug: true,
@@ -54,7 +55,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
           }
           console.log(`user.email: ${user.email}`);
           if(!user.email.endsWith("@gmail.com")) {
-            console.error("サインイン失敗: お使いのメールアドレスは標準のメールアドレス規格を満たしていません。 許容規格：...@gmail.com");
+            console.error("サインイン失敗: 許容規格：...@gmail.com 以外のメールアドレスです。");
             return "/login?error=invalidEmail";
           }
 
@@ -62,6 +63,23 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
           console.log(`debugging signIn callback: user: ${JSON.stringify(user, null, 2)}`);
 
           try {
+            let firebaseUser;
+            try {
+              firebaseUser = await authAdmin.getUserByEmail(email);
+            } catch(error) {
+              if(error instanceof FirebaseError && error.code === "auth/user-not-fouund") {
+                firebaseUser = await authAdmin.createUser({
+                  email,
+                  displayName: user.name,
+                  photoURL: user.image,
+                  emailVerified: false,
+                });
+                console.log(`新規作成された Firebase ユーザ UID: ${firebaseUser.uid}`);
+              } else {
+                console.error("Firebase Authentication Error:", error);
+              }
+            }
+
             const userCollection = firestoreAdmin.collection("users");
             const userQuerySnapshot = await userCollection
               .where("email", "==", email)
@@ -116,58 +134,6 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
 
           // }
           return token;
-
-
-          // // 初回ログイン時
-          // if (account) {
-          //   // アカウント情報が存在する場合（ログイン時）
-          //   console.log("ログイン時にアクセストークンとリフレッシュトークンを設定します。");
-          //   token.accessToken = account.access_token;
-          //   token.refreshToken = account.refresh_token;
-          //   token.exp = Date.now() + 40 * 60 * 1000, // 40min
-          //   token.provider = account.provider;
-          //   console.log(`token: ${JSON.stringify(token, null, 2)}`);
-          // }
-
-          // if(token.exp && Date.now() < token.exp) {
-          //   return token;
-          // }
-
-          // return await refreshToken(token);
-
-          // if (user) {
-          //   // ユーザー情報が存在する場合（ログイン時）
-          //   console.log("ログイン時: ユーザー情報をトークンに追加します。");
-          //   token.email = user.email;
-          //   token.name = user.name;
-          //   token.picture = user.image;
-          //   console.log(`token: ${JSON.stringify(token, null, 2)}`);
-          // }
-
-          // Firestoreから追加情報を取得してトークンに反映
-          // const email = token.email;
-          // if (email) {
-          //   console.log(`Firestoreからユーザー (${email}) の情報を取得します。`);
-          //   const userDocs = await firestoreAdmin.collection("users").
-          //     where("email", "==", email)
-          //     .limit(1)
-          //     .get();
-          //   const userDoc = userDocs.docs[0];
-
-          //   if (userDoc.exists) {
-          //     const userData = userDoc.data();
-          //     token.role = userData?.permissions?.includes("admin") ? "admin" : "user";
-          //     console.log(`ユーザー (${email}) のロールは: ${token.role}`);
-          //   } else {
-          //     console.warn(`Firestoreにユーザー (${email}) の情報が存在しません。`);
-          //   }
-          // } else {
-          //   console.warn("トークンにメールアドレス情報が存在しません。Firestoreの確認はスキップします。");
-          // }
-
-          // console.log("JWTコールバック終了: 更新されたトークン", token);
-
-          // return token;
         },
         async session({ session, token }) {
           console.log("セッションコールバック:", { session, token });
