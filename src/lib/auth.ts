@@ -2,7 +2,7 @@
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import GitHubProvider from "next-auth/providers/github";
-import { FirestoreAdapter } from "@auth/firebase-adapter";
+import { CustomFirestoreAdapter } from "./customFirestoreAdapter";
 // import { handleSignIn, handleSignUp, initializeUserData } from "@/lib/authCallbacks";
 import { firestoreAdmin } from "./firebaseAdmin";
 // import { User, Account, } from "@auth/core/types";
@@ -11,7 +11,7 @@ import { sendVerificationEmail } from "./sendVerificationEmail";
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
     // debug: true,
-    adapter: FirestoreAdapter(firestoreAdmin),
+    adapter: CustomFirestoreAdapter(),
     providers: [
         GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -43,65 +43,67 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         // サインイン時の処理
         async signIn({ user, account }) {
 
-        if (!account || account.provider !== "google") {
-          console.warn("現在、Googleアカウント以外の認証はサポートされていません。");
-          return '/login?error=unsupportedProvider';
-        }
-
-        if (!user.email) {
-          console.error("サインイン失敗: メールアドレスが提供されていません。");
-          return "/login?error=noEmail";
-        }
-        console.log(`user.email: ${user.email}`);
-        if(!user.email.endsWith("@gmail.com")) {
-          console.error("サインイン失敗: お使いのメールアドレスは標準のメールアドレス規格を満たしていません。 許容規格：...@gmail.com");
-          return "/login?error=invalidEmail";
-        }
-
-        const email = user.email;
-
-        try {
-          const userCollection = firestoreAdmin.collection("users");
-          const userQuerySnapshot = await userCollection
-            .where("email", "==", email)
-            .limit(1)
-            .get();
-          const userDocs = userQuerySnapshot.docs;
-
-          if (userDocs.length === 0) {
-            console.warn(`ユーザー ${email} はFirestoreに存在しません。仮登録と同時に確認メールを送信します。`);
-            await sendVerificationEmail(email);
-            return "/login?verificationSent=true";
+          if (!account || account.provider !== "google") {
+            console.warn("現在、Googleアカウント以外の認証はサポートされていません。");
+            return '/login?error=unsupportedProvider';
           }
-          if (userDocs.length > 1) {
-            console.error(`ユーザ ${email} が存在しますが複数アカウントあり規約に違反しています。`);
-            return "/login?error=multipleAccounts";
+
+          if (!user.email) {
+            console.error("サインイン失敗: メールアドレスが提供されていません。");
+            return "/login?error=noEmail";
           }
-          if (userDocs.length === 1 && userDocs[0].data().emailVerified !== true) {
-              console.log(`ユーザー ${email} の登録が未完了です。確認メールを再送信します。`);
+          console.log(`user.email: ${user.email}`);
+          if(!user.email.endsWith("@gmail.com")) {
+            console.error("サインイン失敗: お使いのメールアドレスは標準のメールアドレス規格を満たしていません。 許容規格：...@gmail.com");
+            return "/login?error=invalidEmail";
+          }
+
+          const email = user.email;
+          console.log(`debugging signIn callback: user: ${JSON.stringify(user, null, 2)}`);
+
+          try {
+            const userCollection = firestoreAdmin.collection("users");
+            const userQuerySnapshot = await userCollection
+              .where("email", "==", email)
+              .limit(1)
+              .get();
+            const userDocs = userQuerySnapshot.docs;
+
+            if (userDocs.length === 0) {
+              console.warn(`ユーザー ${email} はFirestoreに存在しません。仮登録と同時に確認メールを送信します。`);
               await sendVerificationEmail(email);
-              return "login?verificationSent=true";
+              return true;
             }
-          console.log(`ユーザー ${email} : 登録済み。ログイン処理を開始します。`);
-          return true;
-        } catch (error) {
-          if (error instanceof Error) {
-            console.error("サインイン処理中にエラーが発生しました:", error.message);
-            return false;
-          } else {
-            console.error("サインイン中に予期せぬエラーが発生しました。", error);
-            return false;
+            if (userDocs.length > 1) {
+              console.error(`ユーザ ${email} が存在しますが複数アカウントあり規約に違反しています。`);
+              return "/login?error=multipleAccounts";
+            }
+            if (userDocs.length === 1 && userDocs[0].data().emailVerified !== true) {
+                console.log(`ユーザー ${email} の登録が未完了です。確認メールを再送信します。`);
+                await sendVerificationEmail(email);
+                return false;
+              }
+            console.log(`ユーザー ${email} : 登録済み。ログイン処理を開始します。`);
+            return true;
+          } catch (error) {
+            if (error instanceof Error) {
+              console.error("サインイン処理中にエラーが発生しました:", error.message);
+              return false;
+            } else {
+              console.error("サインイン中に予期せぬエラーが発生しました。", error);
+              return false;
+            }
           }
-        }
-      },
+        },
         // JWTトークン生成時の処理
-        async jwt({ token, account, user }) {
-          console.log("JWTコールバック開始:", { token, account }); // TODO (修正)account:undefined
+        async jwt({ token, user }) {
+          console.log("JWTコールバック開始:", { token}); // TODO (修正)account:undefined
           console.log(`debug: user: ${JSON.stringify(user, null, 2)}`);
           // if(user) {
             token.role = "user";
             token.subscriptionType = "free";
-            token.id = user?.id;
+            // token.id = user.id;
+            // token.id = user?.id;
           // }
           console.log(`costomized JWT: ${JSON.stringify(token, null, 2)}`);
 
