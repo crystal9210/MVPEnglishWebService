@@ -9,11 +9,13 @@ import { firestoreAdmin } from "./firebaseAdmin";
 // import { AdapterUser } from "@auth/core/adapters";
 import { sendVerificationEmail } from "./sendVerificationEmail";
 import { createAccountEntry, createUser, getUserByEmail } from "./authService";
-import { FieldValue } from "firebase-admin/firestore";
+
+const adapter = CustomFirestoreAdapter();
+console.log("Adapter keys:", Object.keys(adapter));
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
-    debug: true,
-    adapter: CustomFirestoreAdapter(),
+    // debug: true,
+    adapter: adapter,
     providers: [
         GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID!,
