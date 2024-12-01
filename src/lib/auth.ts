@@ -4,14 +4,15 @@ import GoogleProvider from "next-auth/providers/google";
 import GitHubProvider from "next-auth/providers/github";
 import { CustomFirestoreAdapter } from "./customFirestoreAdapter";
 // import { handleSignIn, handleSignUp, initializeUserData } from "@/lib/authCallbacks";
-import { authAdmin, firestoreAdmin } from "./firebaseAdmin";
+import { firestoreAdmin } from "./firebaseAdmin";
 // import { User, Account, } from "@auth/core/types";
 // import { AdapterUser } from "@auth/core/adapters";
 import { sendVerificationEmail } from "./sendVerificationEmail";
-import { FirebaseError } from "firebase/app";
+import { createAccountEntry, createUser, getUserByEmail } from "./authService";
+import { FieldValue } from "firebase-admin/firestore";
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
-    // debug: true,
+    debug: true,
     adapter: CustomFirestoreAdapter(),
     providers: [
         GoogleProvider({
@@ -61,23 +62,41 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
 
           const email = user.email;
           console.log(`debugging signIn callback: user: ${JSON.stringify(user, null, 2)}`);
+          console.log(`debugging signIn callback: account: ${JSON.stringify(account, null, 2)}`);
 
           try {
-            let firebaseUser;
-            try {
-              firebaseUser = await authAdmin.getUserByEmail(email);
-            } catch(error) {
-              if(error instanceof FirebaseError && error.code === "auth/user-not-fouund") {
-                firebaseUser = await authAdmin.createUser({
-                  email,
-                  displayName: user.name,
-                  photoURL: user.image,
-                  emailVerified: false,
-                });
-                console.log(`新規作成された Firebase ユーザ UID: ${firebaseUser.uid}`);
-              } else {
-                console.error("Firebase Authentication Error:", error);
-              }
+            let firebaseUser = await getUserByEmail(email);
+            if (!firebaseUser) {
+              console.log(`Firebase Authentication にユーザが存在しないため、新規作成します。: ${email}`);
+              firebaseUser = await createUser(
+                email,
+                user.name || undefined,
+                user.image || undefined
+              );
+              console.log(`新規 Firebase ユーザ UID: ${firebaseUser.uid}`);
+            }
+
+            // 認証プロバイダとの同期状態を反映
+            if (account) {
+              await createAccountEntry(firebaseUser.uid, account);
+            }
+
+            const userDocRef = firestoreAdmin.collection("users").doc(firebaseUser.uid);
+            const userDoc = await userDocRef.get();
+
+            if (!userDoc.exists) {
+              console.log(`Firestoreにユーザが存在しないため、新規作成します: ${email}`);
+              await userDocRef.set({
+                email: firebaseUser.email,
+                name: user.name || firebaseUser.displayName || `User_${Date.now()}`,
+                iamge: user.image || firebaseUser.photoURL || undefined,
+                emailVerified: firebaseUser.emailVerified || false, // TODO 登録確認メールを受け取ったapiでauthentication・firestore両方に対してemailVerified: trueとする
+                // createdAt: FieldValue.serverTimestamp(),
+                // updatedAt: FieldValue.serverTimestamp(),
+              });
+              console.log(`Firestoreにユーザデータを作成しました: ${firebaseUser.uid}`);
+            } else {
+              console.log(`Firestoreに既存ユーザが見つかりました: ${firebaseUser.uid}`);
             }
 
             const userCollection = firestoreAdmin.collection("users");
@@ -87,11 +106,6 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
               .get();
             const userDocs = userQuerySnapshot.docs;
 
-            if (userDocs.length === 0) {
-              console.warn(`ユーザー ${email} はFirestoreに存在しません。仮登録と同時に確認メールを送信します。`);
-              await sendVerificationEmail(email);
-              return true;
-            }
             if (userDocs.length > 1) {
               console.error(`ユーザ ${email} が存在しますが複数アカウントあり規約に違反しています。`);
               return "/login?error=multipleAccounts";
@@ -100,7 +114,8 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
                 console.log(`ユーザー ${email} の登録が未完了です。確認メールを再送信します。`);
                 await sendVerificationEmail(email);
                 return false;
-              }
+            }
+
             console.log(`ユーザー ${email} : 登録済み。ログイン処理を開始します。`);
             return true;
           } catch (error) {

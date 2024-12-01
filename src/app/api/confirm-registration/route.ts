@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { firestoreAdmin } from "@/lib/firebaseAdmin";
+import { firestoreAdmin, authAdmin } from "@/lib/firebaseAdmin";
 import { verify } from "jsonwebtoken";
 import { publicKey } from "@/utils/keys";
 
@@ -49,11 +49,11 @@ export async function GET(request: Request) {
     }
 
     const userCollection = firestoreAdmin.collection("users");
-    console.log("Firestoreコレクションの中身を表示:");
+    console.log("Firestoreコレクションの中身を表示:", JSON.stringify(userCollection, null, 2));
 
     const allDocs = await userCollection.get();
     allDocs.forEach(doc => {
-      console.log(`Doc ID: ${doc.id}, Data:`, doc.data());
+      console.log(`Doc ID: ${doc.id}, Data:`, JSON.stringify(doc.data(), null, 2));
     });
     const userQuerySnapshot = await userCollection
       .where("email", "==", email)
@@ -65,7 +65,7 @@ export async function GET(request: Request) {
       throw new Error("該当ユーザは存在しません。");
     }
 
-    const userDocRef = await userQuerySnapshot.docs[0].ref;
+    const userDocRef = await userQuerySnapshot.docs[0].ref; // TODO なんの種類か
 
     // Firestoreトランザクションを実行
     await firestoreAdmin.runTransaction(async (transaction) => {
@@ -79,6 +79,14 @@ export async function GET(request: Request) {
       // ユーザーを確認済みに更新
       transaction.update(userDocRef, { emailVerified: true });
     });
+
+    const firebaseUser = await authAdmin.getUserByEmail(email);
+    if (!firebaseUser.emailVerified) {
+      await authAdmin.updateUser(firebaseUser.uid, { emailVerified: true });
+      console.log(`Firebase AuthenticationのemailVerifiedを更新しました: ${firebaseUser.uid}`);
+    } else {
+      console.log(`Firebase AuthenticationのemailVerifiedはすでにtrueです: ${firebaseUser.uid}`);
+    }
 
     // リダイレクト先を設定
     return NextResponse.redirect(`http://localhost:3000/verify-email-sent?email=${encodeURIComponent(email)}`);
