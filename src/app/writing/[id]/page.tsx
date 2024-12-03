@@ -4,20 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import InputField from "./_components/InputField";
 import HintDisplay from "./_components/HintDisplay";
-
-interface ContentPart {
-  type: "text" | "blank";
-  value?: string;
-  correctAnswer?: string;
-  hint?: string;
-}
-
-interface WritingExercise {
-  id: string;
-  title: string;
-  description: string;
-  content: ContentPart[];
-}
+import { WritingExerciseSchema, WritingExercise } from "@/schemas/WritingExerciseSchema";
 
 const sampleData: WritingExercise[] = [
   {
@@ -26,9 +13,9 @@ const sampleData: WritingExercise[] = [
     description: "Fill in the blanks with the correct words based on the hints.",
     content: [
       { type: "text", value: "Every morning, I wake up at " },
-      { type: "blank", correctAnswer: "7:00", hint: "A typical wake-up time" },
+      { type: "blank", correctAnswer: "7:00", tips: "A typical wake-up time" },
       { type: "text", value: ". After that, I eat a quick " },
-      { type: "blank", correctAnswer: "breakfast", hint: "A morning meal" },
+      { type: "blank", correctAnswer: "breakfast", tips: "A morning meal" },
       { type: "text", value: " before heading to work." }
     ]
   }
@@ -45,9 +32,15 @@ const WritingExercisePage = () => {
   useEffect(() => {
     if (!id) return;
 
-    const data = sampleData.find((item) => item.id === id);
-    if (data) {
-      setExercise(data);
+    const rawData = sampleData.find((item) => item.id === id);
+
+    if (rawData) {
+      const validated = WritingExerciseSchema.safeParse(rawData);
+      if (validated.success) {
+        setExercise(validated.data);
+      } else {
+        console.error("Invalid data:", validated.error);
+      }
     }
   }, [id]);
 
@@ -97,7 +90,7 @@ const WritingExercisePage = () => {
                 index={idx}
                 value={answers[idx] || ""}
                 onChange={handleInputChange}
-                hint={part.hint}
+                hint={part.tips}
                 onHintClick={(hintText) => handleHintDisplay(hintText, idx)}
               />
             );
