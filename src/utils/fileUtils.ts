@@ -1,8 +1,9 @@
-export const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+export const MAX_IMAGE_FILE_SIZE_MB = 5 * 1024 * 1024; // 5MB
+export const MAX_DOCUMENT_FILE_SIZE_MB = 10; // [MD]
 
-export const validateFileSize = (file: File): string | null => {
-    if (file.size > MAX_FILE_SIZE) {
-        return `File is too large. Maximum size allowed is ${MAX_FILE_SIZE / (1024 * 1024)} MB.`;
+export const validateFileSize = (file: File, maxSizeMB: number): string | null => {
+    if (file.size > maxSizeMB * 1024 * 1024) {
+        return `File is too large. Maximum size allowed is ${maxSizeMB / (1024 * 1024)} MB.`;
     }
     return null;
 }

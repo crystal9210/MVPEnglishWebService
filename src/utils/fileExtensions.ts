@@ -1,23 +1,32 @@
-// TODO ファイル拡張子ごとのセキュリティ上の脆弱性調査・追加実装
-export const allowedFileExtensions: Record<string, string[]> = {
-    image: ["jpg", "jpeg", "png", "gif"],
-    document: ["pdf", "docx", "word", "txt"],
-    all: ["jpg", "jpeg", "png", "gif", "pdf", "docx", "word", "txt"]
-};
-
-export const allowedMimeTypes: Record<string, string[]> = {
-    image: ["image/jpeg", "image/png", "image/gif"],
-    document: [
+export const allowedFileTypes = {
+    image: {
+        extensions: ["jpg", "jpeg", "png", "gif"] as const,
+        mimeTypes: ["image/jpeg", "image/png", "image/gif"] as const,
+    },
+    document: {
+        extensions: ["pdf", "docx", "txt"] as const,
+        mimeTypes: [
         "application/pdf",
         "application/msword",
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    ],
-    all: [
+        ] as const,
+    },
+    all: {
+        extensions: ["jpg", "jpeg", "png", "gif", "pdf", "docx", "txt"] as const,
+        mimeTypes: [
         "image/jpeg",
         "image/png",
         "image/gif",
         "application/pdf",
         "application/msword",
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    ],
-};
+        ] as const,
+    },
+} as const;
+
+// キーの型を定義
+export type AllowedFileType = keyof typeof allowedFileTypes; // "image" | "document" | "all"
+
+// 各プロパティの型推論
+export type FileExtensions<T extends AllowedFileType> = typeof allowedFileTypes[T]["extensions"];
+export type MimeTypes<T extends AllowedFileType> = typeof allowedFileTypes[T]["mimeTypes"];
