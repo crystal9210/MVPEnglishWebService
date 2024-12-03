@@ -18,7 +18,19 @@ const sampleData: WritingExercise[] = [
       { type: "blank", correctAnswer: "breakfast", tips: "A morning meal" },
       { type: "text", value: " before heading to work." }
     ]
-  }
+  },
+  {
+        "id": "writing-002",
+        "title": "Weekend Plans",
+        "description": "Complete the sentences to describe a weekend plan.",
+        "content": [
+        { "type": "text", "value": "This Saturday, I will go to the " },
+        { "type": "blank", "correctAnswer": "park", "tips": "An outdoor location" },
+        { "type": "text", "value": " with my friends. We plan to watch a " },
+        { "type": "blank", "correctAnswer": "comedy", "tips": "A genre of movies" },
+        { "type": "text", "value": " movie." }
+        ]
+    }
 ];
 
 const WritingExercisePage = () => {

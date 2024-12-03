@@ -4,3 +4,20 @@ export const allowedFileExtensions: Record<string, string[]> = {
     document: ["pdf", "docx", "word", "txt"],
     all: ["jpg", "jpeg", "png", "gif", "pdf", "docx", "word", "txt"]
 };
+
+export const allowedMimeTypes: Record<string, string[]> = {
+    image: ["image/jpeg", "image/png", "image/gif"],
+    document: [
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ],
+    all: [
+        "image/jpeg",
+        "image/png",
+        "image/gif",
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ],
+};
