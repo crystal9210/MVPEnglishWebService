@@ -2,13 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 
 export const config = {
-  matcher: ["/dashboard", "/dashboard/:path*", "/register"], // `/register` を追加
+    matcher: ["/dashboard", "/dashboard/:path*", "/register"],
 };
 
 export async function middleware(req: NextRequest) {
     const token = await getToken({ req, secret: process.env.AUTH_SECRET });
 
-    // `/register` ページは認証不要
+    // `/register` ページ:認証不要
     if (req.nextUrl.pathname === "/register") {
         return NextResponse.next();
     }

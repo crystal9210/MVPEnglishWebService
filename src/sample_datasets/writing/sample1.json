@@ -1,0 +1,26 @@
+[
+    {
+        "id": "writing-001",
+        "title": "Daily Routine",
+        "description": "Fill in the blanks with the correct words based on the hints.",
+        "content": [
+        { "type": "text", "value": "Every morning, I wake up at " },
+        { "type": "blank", "correctAnswer": "7:00", "hint": "A typical wake-up time" },
+        { "type": "text", "value": ". After that, I eat a quick " },
+        { "type": "blank", "correctAnswer": "breakfast", "hint": "A morning meal" },
+        { "type": "text", "value": " before heading to work." }
+        ]
+    },
+    {
+        "id": "writing-002",
+        "title": "Weekend Plans",
+        "description": "Complete the sentences to describe a weekend plan.",
+        "content": [
+        { "type": "text", "value": "This Saturday, I will go to the " },
+        { "type": "blank", "correctAnswer": "park", "hint": "An outdoor location" },
+        { "type": "text", "value": " with my friends. We plan to watch a " },
+        { "type": "blank", "correctAnswer": "comedy", "hint": "A genre of movies" },
+        { "type": "text", "value": " movie." }
+        ]
+    }
+]
