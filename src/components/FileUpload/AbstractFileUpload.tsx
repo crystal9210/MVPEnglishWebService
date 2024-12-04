@@ -6,7 +6,7 @@ import { validateFileSize } from "@/utils/fileUtils";
 interface AbstractFileUploadProps<T> {
     schema: ZodSchema<T>; // TODO
     onFileSelect: (fileData: T) => void;
-    allowedExtensions: string[];
+    allowedExtensions: readonly string[];
     maxSize: number; // [MB]
 }
 
@@ -44,7 +44,7 @@ export const AbstractFileUpload = <T,>({
             return;
         }
 
-        onFileSelect(fileData);
+        onFileSelect(fileData as T);
     };
 
     return <input type="file" onChange={handleFileChange} />;

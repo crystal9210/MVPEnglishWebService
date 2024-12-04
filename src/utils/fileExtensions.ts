@@ -1,32 +1,27 @@
 export const allowedFileTypes = {
-    image: {
-        extensions: ["jpg", "jpeg", "png", "gif"] as const,
-        mimeTypes: ["image/jpeg", "image/png", "image/gif"] as const,
-    },
-    document: {
-        extensions: ["pdf", "docx", "txt"] as const,
-        mimeTypes: [
-        "application/pdf",
-        "application/msword",
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        ] as const,
-    },
-    all: {
-        extensions: ["jpg", "jpeg", "png", "gif", "pdf", "docx", "txt"] as const,
-        mimeTypes: [
-        "image/jpeg",
-        "image/png",
-        "image/gif",
-        "application/pdf",
-        "application/msword",
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        ] as const,
-    },
+    image: [
+        { extension: "jpg", mimeType: "image/jpeg" },
+        { extension: "jpeg", mimeType: "image/jpeg" },
+        { extension: "png", mimeType: "image/png" },
+        { extension: "gif", mimeType: "image/gif" },
+    ] as const,
+    document: [
+        { extension: "pdf", mimeType: "application/pdf" },
+        { extension: "docx", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" },
+        { extension: "txt", mimeType: "text/plain" },
+    ] as const,
+    all: [
+        { extension: "jpg", mimeType: "image/jpeg" },
+        { extension: "jpeg", mimeType: "image/jpeg" },
+        { extension: "png", mimeType: "image/png" },
+        { extension: "gif", mimeType: "image/gif" },
+        { extension: "pdf", mimeType: "application/pdf" },
+        { extension: "docx", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" },
+        { extension: "txt", mimeType: "text/plain" },
+    ] as const,
 } as const;
 
-// キーの型を定義
 export type AllowedFileType = keyof typeof allowedFileTypes; // "image" | "document" | "all"
 
-// 各プロパティの型推論
-export type FileExtensions<T extends AllowedFileType> = typeof allowedFileTypes[T]["extensions"];
-export type MimeTypes<T extends AllowedFileType> = typeof allowedFileTypes[T]["mimeTypes"];
+// ファイル情報の型
+export type AllowedFilePair<T extends AllowedFileType> = typeof allowedFileTypes[T][number];
