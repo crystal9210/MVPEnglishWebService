@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { firestoreAdmin, authAdmin } from "@/lib/firebaseAdmin";
+import { firestoreAdmin, authAdmin } from "@/services/firebaseAdmin";
 import { verify } from "jsonwebtoken";
 import { publicKey } from "@/utils/keys";
 

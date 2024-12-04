@@ -1,4 +1,4 @@
-import { firestoreAdmin } from "@/lib/firebaseAdmin";
+import { firestoreAdmin } from "@/services/firebaseAdmin";
 
 export async function POST(req: Request) {
     try {

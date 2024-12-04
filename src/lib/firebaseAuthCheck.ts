@@ -1,6 +1,6 @@
 // src/lib/firebaseAuthCheck.ts
 
-import { firestoreAdmin } from "./firebaseAdmin";
+import { firestoreAdmin } from "../services/firebaseAdmin";
 
 /**
  * ユーザーのロールを設定

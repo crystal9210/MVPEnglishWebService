@@ -1,6 +1,6 @@
 "use server";
 import { authRequestSchema } from "@/schemas/auth";
-import { firestoreAdmin } from "@/lib/firebaseAdmin";
+import { firestoreAdmin } from "@/services/firebaseAdmin";
 import { signIn } from "next-auth/react";
 import { sendVerificationEmail } from "./sendVerificationEmail";
 

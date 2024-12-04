@@ -4,7 +4,7 @@ import GoogleProvider from "next-auth/providers/google";
 import GitHubProvider from "next-auth/providers/github";
 import { CustomFirestoreAdapter } from "./customFirestoreAdapter";
 // import { handleSignIn, handleSignUp, initializeUserData } from "@/lib/authCallbacks";
-import { firestoreAdmin } from "./firebaseAdmin";
+import { firestoreAdmin } from "../services/firebaseAdmin";
 // import { User, Account, } from "@auth/core/types";
 // import { AdapterUser } from "@auth/core/adapters";
 import { sendVerificationEmail } from "./sendVerificationEmail";

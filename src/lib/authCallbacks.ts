@@ -1,4 +1,4 @@
-import { firestoreAdmin } from "@/lib/firebaseAdmin";
+import { firestoreAdmin } from "@/services/firebaseAdmin";
 
 /**
  * JWT生成時の処理を管理

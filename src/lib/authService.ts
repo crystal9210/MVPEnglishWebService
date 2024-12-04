@@ -1,4 +1,4 @@
-import { authAdmin, firestoreAdmin } from "./firebaseAdmin";
+import { authAdmin, firestoreAdmin } from "../services/firebaseAdmin";
 import { FirebaseError } from "firebase/app";
 import { Adapter, AdapterAccount } from "next-auth/adapters";
 
