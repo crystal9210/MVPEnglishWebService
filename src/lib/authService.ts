@@ -1,10 +1,11 @@
 import { authAdmin, firestoreAdmin } from "./firebaseAdmin";
 import { FirebaseError } from "firebase/app";
+import { Adapter, AdapterAccount } from "next-auth/adapters";
 
-export async function createAccountEntry(uid: string, accountData: any) {
+export async function createAccountEntry(uid: string, accountData: AdapterAccount) {
     try {
         // 必須フィールドの定義
-        const requiredFields = [
+        const requiredFields: (keyof AdapterAccount)[] = [
             "provider",
             "providerAccountId",
             "access_token",
