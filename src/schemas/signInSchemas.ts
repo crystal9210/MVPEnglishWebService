@@ -2,19 +2,18 @@
 import { AdapterAccount, AdapterUser } from "next-auth/adapters";
 import { z } from "zod";
 
-export interface AccountSchema extends AdapterAccount {
-    access_token: z.string(),
-    refresh_token: z.string().optional(),
-    provider: z.string(),
-    providerAccountId: z.string(),
-    userId: z.string(),
-    scope: z.string(),
-    token_type: z.string(),
-    type: z.string(),
-    expires_at: z.number().optional(),
-    id_token: z.string().optional(),
-    // AdapterAccountに基づくその他のフィールド
-});
+export const accountDataSchema: z.ZodSchema<AdapterAccount> = z.object({
+    userId: z.string().min(1, "User ID is required"),
+    provider: z.string().min(1, "Provider is required."),
+    providerAccountId: z.string().min(1, "Provider Account ID is required."),
+    access_token: z.string().min(1, "Access token is required."),
+    refresh_token: z.string().nullable(),
+    id_token: z.string().nullable(),
+    token_type: z.string().min(1, "Token type is required"),
+    scope: z.string().min(1, "Scope is required"),
+    expires_at: z.number().nullable(),
+    type: z.string().min(1, "Type is required"),
+}).strict();
 
 const UserSchema = z.object({
     email: z.string().email(),

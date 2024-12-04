@@ -1,6 +1,6 @@
 import React from "react";
 import { ZodSchema } from "zod";
-import { validateWithSchema } from "@/utils/validateWithSchema";
+import { validateWithSchema } from "@/utils/validation";
 import { validateFileSize } from "@/utils/fileUtils";
 
 interface AbstractFileUploadProps<T> {

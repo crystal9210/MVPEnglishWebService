@@ -1,14 +1,27 @@
-// // src/utils/logger.ts
-// import { createLogger, transports, format } from 'winston';
+import { createLogger, transports, format } from 'winston';
 
-// export const Logger = createLogger({
-//     level: 'info',
-//     format: format.combine(
-//         format.timestamp(),
-//         format.json()
-//     ),
-//     transports: [
-//         new transports.Console(),
-//         new transports.File({ filename: 'logs/app.log' }),
-//     ],
-// });
+export const Logger = createLogger({
+    level: 'info',
+    format: format.combine(
+        format.timestamp({
+        format: 'YYYY-MM-DD HH:mm:ss',
+        }),
+        format.errors({ stack: true }),
+        format.splat(),
+        format.json()
+    ),
+    transports: [
+        new transports.Console({
+        format: format.combine(
+            format.colorize(),
+            format.simple()
+        ),
+        }),
+        new transports.File({ filename: 'logs/error.log', level: 'error' }),
+        new transports.File({ filename: 'logs/combined.log' }),
+    ],
+    exceptionHandlers: [
+        new transports.File({ filename: 'logs/exceptions.log' })
+    ]
+});
+
