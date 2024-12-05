@@ -1,25 +1,44 @@
 import { z } from "zod";
 
-export const ExerciseSchema = z.object({
-    id: z.string(),
-    type: z.enum(["fill-in-the-blank", "multiple-choice", "listening", "writing"]),
-    question: z.string(),
-    options: z.array(z.string()).optional(),
-    answer: z.union([z.string(), z.array(z.string())]),
-    tips: z.string().optional(),
+// 抽象スキーマ・共通ルール
+const baseProblemSchema = z.object({
+  id: z.string(),
+  type: z.enum(["multiple-choice", "fill-in-the-blank", "writing", "basis", "pattern"]),
+  category: z.string(),
+  difficulty: z.enum(["beginner", "intermediate", "advanced"]),
 });
 
-export const PatternSchema = z.object({
-    id: z.string(),
-    title: z.string(),
-    description: z.string(),
-    difficulty: z.enum(["beginner", "intermediate", "advanced"]),
-    examples: z.array(z.object({ en: z.string(), jp: z.string() })),
-    exercises: z.array(ExerciseSchema),
+const multipleChoiceProblemSchema = baseProblemSchema.extend({
+  type: z.literal("multiple-choice"),
+  question: z.string(),
+  options: z.array(
+    z.object({
+      text: z.string(),
+      images: z.array(z.string()).optional(),
+    })
+  ),
+  answer: z.string(),
+  explanation: z.string().optional(),
 });
+
+const fillInTheBlankProblemSchema = baseProblemSchema.extend({
+  type: z.literal("fill-in-the-blank"),
+  title: z.string(),
+  description: z.string(),
+  text: z.string(),
+  blanks: z.array(
+    z.object({
+      index: z.number(),
+      correctAnswer: z.string(),
+      tips: z.string().optional(),
+    })
+  ),
+});
+
 
 // WritingExerciseSchemaの型を生成
-export const WritingExerciseSchema = z.object({
+const WritingExerciseSchema = baseProblemSchema.extend({
+  type: z.literal("writing"),
   id: z.string(),
   title: z.string(),
   description: z.string(),
@@ -28,8 +47,62 @@ export const WritingExerciseSchema = z.object({
     z.object({
       index: z.number(),
       correctAnswer: z.string(),
-      hint: z.string().optional(),
+      tips: z.string().optional(),
     })
   ),
 });
-export type WritingExercise = z.infer<typeof WritingExerciseSchema>;
+
+const basisProblemSchema = baseProblemSchema.extend({
+  type: z.literal("basis"),
+  id: z.string(),
+  example: z.string(),
+  explanation: z.string(),
+  options: z.array(
+    z.object({
+      text: z.string(),
+      images: z.array(z.string()),
+    })
+  ),
+  answer: z.string(),
+});
+
+// export type WritingExercise = z.infer<typeof WritingExerciseSchema>;
+
+export const PatternSchema = baseProblemSchema.extend({
+  type: z.literal("pattern"),
+  id: z.string(),
+  title: z.string(),
+  description: z.string(),
+  difficulty: z.enum(["beginner", "intermediate", "advanced"]),
+  examples: z.array(z.object({ en: z.string(), jp: z.string() })),
+  problemIds: z.array(z.string()),
+});
+
+// TODO
+export const ProblemSchema = z.discriminatedUnion("type", [
+  multipleChoiceProblemSchema,
+  fillInTheBlankProblemSchema,
+  WritingExerciseSchema,
+  basisProblemSchema,
+  PatternSchema,
+]);
+
+export type Problem = z.infer<typeof ProblemSchema>;
+
+// export const ExerciseSchema = z.object({
+//     id: z.string(),
+//     type: z.enum(["fill-in-the-blank", "multiple-choice", "listening", "writing"]),
+//     question: z.string(),
+//     options: z.array(z.string()).optional(),
+//     answer: z.union([z.string(), z.array(z.string())]),
+//     tips: z.string().optional(),
+// });
+
+// export const PatternSchema = z.object({
+//     id: z.string(),
+//     title: z.string(),
+//     description: z.string(),
+//     difficulty: z.enum(["beginner", "intermediate", "advanced"]),
+//     examples: z.array(z.object({ en: z.string(), jp: z.string() })),
+//     exercises: z.array(ExerciseSchema),
+// });

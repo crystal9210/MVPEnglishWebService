@@ -36,6 +36,7 @@
     "tsyringe": "^4.8.0",
     "uuid": "^11.0.3",
     "winston": "^3.17.0",
+    "winston-loggly-bulk": "^3.3.2",
     "zod": "^3.23.8"
   },
   "devDependencies": {
@@ -47,6 +48,7 @@
     "@types/react": "^18",
     "@types/react-beautiful-dnd": "^13.1.8",
     "@types/react-dom": "^18",
+    "@types/winston-loggly-bulk": "^3.0.6",
     "chart.js": "^4.4.6",
     "eslint": "^8",
     "eslint-config-next": "15.0.2",
