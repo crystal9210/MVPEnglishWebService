@@ -1,5 +1,3 @@
-// src/utils/logger.ts
-
 import { createLogger, transports, format, Logger as WinstonLogger } from "winston";
 import { Loggly } from "winston-loggly-bulk";
 
@@ -27,16 +25,16 @@ const loggerTransports = [
         ]
         : []),
     // Logglyなどの外部サービスへのログ出力
-    ...(process.env.LOGGLY_TOKEN
+    ...(process.env.LOGGLY_TOKEN && process.env.LOGGLY_SUBDOMAIN
         ? [
             new Loggly({
-            token: process.env.LOGGLY_TOKEN,
-            subdomain: process.env.LOGGLY_SUBDOMAIN,
+            token: process.env.LOGGLY_TOKEN!,
+            subdomain: process.env.LOGGLY_SUBDOMAIN!,
             tags: ["Winston-NodeJS"],
             json: true,
             }),
         ]
-        : []),
+    : []),
 ];
 
 export const Logger: WinstonLogger = createLogger({

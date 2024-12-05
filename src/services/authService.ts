@@ -35,6 +35,8 @@ export class AuthService {
             );
         }
 
+        const { userId: _, ...accountDataWithoutUserId } = accountData; // TODO
+
         const accountsCollection = this.firebaseAdmin.firestore.collection(
             "accounts"
         );
@@ -42,7 +44,8 @@ export class AuthService {
 
         // TODO uidの扱いはどうなる？
         await accountDocRef.set({
-            ...accountData,
+            userId: uid,
+            ...accountDataWithoutUserId,
         });
 
         Logger.info(`Account entry created/updated in Firestore for userId: ${uid}`);

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { sanitizedString } from "./baseSchemas";
+import { sanitizedString } from "./BaseSchemas";
 
 export const profileSchema = z.object({
     displayName: sanitizedString(50),

@@ -89,6 +89,25 @@ export const ProblemSchema = z.discriminatedUnion("type", [
 
 export type Problem = z.infer<typeof ProblemSchema>;
 
+// 個々の問題スキーマの部分的なバージョン
+const partialMultipleChoiceProblemSchema = multipleChoiceProblemSchema.partial();
+const partialFillInTheBlankProblemSchema = fillInTheBlankProblemSchema.partial();
+const partialWritingExerciseSchema = WritingExerciseSchema.partial();
+const partialBasisProblemSchema = basisProblemSchema.partial();
+const partialPatternSchema = PatternSchema.partial();
+
+export const PartialProblemSchema = z.discriminatedUnion("type", [
+  partialMultipleChoiceProblemSchema,
+  partialFillInTheBlankProblemSchema,
+  partialWritingExerciseSchema,
+  partialBasisProblemSchema,
+  partialPatternSchema,
+]);
+
+export type PartialProblem = z.infer<typeof PartialProblemSchema>;
+
+
+export type Pattern = z.infer<typeof PatternSchema>;
 // export const ExerciseSchema = z.object({
 //     id: z.string(),
 //     type: z.enum(["fill-in-the-blank", "multiple-choice", "listening", "writing"]),

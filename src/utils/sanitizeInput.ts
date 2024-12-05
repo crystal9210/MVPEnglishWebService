@@ -1,5 +1,3 @@
-// src/utils/sanitizeInput.ts
-
 import DOMPurify from 'dompurify';
 import { JSDOM } from 'jsdom';
 import type { Config, DOMPurify as DOMPurifyType } from 'dompurify';
