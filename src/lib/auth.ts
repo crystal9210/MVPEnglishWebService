@@ -4,7 +4,7 @@ import GoogleProvider from "next-auth/providers/google";
 import GitHubProvider from "next-auth/providers/github";
 import { CustomFirestoreAdapter } from "./customFirestoreAdapter";
 // import { handleSignIn, handleSignUp, initializeUserData } from "@/lib/authCallbacks";
-import { firestoreAdmin } from "../services/firebaseAdmin";
+import { FirestoreAdmin } from "../services/firebaseAdmin";
 // import { User, Account, } from "@auth/core/types";
 // import { AdapterUser } from "@auth/core/adapters";
 import { sendVerificationEmail } from "./sendVerificationEmail";
@@ -83,7 +83,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
               await createAccountEntry(firebaseUser.uid, account);
             }
 
-            const userDocRef = firestoreAdmin.collection("users").doc(firebaseUser.uid);
+            const userDocRef = FirestoreAdmin.collection("users").doc(firebaseUser.uid);
             const userDoc = await userDocRef.get();
 
             if (!userDoc.exists) {
@@ -101,7 +101,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
               console.log(`Firestoreに既存ユーザが見つかりました: ${firebaseUser.uid}`);
             }
 
-            const userCollection = firestoreAdmin.collection("users");
+            const userCollection = FirestoreAdmin.collection("users");
             const userQuerySnapshot = await userCollection
               .where("email", "==", email)
               .limit(1)

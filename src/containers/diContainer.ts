@@ -3,11 +3,21 @@ import "reflect-metadata"; // TODO でコレーたが機能するために必要
 import { container } from "tsyringe";
 import { AuthService } from "@/services/authService";
 import { FirebaseAdmin } from "@/services/firebaseAdmin";
+import { UserService } from "@/services/userService";
+import { UserProfileService } from "@/services/userProfileService";
+import { UserHistoryService } from "@/services/userHistoryService";
+import { UserBookmarkService } from "@/services/userBookmarkService";
 import { ProblemService } from "@/services/problemService";
+import { PatternService } from "@/services/patternService";
 
-container.registerSingleton<FirebaseAdmin>("FirebaseAdmin", FirebaseAdmin);
-container.registerSingleton<AuthService>(AuthService);
-container.registerSingleton<ProblemService>(ProblemService);
+container.registerSingleton(FirebaseAdmin);
+container.registerSingleton(AuthService);
+container.registerSingleton(UserService);
+container.registerSingleton(UserProfileService);
+container.registerSingleton(UserHistoryService);
+container.registerSingleton(UserBookmarkService);
+container.registerSingleton(ProblemService);
+container.registerSingleton(PatternService);
 
 
 // --- use case ---

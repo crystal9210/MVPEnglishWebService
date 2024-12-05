@@ -35,7 +35,7 @@ export class AuthService {
             );
         }
 
-        const { userId: _, ...accountDataWithoutUserId } = accountData; // TODO
+        const { userId, ...accountDataWithoutUserId } = accountData; // TODO
 
         const accountsCollection = this.firebaseAdmin.firestore.collection(
             "accounts"
