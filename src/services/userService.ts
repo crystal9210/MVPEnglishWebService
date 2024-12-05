@@ -34,6 +34,21 @@ export class UserService {
         }
     }
 
+    async createUser(uid: string, userData: User): Promise<void> {
+        try {
+            const userRef = this.usersCollection.doc(uid);
+            const parsed = UserSchema.safeParse(userData);
+            if (!parsed.success) {
+                throw new Error("Invalid user data for creation");
+            }
+            await userRef.set(parsed.data);
+            Logger.info(`User created with UID: ${uid}`);
+        } catch (error) {
+            Logger.error(`Failed to create user with UID: ${uid}`, error);
+            throw error;
+        }
+    }
+
     async updateUser(uid: string, userData: Partial<User>): Promise<void> {
         try {
             const userRef = this.usersCollection.doc(uid);

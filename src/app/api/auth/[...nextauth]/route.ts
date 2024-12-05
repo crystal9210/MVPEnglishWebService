@@ -1,3 +1,5 @@
-import { handlers } from "@/lib/auth";
+import NextAuth from "next-auth";
+import { authOptions } from "@/lib/authOptions";
 
-export const { GET, POST } = handlers;
+const handler = NextAuth(authOptions); // 単一のハンドラが返される
+export { handler as GET, handler as POST }; // GET, POSTのHTTPメソッドをサポートする形でハンドラをエクスポート(公開)

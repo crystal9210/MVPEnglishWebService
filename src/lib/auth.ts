@@ -13,7 +13,7 @@ import { createAccountEntry, createUser, getUserByEmail } from "./authService";
 const adapter = CustomFirestoreAdapter();
 console.log("Adapter keys:", Object.keys(adapter));
 
-export const { auth, handlers, signIn, signOut } = NextAuth({
+export const { auth, handlers, signIn, signOut, unstable_update } = NextAuth({
     // debug: true,
     adapter: adapter,
     providers: [

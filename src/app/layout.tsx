@@ -37,3 +37,19 @@ export default function RootLayout({
     </html>
   );
 }
+
+
+// TODO セッションの管理・整合性の担保をクライアント/サーバのいずれで行うかそしてタイミング等に関してもより厳密に設計
+// src/components/AuthProvider.tsx
+// "use client";
+
+// import { SessionProvider } from "next-auth/react";
+// import { ReactNode } from "react";
+
+// interface AuthProviderProps {
+//   children: ReactNode;
+// }
+
+// export function AuthProvider({ children }: AuthProviderProps) {
+//   return <SessionProvider>{children}</SessionProvider>;
+// }
