@@ -2,16 +2,16 @@
 
 import { firestore } from "./firebaseClient";
 import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  query,
-  where,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  DocumentData,
+    collection,
+    doc,
+    getDoc,
+    getDocs,
+    query,
+    where,
+    addDoc,
+    updateDoc,
+    deleteDoc,
+    DocumentData,
 } from "firebase/firestore";
 import { ProblemSchema, Problem, PartialProblemSchema } from "../schemas/problemSchemas";
 import { injectable } from "tsyringe";

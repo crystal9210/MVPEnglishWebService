@@ -22,13 +22,13 @@ describe('textValidator', () => {
 
     it('should reject text shorter than the minimum length', () => {
         const shortText = 'abcd';
-        const error = validateText(schema, shortText);
+        const error = validateText(schema, shortText); // TODO
         expect(error).toBe(`Text must be at least ${minLength} characters long.`);
     });
 
     it('should reject text longer than the maximum length', () => {
         const longText = 'a'.repeat(maxLength + 1);
-        const error = validateText(schema, longText);
+        const error = validateText(schema, longText); // TODO
         expect(error).toBe(`Text must be no more than ${maxLength} characters long`);
     });
 
