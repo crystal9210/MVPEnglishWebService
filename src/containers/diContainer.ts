@@ -1,93 +1,100 @@
-import "reflect-metadata"; // for use "tsyringe"
+// src/container/diContainer.ts
+import "reflect-metadata";
 import { container } from "tsyringe";
 import { validateEnvVar } from "@/utils/env";
 
-// サービスインターフェース
-import { IAuthService } from "@/interfaces/services/IAuthService";
-import { IFirebaseAdmin } from "@/interfaces/services/IFirebaseAdmin";
-import { ILoggerService } from "@/interfaces/services/ILoggerService";
-import { IPatternService } from "@/interfaces/services/IPatternService";
-import { IProblemService } from "@/interfaces/services/IProblemService";
-import { IUserBookmarkService } from "@/interfaces/services/IUserBookmarkService";
-import { IUserHistoryService } from "@/interfaces/services/IUserHistoryService";
-import { IUserProfileService } from "@/interfaces/services/IUserProfileService";
-import { IUserService } from "@/interfaces/services/IUserService";
-// リポジトリインターフェース
-import { IUserRepository } from "@/interfaces/repositories/IUserRepository";
-import { IProblemRepository } from "@/interfaces/repositories/IProblemRepository";
-import { IPatternRepository } from "@/interfaces/repositories/IPatternRepository";
+import * as admin from "firebase-admin";
+import { Firestore } from "firebase-admin/firestore";
 
-// サービスとリポジトリの実装クラス
+// インターフェース群 (type importでdecoratorエラー回避)
+import type { IFirebaseAdmin } from "@/interfaces/services/IFirebaseAdmin";
+import type { ILoggerService } from "@/interfaces/services/ILoggerService";
+import type { IAuthService } from "@/interfaces/services/IAuthService";
+import type { IUserService } from "@/interfaces/services/IUserService";
+import type { IUserProfileService } from "@/interfaces/services/IUserProfileService";
+import type { IUserHistoryService } from "@/interfaces/services/IUserHistoryService";
+import type { IUserBookmarkService } from "@/interfaces/services/IUserBookmarkService";
+import type { IProblemService } from "@/interfaces/services/IProblemService";
+import type { IPatternService } from "@/interfaces/services/IPatternService";
+import type { IHistoryService } from "@/interfaces/services/IHistoryService";
+import type { ISubscriptionService } from "@/interfaces/services/ISubscriptionService";
+import type { IQuestionService } from "@/interfaces/services/IQuestionService";
+import type { IAccountRepository } from "@/interfaces/repositories/IAccountRepository";
+import type { IUserRepository } from "@/interfaces/repositories/IUserRepository";
+import type { IProblemRepository } from "@/interfaces/repositories/IProblemRepository";
+import type { IPatternRepository } from "@/interfaces/repositories/IPatternRepository";
+import type { IProblemResultRepository } from "@/interfaces/repositories/IProblemResultRepository";
+import type { IProfileRepository } from "@/interfaces/repositories/IProfileRepository";
+import type { IHistoryRepository } from "@/interfaces/repositories/IHistoryRepository";
+import type { ISubscriptionRepository } from "@/interfaces/repositories/ISubscriptionRepository";
+import type { IQuestionRepository } from "@/interfaces/repositories/IQuestionRepository";
+
+// 実装クラス群
 import { AuthService } from "@/services/authService";
 import { FirebaseAdmin } from "@/services/firebaseAdmin";
+import { LoggerService } from "@/services/loggerService";
 import { UserService } from "@/services/userService";
 import { UserProfileService } from "@/services/userProfileService";
 import { UserHistoryService } from "@/services/userHistoryService";
 import { UserBookmarkService } from "@/services/userBookmarkService";
 import { ProblemService } from "@/services/problemService";
 import { PatternService } from "@/services/patternService";
-import { LoggerService } from "@/services/loggerService";
+import { HistoryService } from "@/services/historyService";
+import { SubscriptionService } from "@/services/subscriptionService";
+import { QuestionService } from "@/services/questionService";
 
 import { UserRepository } from "@/repositories/userRepository";
 import { ProblemRepository } from "@/repositories/problemRepository";
 import { PatternRepository } from "@/repositories/patternRepository";
-
-// Firestore初期化
-import * as admin from "firebase-admin";
-import { Firestore } from "firebase-admin/firestore";
+import { ProblemResultRepository } from "@/repositories/problemResultRepository";
+import { ProfileRepository } from "@/repositories/userProfileRepository";
+import { HistoryRepository } from "@/repositories/historyRepository";
+import { SubscriptionRepository } from "@/repositories/subscriptionRepository";
+import { QuestionRepository } from "@/repositories/questionRepository";
+import { AccountRepository } from "@/repositories/accountRepository";
+import { BatchOperations } from "@/utils/batchOperations";
 
 if (!admin.apps.length) {
     const projectId = validateEnvVar("FIREBASE_PROJECT_ID");
     const clientEmail = validateEnvVar("FIREBASE_CLIENT_EMAIL");
     let privateKey = validateEnvVar("FIREBASE_PRIVATE_KEY");
-
     privateKey = privateKey.replace(/\\n/g, "\n");
 
     admin.initializeApp({
-        credential: admin.credential.cert({
-            projectId,
-            clientEmail,
-            privateKey,
-        }),
+        credential: admin.credential.cert({ projectId, clientEmail, privateKey }),
     });
 }
 
-// Firestore:"Firestore"として登録
 container.registerInstance<Firestore>("Firestore", admin.firestore());
 
-// リポジトリの登録: インターフェースと実装の紐付け
+// Repositories
+container.registerSingleton<IAccountRepository>("IAccountRepository", AccountRepository);
 container.registerSingleton<IUserRepository>("IUserRepository", UserRepository);
 container.registerSingleton<IProblemRepository>("IProblemRepository", ProblemRepository);
 container.registerSingleton<IPatternRepository>("IPatternRepository", PatternRepository);
+container.registerSingleton<IProblemResultRepository>("IProblemResultRepository", ProblemResultRepository);
+container.registerSingleton<IProfileRepository>("IProfileRepository", ProfileRepository);
+container.registerSingleton<IHistoryRepository>("IHistoryRepository", HistoryRepository);
+container.registerSingleton<ISubscriptionRepository>("ISubscriptionRepository", SubscriptionRepository);
+container.registerSingleton<IQuestionRepository>("IQuestionRepository", QuestionRepository);
 
-// ロガーサービスの登録
-container.registerSingleton<ILoggerService>("ILoggerService", LoggerService);
-
-// FirebaseAdmin: IFirebaseAdminインターフェースを実装していることを前提
+// Services
 container.registerSingleton<IFirebaseAdmin>("IFirebaseAdmin", FirebaseAdmin);
-
-// AuthService: IAuthServiceインターフェースを実装していることを前提
+container.registerSingleton<ILoggerService>("ILoggerService", LoggerService);
 container.registerSingleton<IAuthService>("IAuthService", AuthService);
-
-// UserService: IUserServiceインターフェースを実装
 container.registerSingleton<IUserService>("IUserService", UserService);
-
-// UserProfileService: IUserProfileServiceインターフェースを実装
 container.registerSingleton<IUserProfileService>("IUserProfileService", UserProfileService);
-
-// UserHistoryService: IUserHistoryServiceインターフェースを実装
 container.registerSingleton<IUserHistoryService>("IUserHistoryService", UserHistoryService);
-
-// UserBookmarkService: IUserBookmarkServiceインターフェースを実装
 container.registerSingleton<IUserBookmarkService>("IUserBookmarkService", UserBookmarkService);
-
-// ProblemService: IProblemServiceインターフェースを実装
 container.registerSingleton<IProblemService>("IProblemService", ProblemService);
-
-// PatternService: IPatternServiceインターフェースを実装
 container.registerSingleton<IPatternService>("IPatternService", PatternService);
+container.registerSingleton<IHistoryService>("IHistoryService", HistoryService);
+container.registerSingleton<ISubscriptionService>("ISubscriptionService", SubscriptionService);
+container.registerSingleton<IQuestionService>("IQuestionService", QuestionService);
 
-// container をエクスポート（APIエンドポイントで利用するため）
+// Utility
+container.registerSingleton(BatchOperations);
+
 export { container };
 
 

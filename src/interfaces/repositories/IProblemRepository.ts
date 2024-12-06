@@ -1,10 +1,11 @@
-import { Problem } from "@/schemas/problemSchemas";
+// serviceIdに対応化
+import type { Problem } from "@/schemas/problemSchemas";
 
 export interface IProblemRepository {
-    findByCategory(category: string): Promise<Problem[]>;
-    findByDifficulty(difficulty: string): Promise<Problem[]>;
-    findById(id: string): Promise<Problem | null>;
-    create(problemData: Problem): Promise<string>;
-    update(id: string, problemData: Partial<Problem>): Promise<void>;
-    delete(id: string): Promise<void>;
+    findByCategory(serviceId: string, category: string): Promise<Problem[]>;
+    findByDifficulty(serviceId: string, difficulty: string): Promise<Problem[]>;
+    findById(serviceId: string, id: string): Promise<Problem | null>;
+    create(serviceId: string, problemData: Problem): Promise<string>;
+    update(serviceId: string, id: string, problemData: Partial<Problem>): Promise<void>;
+    delete(serviceId: string, id: string): Promise<void>;
 }

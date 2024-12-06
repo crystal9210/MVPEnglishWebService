@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { sanitizedString } from "./BaseSchemas";
+import { sanitizedString } from "./baseSchemas";
 
 export const UserSchema = z.object({
     uid: z.string(), // TODO
@@ -12,7 +12,7 @@ export const UserSchema = z.object({
 
 export type User = z.infer<typeof UserSchema>;
 
-export const ProfileSchema = z.object({
+export const UserProfileSchema = z.object({
     displayName: sanitizedString(50),
     bio: sanitizedString(300).optional(),
     location: sanitizedString(100).optional(),
@@ -31,7 +31,7 @@ export const ProfileSchema = z.object({
     }),
 });
 
-export type UserProfile = z.infer<typeof ProfileSchema>;
+export type UserProfile = z.infer<typeof UserProfileSchema>;
 
 export const UserHistoryItemSchema = z.object({
     problemId: z.string(),

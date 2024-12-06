@@ -1,49 +1,34 @@
-import { FirebaseAdmin } from "./firebaseAdmin";
-import { Firestore } from "firebase-admin/firestore";
+// ok
 import { injectable, inject } from "tsyringe";
-import { UserProfileSchema, UserProfile } from "../schemas/userSchemas";
-import { Logger } from "@/services/loggerService";
+import type { IUserProfileService } from "@/interfaces/services/IUserProfileService";
+import type { IProfileRepository } from "@/interfaces/repositories/IProfileRepository";
+import type { ILoggerService } from "@/interfaces/services/ILoggerService";
+import type { UserProfile } from "@/schemas/userSchemas";
 
 @injectable()
-export class UserProfileService {
-    private firestore: Firestore;
+export class UserProfileService implements IUserProfileService {
+    constructor(
+        @inject("IProfileRepository") private readonly profileRepository: IProfileRepository,
+        @inject("ILoggerService") private readonly logger: ILoggerService
+    ) {}
 
-    constructor(@inject(FirebaseAdmin) private firebaseAdmin: FirebaseAdmin) {
-        this.firestore = this.firebaseAdmin.firestore;
+    async getUserProfile(userId: string): Promise<UserProfile | null> {
+        const profile = await this.profileRepository.getProfile(userId);
+        if (profile) {
+            this.logger.info(`User profile retrieved in service: UID=${userId}`);
+        } else {
+            this.logger.warn(`User profile not found in service: UID=${userId}`);
+        }
+        return profile;
     }
 
-    async getUserProfile(uid: string, profileId: string): Promise<UserProfile | null> {
-        try {
-        const profileRef = this.firestore.collection("users").doc(uid).collection("profiles").doc(profileId);
-        const docSnap = await profileRef.get();
-        if (docSnap.exists) {
-            const data = docSnap.data();
-            const parsed = UserProfileSchema.safeParse(data);
-            if (parsed.success) {
-            return parsed.data;
-            } else {
-            Logger.warn(`Invalid profile data: UID = ${uid}, Profile ID = ${profileId}`);
-            }
-        }
-        return null;
-        } catch (error) {
-        Logger.error(`Failed to get profile for UID: ${uid}, Profile ID: ${profileId}`, error);
-        throw error;
-        }
+    async upsertUserProfile(userId: string, profileData: Partial<UserProfile>): Promise<void> {
+        await this.profileRepository.upsertProfile(userId, profileData);
+        this.logger.info(`User profile upserted in service: UID=${userId}`);
     }
 
-    async upsertUserProfile(uid: string, profileId: string, profileData: Partial<UserProfile>): Promise<void> {
-        try {
-        const profileRef = this.firestore.collection("users").doc(uid).collection("profiles").doc(profileId);
-        const parsed = UserProfileSchema.partial().safeParse(profileData);
-        if (!parsed.success) {
-            throw new Error("Invalid profile data for upsert");
-        }
-        await profileRef.set(parsed.data, { merge: true });
-        Logger.info(`Profile upserted for UID: ${uid}, Profile ID: ${profileId}`);
-        } catch (error) {
-        Logger.error(`Failed to upsert profile for UID: ${uid}, Profile ID: ${profileId}`, error);
-        throw error;
-        }
+    async deleteUserProfile(userId: string): Promise<void> {
+        await this.profileRepository.deleteProfile(userId);
+        this.logger.info(`User profile deleted in service: UID=${userId}`);
     }
 }

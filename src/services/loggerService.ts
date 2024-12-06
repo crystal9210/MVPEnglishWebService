@@ -1,12 +1,13 @@
-// src/utils/logger.ts
+// ok
 import { createLogger, transports, format, Logger as WinstonLogger } from "winston";
 import { Loggly } from "winston-loggly-bulk";
 import { injectable } from 'tsyringe';
 import dotenv from 'dotenv';
+import { ILoggerService } from "@/interfaces/services/ILoggerService";
 dotenv.config();
 
 @injectable()
-export class LoggerService {
+export class LoggerService implements ILoggerService {
     private logger: WinstonLogger;
 
     constructor() {

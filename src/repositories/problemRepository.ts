@@ -1,123 +1,92 @@
 import { injectable, inject } from "tsyringe";
-import { CollectionReference, DocumentData, QuerySnapshot } from "firebase-admin/firestore";
-import { ProblemSchema, Problem, PartialProblemSchema } from "../schemas/problemSchemas";
-import { Firestore } from "firebase-admin/firestore";
-import { LoggerService } from "@/services/loggerService";
-import { IProblemRepository } from "@/interfaces/repositories/IProblemRepository";
+import type { IProblemRepository } from "@/interfaces/repositories/IProblemRepository";
+import type { IFirebaseAdmin } from "@/interfaces/services/IFirebaseAdmin";
+import type { ILoggerService } from "@/interfaces/services/ILoggerService";
+import type { Problem } from "@/schemas/problemSchemas";
+import { ProblemSchema, PartialProblemSchema } from "@/schemas/problemSchemas";
 
 @injectable()
 export class ProblemRepository implements IProblemRepository {
-    private problemsCollection: CollectionReference<DocumentData>;
-
     constructor(
-        @inject("Firestore") private firestore: Firestore,
-        @inject(LoggerService) private logger: LoggerService
-    ) {
-        this.problemsCollection = firestore.collection("problems");
+        @inject("IFirebaseAdmin") private readonly firebaseAdmin: IFirebaseAdmin,
+        @inject("ILoggerService") private readonly logger: ILoggerService
+    ) {}
+
+    private collectionRef(serviceId: string) {
+        const firestore = this.firebaseAdmin.getFirestore();
+        return firestore.collection("problemServices").doc(serviceId).collection("problems");
     }
 
-    async findByCategory(category: string): Promise<Problem[]> {
-        try {
-            const querySnapshot: QuerySnapshot<DocumentData> = await this.problemsCollection.where("category", "==", category).get();
-
-            const problems: Problem[] = [];
-            querySnapshot.forEach((docSnap) => {
-                const data = docSnap.data();
-                const parsed = ProblemSchema.safeParse(data);
-                if (parsed.success) {
-                    problems.push(parsed.data);
-                } else {
-                    this.logger.warn(`Invalid problem data: ${docSnap.id}`, { errors: parsed.error.errors });
-                }
-            });
-            return problems;
-        } catch (error) {
-            this.logger.error("Failed to find problems by category", { error });
-            throw error;
-        }
-    }
-
-    async findByDifficulty(difficulty: string): Promise<Problem[]> {
-        try {
-            const querySnapshot: QuerySnapshot<DocumentData> = await this.problemsCollection.where("difficulty", "==", difficulty).get();
-
-            const problems: Problem[] = [];
-            querySnapshot.forEach((docSnap) => {
-                const data = docSnap.data();
-                const parsed = ProblemSchema.safeParse(data);
-                if (parsed.success) {
-                    problems.push(parsed.data);
-                } else {
-                    this.logger.warn(`Invalid problem data: ${docSnap.id}`, { errors: parsed.error.errors });
-                }
-            });
-            return problems;
-        } catch (error) {
-            this.logger.error("Failed to find problems by difficulty", { error });
-            throw error;
-        }
-    }
-
-    async findById(id: string): Promise<Problem | null> {
-        try {
-            const problemRef = this.problemsCollection.doc(id);
-            const docSnap = await problemRef.get();
-            if (docSnap.exists) {
-                const data = docSnap.data();
-                const parsed = ProblemSchema.safeParse(data);
-                if (parsed.success) {
-                    return parsed.data;
-                } else {
-                    this.logger.warn(`Invalid problem data: ${id}`, { errors: parsed.error.errors });
-                }
+    async findByCategory(serviceId: string, category: string): Promise<Problem[]> {
+        const colRef = this.collectionRef(serviceId);
+        const querySnapshot = await colRef.where("category", "==", category).get();
+        const problems: Problem[] = [];
+        querySnapshot.forEach((docSnap) => {
+            const parsed = ProblemSchema.safeParse(docSnap.data());
+            if (parsed.success) {
+                problems.push(parsed.data);
+            } else {
+                this.logger.warn(`Invalid problem data: ${docSnap.id}`, { errors: parsed.error.errors });
             }
-            return null;
-        } catch (error) {
-            this.logger.error(`Failed to find problem by ID: ${id}`, { error });
-            throw error;
-        }
+        });
+        return problems;
     }
 
-    async create(problemData: Problem): Promise<string> {
-        try {
-            const parsed = ProblemSchema.safeParse(problemData);
-            if (!parsed.success) {
-                this.logger.warn("Invalid problem data", { errors: parsed.error.errors });
-                throw new Error("Invalid problem data");
+    async findByDifficulty(serviceId: string, difficulty: string): Promise<Problem[]> {
+        const colRef = this.collectionRef(serviceId);
+        const querySnapshot = await colRef.where("difficulty", "==", difficulty).get();
+        const problems: Problem[] = [];
+        querySnapshot.forEach((docSnap) => {
+            const parsed = ProblemSchema.safeParse(docSnap.data());
+            if (parsed.success) {
+                problems.push(parsed.data);
+            } else {
+                this.logger.warn(`Invalid problem data: ${docSnap.id}`, { errors: parsed.error.errors });
             }
-            const docRef = await this.problemsCollection.add(parsed.data);
-            this.logger.info(`Problem added with ID: ${docRef.id}`);
-            return docRef.id;
-        } catch (error) {
-            this.logger.error("Failed to add problem", { error });
-            throw error;
-        }
+        });
+        return problems;
     }
 
-    async update(id: string, problemData: Partial<Problem>): Promise<void> {
-        try {
-            const problemRef = this.problemsCollection.doc(id);
-            const parsed = PartialProblemSchema.safeParse(problemData);
-            if (!parsed.success) {
-                this.logger.warn("Invalid problem data for update", { errors: parsed.error.errors });
-                throw new Error("Invalid problem data for update");
+    async findById(serviceId: string, id: string): Promise<Problem | null> {
+        const colRef = this.collectionRef(serviceId);
+        const docSnap = await colRef.doc(id).get();
+        if (docSnap.exists) {
+            const parsed = ProblemSchema.safeParse(docSnap.data());
+            if (parsed.success) {
+                return parsed.data;
+            } else {
+                this.logger.warn(`Invalid problem data: ${id}`, { errors: parsed.error.errors });
             }
-            await problemRef.update(parsed.data);
-            this.logger.info(`Problem updated with ID: ${id}`);
-        } catch (error) {
-            this.logger.error(`Failed to update problem with ID: ${id}`, { error });
-            throw error;
         }
+        return null;
     }
 
-    async delete(id: string): Promise<void> {
-        try {
-            const problemRef = this.problemsCollection.doc(id);
-            await problemRef.delete();
-            this.logger.info(`Problem deleted with ID: ${id}`);
-        } catch (error) {
-            this.logger.error(`Failed to delete problem with ID: ${id}`, { error });
-            throw error;
+    async create(serviceId: string, problemData: Problem): Promise<string> {
+        const colRef = this.collectionRef(serviceId);
+        const parsed = ProblemSchema.safeParse(problemData);
+        if (!parsed.success) {
+            this.logger.warn("Invalid problem data", { errors: parsed.error.errors });
+            throw new Error("Invalid problem data");
         }
+        const docRef = await colRef.add(parsed.data);
+        this.logger.info(`Problem added: ${docRef.id} under serviceId=${serviceId}`);
+        return docRef.id;
+    }
+
+    async update(serviceId: string, id: string, problemData: Partial<Problem>): Promise<void> {
+        const colRef = this.collectionRef(serviceId);
+        const parsed = PartialProblemSchema.safeParse(problemData);
+        if (!parsed.success) {
+            this.logger.warn("Invalid problem data for update", { errors: parsed.error.errors });
+            throw new Error("Invalid problem data for update");
+        }
+        await colRef.doc(id).update(parsed.data);
+        this.logger.info(`Problem updated: ${id} under serviceId=${serviceId}`);
+    }
+
+    async delete(serviceId: string, id: string): Promise<void> {
+        const colRef = this.collectionRef(serviceId);
+        await colRef.doc(id).delete();
+        this.logger.info(`Problem deleted: ${id} under serviceId=${serviceId}`);
     }
 }

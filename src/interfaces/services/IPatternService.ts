@@ -1,4 +1,4 @@
-import { Pattern } from "@/schemas/problemSchemas";
+import type { Pattern } from "@/schemas/problemSchemas";
 
 export interface IPatternService {
     getAllPatterns(): Promise<Pattern[]>;
