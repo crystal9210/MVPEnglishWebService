@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { injectable, inject } from "tsyringe";
 import type { IUserBookmarkRepository } from "@/interfaces/repositories/IUserBookmarkRepository";
 import type { IFirebaseAdmin } from "@/interfaces/services/IFirebaseAdmin";
