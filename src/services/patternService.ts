@@ -2,9 +2,10 @@ import { injectable, inject } from "tsyringe";
 import { Pattern } from "../schemas/problemSchemas";
 import { PatternRepository } from "@/repositories/patternRepository";
 import { LoggerService } from "@/services/loggerService";
+import { IPatternService } from "@/interfaces/services/IPatternService";
 
 @injectable()
-export class PatternService {
+export class PatternService implements IPatternService {
     constructor(
         @inject(PatternRepository) private patternRepository: PatternRepository,
         @inject(LoggerService) private logger: LoggerService

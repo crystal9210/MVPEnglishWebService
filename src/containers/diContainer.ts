@@ -16,18 +16,16 @@ import type { IUserHistoryService } from "@/interfaces/services/IUserHistoryServ
 import type { IUserBookmarkService } from "@/interfaces/services/IUserBookmarkService";
 import type { IProblemService } from "@/interfaces/services/IProblemService";
 import type { IPatternService } from "@/interfaces/services/IPatternService";
-import type { IHistoryService } from "@/interfaces/services/IHistoryService";
+// import type { IHistoryService } from "@/interfaces/services/IHistoryService";
 import type { ISubscriptionService } from "@/interfaces/services/ISubscriptionService";
-import type { IQuestionService } from "@/interfaces/services/IQuestionService";
 import type { IAccountRepository } from "@/interfaces/repositories/IAccountRepository";
 import type { IUserRepository } from "@/interfaces/repositories/IUserRepository";
 import type { IProblemRepository } from "@/interfaces/repositories/IProblemRepository";
 import type { IPatternRepository } from "@/interfaces/repositories/IPatternRepository";
 import type { IProblemResultRepository } from "@/interfaces/repositories/IProblemResultRepository";
 import type { IProfileRepository } from "@/interfaces/repositories/IProfileRepository";
-import type { IHistoryRepository } from "@/interfaces/repositories/IHistoryRepository";
+import type { IUserHistoryRepository } from "@/interfaces/repositories/IUserHistoryRepository";
 import type { ISubscriptionRepository } from "@/interfaces/repositories/ISubscriptionRepository";
-import type { IQuestionRepository } from "@/interfaces/repositories/IQuestionRepository";
 
 // 実装クラス群
 import { AuthService } from "@/services/authService";
@@ -39,18 +37,15 @@ import { UserHistoryService } from "@/services/userHistoryService";
 import { UserBookmarkService } from "@/services/userBookmarkService";
 import { ProblemService } from "@/services/problemService";
 import { PatternService } from "@/services/patternService";
-import { HistoryService } from "@/services/historyService";
 import { SubscriptionService } from "@/services/subscriptionService";
-import { QuestionService } from "@/services/questionService";
 
 import { UserRepository } from "@/repositories/userRepository";
 import { ProblemRepository } from "@/repositories/problemRepository";
 import { PatternRepository } from "@/repositories/patternRepository";
 import { ProblemResultRepository } from "@/repositories/problemResultRepository";
 import { ProfileRepository } from "@/repositories/userProfileRepository";
-import { HistoryRepository } from "@/repositories/historyRepository";
+import { UserHistoryRepository } from "@/repositories/userHistoryRepository";
 import { SubscriptionRepository } from "@/repositories/subscriptionRepository";
-import { QuestionRepository } from "@/repositories/questionRepository";
 import { AccountRepository } from "@/repositories/accountRepository";
 import { BatchOperations } from "@/utils/batchOperations";
 
@@ -74,9 +69,8 @@ container.registerSingleton<IProblemRepository>("IProblemRepository", ProblemRep
 container.registerSingleton<IPatternRepository>("IPatternRepository", PatternRepository);
 container.registerSingleton<IProblemResultRepository>("IProblemResultRepository", ProblemResultRepository);
 container.registerSingleton<IProfileRepository>("IProfileRepository", ProfileRepository);
-container.registerSingleton<IHistoryRepository>("IHistoryRepository", HistoryRepository);
+container.registerSingleton<IUserHistoryRepository>("IUserHistoryRepository", UserHistoryRepository);
 container.registerSingleton<ISubscriptionRepository>("ISubscriptionRepository", SubscriptionRepository);
-container.registerSingleton<IQuestionRepository>("IQuestionRepository", QuestionRepository);
 
 // Services
 container.registerSingleton<IFirebaseAdmin>("IFirebaseAdmin", FirebaseAdmin);
@@ -86,11 +80,10 @@ container.registerSingleton<IUserService>("IUserService", UserService);
 container.registerSingleton<IUserProfileService>("IUserProfileService", UserProfileService);
 container.registerSingleton<IUserHistoryService>("IUserHistoryService", UserHistoryService);
 container.registerSingleton<IUserBookmarkService>("IUserBookmarkService", UserBookmarkService);
-container.registerSingleton<IProblemService>("IProblemService", ProblemService);
+container.registerSingleton<IProblemService>("IProblemService", ProblemService); // TODO
 container.registerSingleton<IPatternService>("IPatternService", PatternService);
-container.registerSingleton<IHistoryService>("IHistoryService", HistoryService);
+container.registerSingleton<IUserHistoryService>("IUserHistoryRepository", UserHistoryRepository);
 container.registerSingleton<ISubscriptionService>("ISubscriptionService", SubscriptionService);
-container.registerSingleton<IQuestionService>("IQuestionService", QuestionService);
 
 // Utility
 container.registerSingleton(BatchOperations);

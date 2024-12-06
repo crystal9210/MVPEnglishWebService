@@ -1,13 +1,13 @@
-// src/services/userService.ts
 import { injectable, inject } from "tsyringe";
 import { UserRepository } from "@/repositories/userRepository";
 import { ProblemResultRepository } from "@/repositories/problemResultRepository";
 import { User } from "@/schemas/userSchemas";
 import { ProblemResult } from "@/schemas/userHistorySchemas";
 import { LoggerService } from "@/services/loggerService";
+import { IUserService } from "@/interfaces/services/IUserService";
 
 @injectable()
-export class UserService {
+export class UserService implements IUserService {
     private readonly userRepository: UserRepository;
     private readonly problemResultRepository: ProblemResultRepository;
     private readonly logger: LoggerService;

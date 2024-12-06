@@ -1,4 +1,3 @@
-// ok
 import { createLogger, transports, format, Logger as WinstonLogger } from "winston";
 import { Loggly } from "winston-loggly-bulk";
 import { injectable } from 'tsyringe';

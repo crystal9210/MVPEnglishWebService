@@ -1,4 +1,4 @@
-import type { SubscriptionData } from "@/schemas/subscriptionSchema";
+import type { SubscriptionData } from "@/schemas/subscriptionSchemas";
 
 export interface ISubscriptionService {
     getUserSubscription(userId: string): Promise<SubscriptionData | null>;

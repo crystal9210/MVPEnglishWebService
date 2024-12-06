@@ -1,4 +1,3 @@
-// ok
 import { injectable, inject } from "tsyringe";
 import type { IUserProfileService } from "@/interfaces/services/IUserProfileService";
 import type { IProfileRepository } from "@/interfaces/repositories/IProfileRepository";

@@ -1,13 +1,13 @@
-// src/repositories/problemResultRepository.ts
 import { Firestore, WithFieldValue, DocumentData } from "firebase-admin/firestore";
 import { injectable, inject } from "tsyringe";
 import { ProblemResult, ProblemResultSchema } from "@/schemas/userHistorySchemas";
 import { BatchOperations } from "@/utils/batchOperations";
 import { LoggerService } from "@/services/loggerService";
+import { IProblemResultRepository } from "@/interfaces/repositories/IProblemResultRepository";
 
 // TODO 問題形態のスキーマimport、使用->堅牢化
 @injectable()
-export class ProblemResultRepository {
+export class ProblemResultRepository implements IProblemResultRepository {
     private readonly firestore: Firestore;
     private readonly logger: LoggerService;
     private readonly batchOperations: BatchOperations;
