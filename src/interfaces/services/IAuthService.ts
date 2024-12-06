@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { AdapterAccount } from "next-auth/adapters";
 import type { UserRecord } from "firebase-admin/auth";
 // TODO

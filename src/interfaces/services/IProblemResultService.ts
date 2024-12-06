@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import type { ProblemResult } from "@/schemas/userHistorySchemas";
 
 export interface IProblemResultService {

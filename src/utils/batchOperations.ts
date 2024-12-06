@@ -1,4 +1,5 @@
 import { Firestore, WithFieldValue, DocumentData } from "firebase-admin/firestore";
+import { UpdateData } from "firebase-admin/firestore";
 import { injectable, inject } from "tsyringe";
 import { LoggerService } from "@/services/loggerService";
 
@@ -43,13 +44,16 @@ export class BatchOperations {
      * @param collectionName Firestoreのコレクション名
      * @param documents ドキュメントの配列（idと更新データ）
      */
-    async batchUpdate<T extends DocumentData>(collectionName: string, documents: { id: string, data: Partial<T> }[]): Promise<void> {
+    async batchUpdate<T extends DocumentData>(
+        collectionName: string,
+        documents: { id: string; data: UpdateData<T> }[] // 型を UpdateData<T> に修正
+    ): Promise<void> {
         const batch = this.firestore.batch();
         const collectionRef = this.firestore.collection(collectionName);
 
         documents.forEach(doc => {
             const docRef = collectionRef.doc(doc.id);
-            batch.update(docRef, doc.data); // TODO
+            batch.update(docRef, doc.data);
         });
 
         try {
@@ -84,3 +88,36 @@ export class BatchOperations {
         }
     }
 }
+
+// --- use case ---
+// import { BatchOperations } from "@/utils/batchOperations";
+// import { ProblemResult } from "@/schemas/problemSchemas";
+// import { LoggerService } from "@/services/loggerService";
+
+// class ProblemResultService {
+//     constructor(
+//         private batchOperations: BatchOperations,
+//         private logger: LoggerService
+//     ) {}
+
+//     async saveMultipleResults(userId: string, results: { type: string; data: ProblemResult[] }[]): Promise<void> {
+//         try {
+//             const operations = results.flatMap(({ type, data }) =>
+//                 data.map(result => ({
+//                     id: result.problemId,
+//                     data: result,
+//                     collectionName: `users/${userId}/problemResultsType${type}`
+//                 }))
+//             );
+
+//             for (const { collectionName, data } of operations) {
+//                 await this.batchOperations.batchSet(collectionName, data.map(item => ({ id: item.problemId, data: item })));
+//             }
+
+//             this.logger.info("Successfully saved multiple problem results.");
+//         } catch (error) {
+//             this.logger.error("Failed to save multiple problem results.", { error });
+//             throw error;
+//         }
+//     }
+// }

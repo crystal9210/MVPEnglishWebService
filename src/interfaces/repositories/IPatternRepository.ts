@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { Pattern } from "@/schemas/problemSchemas";
 
 export interface IPatternRepository {

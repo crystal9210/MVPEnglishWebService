@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import type { Problem } from "@/schemas/problemSchemas";
 
 export interface IProblemService {

@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { AdapterAccount } from "next-auth/adapters";
 
 export interface IAccountRepository {

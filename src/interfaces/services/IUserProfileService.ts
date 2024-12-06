@@ -1,4 +1,4 @@
-// ok
+/* eslint-disable no-unused-vars */
 import type { UserProfile } from "@/schemas/userSchemas";
 
 export interface IUserProfileService {

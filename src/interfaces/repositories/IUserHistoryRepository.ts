@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import type { UserHistoryItem } from "@/schemas/userSchemas";
 
 export interface IUserHistoryRepository {

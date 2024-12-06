@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import type { SubscriptionData } from "@/schemas/subscriptionSchemas";
 
 export interface ISubscriptionService {

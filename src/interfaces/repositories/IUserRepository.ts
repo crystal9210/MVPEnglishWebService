@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { User } from "@/schemas/userSchemas";
 
 export interface IUserRepository {

@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import type { UserBookmark } from "@/schemas/bookmarkSchemas";
 
 export interface IUserBookmarkService {
