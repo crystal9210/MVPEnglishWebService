@@ -3,7 +3,7 @@ import { CollectionReference, DocumentData, QuerySnapshot } from "firebase-admin
 import { PatternSchema, Pattern } from "../schemas/problemSchemas";
 import { Firestore } from "firebase-admin/firestore";
 import { LoggerService } from "@/services/loggerService";
-import { IPatternRepository } from "@/repositories/interfaces/IPatternRepository";
+import { IPatternRepository } from "@/interfaces/repositories/IPatternRepository";
 
 @injectable()
 export class PatternRepository implements IPatternRepository {

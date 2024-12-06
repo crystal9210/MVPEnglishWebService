@@ -3,7 +3,7 @@ import { CollectionReference, DocumentData, QuerySnapshot } from "firebase-admin
 import { ProblemSchema, Problem, PartialProblemSchema } from "../schemas/problemSchemas";
 import { Firestore } from "firebase-admin/firestore";
 import { LoggerService } from "@/services/loggerService";
-import { IProblemRepository } from "@/repositories/interfaces/IProblemRepository";
+import { IProblemRepository } from "@/interfaces/repositories/IProblemRepository";
 
 @injectable()
 export class ProblemRepository implements IProblemRepository {

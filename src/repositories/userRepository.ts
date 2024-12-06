@@ -4,7 +4,7 @@ import { injectable, inject } from "tsyringe";
 import { User, UserSchema } from "@/schemas/userSchemas";
 import { BatchOperations } from "@/utils/batchOperations";
 import { LoggerService } from "@/services/loggerService";
-import { IUserRepository } from "@/repositories/interfaces/IUserRepository";
+import { IUserRepository } from "@/interfaces/repositories/IUserRepository";
 
 @injectable()
 export class UserRepository implements IUserRepository {

@@ -1,12 +1,13 @@
-import * as admin from "firebase-admin"; // admin名前空間で全メンバーインポート
+import * as admin from "firebase-admin";
 import { injectable, inject } from "tsyringe";
 import { LoggerService } from "@/services/loggerService";
 import { Firestore } from "firebase-admin/firestore";
+import { IFirebaseAdmin } from "@/interfaces/services/IFirebaseAdmin";
 
 @injectable()
-export class FirebaseAdmin {
-    public auth: admin.auth.Auth;
-    public firestore: Firestore;
+export class FirebaseAdmin implements IFirebaseAdmin {
+    private authInstance: admin.auth.Auth;
+    private firestoreInstance: Firestore;
 
     constructor(
         @inject(LoggerService) private logger: LoggerService
@@ -36,11 +37,20 @@ export class FirebaseAdmin {
                 this.logger.info("Firebase Admin SDK already initialized.");
             }
 
-            this.auth = admin.auth();
-            this.firestore = admin.firestore();
+            this.authInstance = admin.auth();
+            this.firestoreInstance = admin.firestore();
         } catch (error) {
             this.logger.error("Failed to initialize Firebase Admin SDK.", { error });
             throw new Error("Firebase initialization failed.");
         }
+    }
+
+    // IFirebaseAdminインターフェースで要求されるメソッドを実装
+    getAuth(): admin.auth.Auth {
+        return this.authInstance;
+    }
+
+    getFirestore(): Firestore {
+        return this.firestoreInstance;
     }
 }

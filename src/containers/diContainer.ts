@@ -1,7 +1,23 @@
 import "reflect-metadata"; // for use "tsyringe"
 import { container } from "tsyringe";
+import { validateEnvVar } from "@/utils/env";
 
-// サービスとリポジトリのインポート
+// サービスインターフェース
+import { IAuthService } from "@/interfaces/services/IAuthService";
+import { IFirebaseAdmin } from "@/interfaces/services/IFirebaseAdmin";
+import { ILoggerService } from "@/interfaces/services/ILoggerService";
+import { IPatternService } from "@/interfaces/services/IPatternService";
+import { IProblemService } from "@/interfaces/services/IProblemService";
+import { IUserBookmarkService } from "@/interfaces/services/IUserBookmarkService";
+import { IUserHistoryService } from "@/interfaces/services/IUserHistoryService";
+import { IUserProfileService } from "@/interfaces/services/IUserProfileService";
+import { IUserService } from "@/interfaces/services/IUserService";
+// リポジトリインターフェース
+import { IUserRepository } from "@/interfaces/repositories/IUserRepository";
+import { IProblemRepository } from "@/interfaces/repositories/IProblemRepository";
+import { IPatternRepository } from "@/interfaces/repositories/IPatternRepository";
+
+// サービスとリポジトリの実装クラス
 import { AuthService } from "@/services/authService";
 import { FirebaseAdmin } from "@/services/firebaseAdmin";
 import { UserService } from "@/services/userService";
@@ -11,25 +27,14 @@ import { UserBookmarkService } from "@/services/userBookmarkService";
 import { ProblemService } from "@/services/problemService";
 import { PatternService } from "@/services/patternService";
 import { LoggerService } from "@/services/loggerService";
-import { IUserRepository } from "@/repositories/interfaces/IUserRepository";
-import { IProblemRepository } from "@/repositories/interfaces/IProblemRepository";
-import { IPatternRepository } from "@/repositories/interfaces/IPatternRepository";
+
 import { UserRepository } from "@/repositories/userRepository";
 import { ProblemRepository } from "@/repositories/problemRepository";
 import { PatternRepository } from "@/repositories/patternRepository";
 
-// Firestore の初期化
+// Firestore初期化
 import * as admin from "firebase-admin";
 import { Firestore } from "firebase-admin/firestore";
-
-// 環境変数の検証関数
-function validateEnvVar(name: string): string {
-    const value = process.env[name];
-    if (!value) {
-        throw new Error(`Environment variable ${name} is not defined.`);
-    }
-    return value;
-}
 
 if (!admin.apps.length) {
     const projectId = validateEnvVar("FIREBASE_PROJECT_ID");
@@ -50,24 +55,41 @@ if (!admin.apps.length) {
 // Firestore:"Firestore"として登録
 container.registerInstance<Firestore>("Firestore", admin.firestore());
 
-// リポジトリの登録
+// リポジトリの登録: インターフェースと実装の紐付け
 container.registerSingleton<IUserRepository>("IUserRepository", UserRepository);
 container.registerSingleton<IProblemRepository>("IProblemRepository", ProblemRepository);
 container.registerSingleton<IPatternRepository>("IPatternRepository", PatternRepository);
 
-// サービスの登録
-container.registerSingleton<LoggerService>(LoggerService);
-container.registerSingleton<FirebaseAdmin>(FirebaseAdmin);
-container.registerSingleton<AuthService>(AuthService);
-container.registerSingleton<UserService>(UserService);
-container.registerSingleton<UserProfileService>(UserProfileService);
-container.registerSingleton<UserHistoryService>(UserHistoryService);
-container.registerSingleton<UserBookmarkService>(UserBookmarkService);
-container.registerSingleton<ProblemService>(ProblemService);
-container.registerSingleton<PatternService>(PatternService);
+// ロガーサービスの登録
+container.registerSingleton<ILoggerService>("ILoggerService", LoggerService);
+
+// FirebaseAdmin: IFirebaseAdminインターフェースを実装していることを前提
+container.registerSingleton<IFirebaseAdmin>("IFirebaseAdmin", FirebaseAdmin);
+
+// AuthService: IAuthServiceインターフェースを実装していることを前提
+container.registerSingleton<IAuthService>("IAuthService", AuthService);
+
+// UserService: IUserServiceインターフェースを実装
+container.registerSingleton<IUserService>("IUserService", UserService);
+
+// UserProfileService: IUserProfileServiceインターフェースを実装
+container.registerSingleton<IUserProfileService>("IUserProfileService", UserProfileService);
+
+// UserHistoryService: IUserHistoryServiceインターフェースを実装
+container.registerSingleton<IUserHistoryService>("IUserHistoryService", UserHistoryService);
+
+// UserBookmarkService: IUserBookmarkServiceインターフェースを実装
+container.registerSingleton<IUserBookmarkService>("IUserBookmarkService", UserBookmarkService);
+
+// ProblemService: IProblemServiceインターフェースを実装
+container.registerSingleton<IProblemService>("IProblemService", ProblemService);
+
+// PatternService: IPatternServiceインターフェースを実装
+container.registerSingleton<IPatternService>("IPatternService", PatternService);
 
 // container をエクスポート（APIエンドポイントで利用するため）
 export { container };
+
 
 
 // --- use case ---

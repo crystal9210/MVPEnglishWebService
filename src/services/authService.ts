@@ -1,17 +1,20 @@
 import { injectable, inject } from "tsyringe";
-import { FirebaseAdmin } from "./firebaseAdmin";
-import { FirebaseError } from "firebase-admin";
-import { LoggerService } from "@/services/loggerService";
+import type { IFirebaseAdmin } from "@/interfaces/services/IFirebaseAdmin";
+import type { ILoggerService } from "@/interfaces/services/ILoggerService";
+import type { IAuthService } from "@/interfaces/services/IAuthService";
+import type { IAccountRepository } from "@/interfaces/repositories/IAccountRepository";
 import { AdapterAccount } from "next-auth/adapters";
+import { FirebaseError } from "firebase-admin";
 
 @injectable()
-export class AuthService {
+export class AuthService implements IAuthService {
     constructor(
-        @inject(FirebaseAdmin) private firebaseAdmin: FirebaseAdmin,
-        @inject(LoggerService) private logger: LoggerService
+        @inject("IFirebaseAdmin") private readonly firebaseAdmin: IFirebaseAdmin,
+        @inject("ILoggerService") private readonly logger: ILoggerService,
+        @inject("IAccountRepository") private readonly accountRepository: IAccountRepository
     ) {}
 
-    async createAccountEntry(uid: string, accountData: AdapterAccount) {
+    async createAccountEntry(uid: string, accountData: AdapterAccount): Promise<void> {
         try {
             const requiredFields: (keyof AdapterAccount)[] = [
                 "provider",
@@ -25,27 +28,18 @@ export class AuthService {
                 "type",
             ];
 
-            const missingFields = requiredFields.filter(
-                (field) => !(field in accountData)
-            );
+            const missingFields = requiredFields.filter((field) => !(field in accountData));
             if (missingFields.length > 0) {
-                throw new Error(
-                    `Missing required account data fields: ${missingFields.join(", ")}`
-                );
+                throw new Error(`Missing required account data fields: ${missingFields.join(", ")}`);
             }
 
-            const { userId, ...accountDataWithoutUserId } = accountData; // TODO
+            const { userId, ...accountDataWithoutUserId } = accountData; // TODO userId handling
 
-            const accountsCollection = this.firebaseAdmin.firestore.collection("accounts");
-            const accountDocRef = accountsCollection.doc(uid);
-
-            // TODO uidの扱いはどうなる？
-            await accountDocRef.set({
+            // AccountRepositoryを介してDB操作
+            await this.accountRepository.createAccountEntry(uid, {
                 userId: uid,
                 ...accountDataWithoutUserId,
             });
-
-            this.logger.info(`Account entry created/updated in Firestore for userId: ${uid}`);
         } catch (error) {
             this.logger.error(`Failed to create account entry for userId: ${uid}`, { error });
             throw error;
@@ -55,7 +49,7 @@ export class AuthService {
     async getUserByEmail(email: string) {
         try {
             this.logger.info(`Fetching user for email: ${email}`);
-            const userRecord = await this.firebaseAdmin.auth.getUserByEmail(email);
+            const userRecord = await this.firebaseAdmin.getAuth().getUserByEmail(email);
             this.logger.info(`User record found: ${JSON.stringify(userRecord, null, 2)}`);
             return userRecord;
         } catch (error) {
@@ -73,7 +67,7 @@ export class AuthService {
 
     async createUser(email: string, name?: string, photoURL?: string) {
         try {
-            const userRecord = await this.firebaseAdmin.auth.createUser({
+            const userRecord = await this.firebaseAdmin.getAuth().createUser({
                 email,
                 displayName: name,
                 photoURL,
@@ -89,7 +83,7 @@ export class AuthService {
 
     async deleteUser(uid: string): Promise<void> {
         try {
-            await this.firebaseAdmin.auth.deleteUser(uid);
+            await this.firebaseAdmin.getAuth().deleteUser(uid);
             this.logger.info(`Firebase Authentication user deleted: ${uid}`);
         } catch (error) {
             this.logger.error(`Failed to delete Firebase Authentication user: ${uid}`, { error });
