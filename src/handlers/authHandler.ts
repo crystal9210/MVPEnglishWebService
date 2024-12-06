@@ -3,7 +3,7 @@ import GoogleProvider from "next-auth/providers/google";
 import { AuthService } from "@/services/authService";
 import { UserService } from "@/services/userService";
 import { container } from "tsyringe";
-import { Logger } from "@/utils/logger";
+import { Logger } from "@/services/loggerService";
 
 const authService = container.resolve(AuthService);
 const userService = container.resolve(UserService);

@@ -1,6 +1,6 @@
 // TODO nextFunctionを入れる必要があるか
 import {  Request, Response } from "express";
-import { Logger } from "./logger";
+import { Logger } from "../services/loggerService";
 import { CustomError } from "./customError";
 
 export function errorHandler(

@@ -1,22 +1,15 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getToken } from "next-auth/jwt";
-
-export const config = {
-    matcher: ["/dashboard", "/dashboard/:path*", "/register"],
-};
+import { NextResponse, NextRequest } from 'next/server';
+import { authenticateMiddleware } from '@/middlewares/authenticate';
 
 export async function middleware(req: NextRequest) {
-    const token = await getToken({ req, secret: process.env.AUTH_SECRET });
+    // 認証ミドルウェア呼び出し
+    const authResponse = await authenticateMiddleware(req);
+    if (authResponse) return authResponse;
 
-    // `/register` ページ:認証不要
-    if (req.nextUrl.pathname === "/register") {
-        return NextResponse.next();
-    }
-
-    // 他のページでトークンがなければログイン画面にリダイレクト
-    if (!token) {
-        return NextResponse.redirect(new URL("/login", req.url));
-    }
-
+    // 認証成功ー＞次に進む
     return NextResponse.next();
 }
+
+export const config = {
+    matcher: ['/api/:path*', '/dashboard/:path*', '/register/:path*'],
+};

@@ -2,7 +2,7 @@ import { FirebaseAdmin } from "./firebaseAdmin";
 import { Firestore } from "firebase-admin/firestore";
 import { injectable, inject } from "tsyringe";
 import { UserProfileSchema, UserProfile } from "../schemas/userSchemas";
-import { Logger } from "@/utils/logger";
+import { Logger } from "@/services/loggerService";
 
 @injectable()
 export class UserProfileService {

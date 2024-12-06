@@ -1,4 +1,4 @@
-import { Logger } from "./logger";
+import { Logger } from "../services/loggerService";
 
 interface RetryOptions {
     retries?: number;

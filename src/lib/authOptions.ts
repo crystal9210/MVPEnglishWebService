@@ -8,7 +8,7 @@ import { AuthService } from "@/services/authService";
 import { UserService } from "@/services/userService";
 import { sendVerificationEmail } from "@/lib/sendVerificationEmail";
 import { container } from "tsyringe";
-import { Logger } from "@/utils/logger";
+import { Logger } from "@/services/loggerService";
 
 const authService = container.resolve(AuthService);
 const userService = container.resolve(UserService);

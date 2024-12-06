@@ -2,23 +2,23 @@ import { z } from "zod";
 import { sanitizedString } from "./BaseSchemas";
 
 export const UserSchema = z.object({
-    uid: z.string(),
+    uid: z.string(), // TODO
     email: z.string().email(),
-    displayName: z.string().optional(),
-    photoURL: z.string().url().optional(),
+    name: z.string().min(1, `Name is required`).max(255, "Name is too long."),
+    image: z.string().url("Invalid image URL").max(255, "Name is too long."),
     createdAt: z.string().or(z.date()),
     updatedAt: z.string().or(z.date()),
 });
 
 export type User = z.infer<typeof UserSchema>;
 
-export const UserProfileSchema = z.object({
+export const ProfileSchema = z.object({
     displayName: sanitizedString(50),
     bio: sanitizedString(300).optional(),
     location: sanitizedString(100).optional(),
     websites: z.array(z.string().url()).optional(),
     isPremium: z.boolean().optional(),
-    subscriptionPlan: z.string().optional(),
+    subscriptionPlan: z.enum(["free", "pro", "enterprise"]), // TODO
     settings: z.object({
         privacy: z.object({
         profileVisibility: z.enum(["public", "private"]),
@@ -31,7 +31,7 @@ export const UserProfileSchema = z.object({
     }),
 });
 
-export type UserProfile = z.infer<typeof UserProfileSchema>;
+export type UserProfile = z.infer<typeof ProfileSchema>;
 
 export const UserHistoryItemSchema = z.object({
     problemId: z.string(),
