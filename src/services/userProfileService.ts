@@ -7,7 +7,9 @@ import type { UserProfile } from "@/schemas/userSchemas";
 @injectable()
 export class UserProfileService implements IUserProfileService {
     constructor(
+        // eslint-disable-next-line no-unused-vars
         @inject("IProfileRepository") private readonly profileRepository: IProfileRepository,
+        // eslint-disable-next-line no-unused-vars
         @inject("ILoggerService") private readonly logger: ILoggerService
     ) {}
 

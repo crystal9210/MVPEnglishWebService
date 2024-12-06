@@ -7,7 +7,9 @@ import type { UserBookmark } from "@/schemas/bookmarkSchemas";
 @injectable()
 export class UserBookmarkService implements IUserBookmarkService {
     constructor(
+        // eslint-disable-next-line no-unused-vars
         @inject("IUserBookmarkRepository") private readonly bookmarkRepository: IUserBookmarkRepository,
+        // eslint-disable-next-line no-unused-vars
         @inject("ILoggerService") private readonly logger: ILoggerService
     ) {}
 

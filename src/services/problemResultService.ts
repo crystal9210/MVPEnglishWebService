@@ -7,7 +7,9 @@ import type { ProblemResult } from "@/schemas/userHistorySchemas";
 @injectable()
 export class ProblemResultService implements IProblemResultService {
     constructor(
+        // eslint-disable-next-line no-unused-vars
         @inject("IProblemResultRepository") private readonly problemResultRepository: IProblemResultRepository,
+        // eslint-disable-next-line no-unused-vars
         @inject("ILoggerService") private readonly logger: ILoggerService
     ) {}
 

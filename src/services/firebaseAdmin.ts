@@ -10,6 +10,7 @@ export class FirebaseAdmin implements IFirebaseAdmin {
     private firestoreInstance: Firestore;
 
     constructor(
+        // eslint-disable-next-line no-unused-vars
         @inject(LoggerService) private logger: LoggerService
     ) {
         try {

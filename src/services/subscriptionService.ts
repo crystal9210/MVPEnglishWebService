@@ -7,7 +7,9 @@ import type { SubscriptionData } from "@/schemas/subscriptionSchemas";
 @injectable()
 export class SubscriptionService implements ISubscriptionService {
     constructor(
+        // eslint-disable-next-line no-unused-vars
         @inject("ISubscriptionRepository") private readonly subscriptionRepository: ISubscriptionRepository,
+        // eslint-disable-next-line no-unused-vars
         @inject("ILoggerService") private readonly logger: ILoggerService
     ) {}
 

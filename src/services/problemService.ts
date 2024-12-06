@@ -7,7 +7,9 @@ import type { Problem } from "@/schemas/problemSchemas";
 @injectable()
 export class ProblemService implements IProblemService {
     constructor(
+        // eslint-disable-next-line no-unused-vars
         @inject("IProblemRepository") private readonly problemRepository: IProblemRepository,
+        // eslint-disable-next-line no-unused-vars
         @inject("ILoggerService") private readonly logger: ILoggerService
     ) {}
 

@@ -7,7 +7,9 @@ import type { UserHistoryItem } from "@/schemas/userSchemas";
 @injectable()
 export class UserHistoryService implements IUserHistoryService {
     constructor(
+        // eslint-disable-next-line no-unused-vars
         @inject("IUserHistoryRepository") private readonly userHistoryRepository: IUserHistoryRepository,
+        // eslint-disable-next-line no-unused-vars
         @inject("ILoggerService") private readonly logger: ILoggerService
     ) {}
 

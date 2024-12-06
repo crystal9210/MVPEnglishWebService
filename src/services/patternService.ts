@@ -7,7 +7,9 @@ import { IPatternService } from "@/interfaces/services/IPatternService";
 @injectable()
 export class PatternService implements IPatternService {
     constructor(
+        // eslint-disable-next-line no-unused-vars
         @inject(PatternRepository) private patternRepository: PatternRepository,
+        // eslint-disable-next-line no-unused-vars
         @inject(LoggerService) private logger: LoggerService
     ) {}
 
