@@ -80,7 +80,7 @@ container.registerSingleton<IUserService>("IUserService", UserService);
 container.registerSingleton<IUserProfileService>("IUserProfileService", UserProfileService);
 container.registerSingleton<IUserHistoryService>("IUserHistoryService", UserHistoryService);
 container.registerSingleton<IUserBookmarkService>("IUserBookmarkService", UserBookmarkService);
-container.registerSingleton<IProblemService>("IProblemService", ProblemService); // TODO
+container.registerSingleton<IProblemService>("IProblemService", ProblemService);
 container.registerSingleton<IPatternService>("IPatternService", PatternService);
 container.registerSingleton<IUserHistoryService>("IUserHistoryRepository", UserHistoryRepository);
 container.registerSingleton<ISubscriptionService>("ISubscriptionService", SubscriptionService);

@@ -1,7 +1,7 @@
-import { UserBookmarkItem } from "@/schemas/userSchemas";
+import type { UserBookmark } from "@/schemas/bookmarkSchemas";
 
 export interface IUserBookmarkService {
-    getUserBookmarks(uid: string): Promise<UserBookmarkItem[]>;
-    addBookmark(uid: string, bookmarkItem: UserBookmarkItem): Promise<void>;
-    removeBookmark(uid: string, problemId: string): Promise<void>;
+    getUserBookmarks(userId: string): Promise<UserBookmark[]>;
+    addUserBookmark(userId: string, bookmark: UserBookmark): Promise<void>;
+    removeUserBookmark(userId: string, problemId: string): Promise<void>;
 }
