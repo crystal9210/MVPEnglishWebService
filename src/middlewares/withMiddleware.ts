@@ -1,4 +1,3 @@
-// src/middlewares/withValidationAndSanitization.ts
 import { NextResponse } from 'next/server';
 import { ZodSchema, ZodError } from 'zod';
 import { validate, sanitize } from './validateAndSanitize';

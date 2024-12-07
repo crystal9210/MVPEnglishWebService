@@ -18,14 +18,14 @@ export async function authenticateMiddleware(req: NextRequest) {
         return NextResponse.next();
     }
 
-    if (!token || !token.id) {
+    // TODO sub調査・調整、token詳細設計反映
+    if (!token || !token.sub) { // 'sub' は標準的なJWTクレーム
         const loginUrl = new URL('/login', req.url);
         return NextResponse.redirect(loginUrl);
     }
 
-    // トークンからユーザーIDを取得し、ヘッダーに添付
-    const userId = token.id as string; // トークンに uid が含まれていると仮定
-    console.log(`userId in middleware: ${userId}`);
+    // ユーザーIDをヘッダーに添付
+    const userId = token.sub as string;
     if (userId) {
         req.headers.set('x-user-id', userId);
     }
