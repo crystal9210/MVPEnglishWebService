@@ -3,18 +3,16 @@ import { Adapter, AdapterUser, AdapterAccount, AdapterSession, VerificationToken
 import type { IFirebaseAdmin } from "@/interfaces/services/IFirebaseAdmin";
 import type { ILoggerService } from "@/interfaces/services/ILoggerService";
 import type { IAuthService } from "@/interfaces/services/IAuthService";
-import type { IUserService } from "@/interfaces/services/IUserService";
 import { FieldValue } from "firebase-admin/firestore";
 
+const firebaseAdmin = container.resolve<IFirebaseAdmin>("IFirebaseAdmin");
+const logger = container.resolve<ILoggerService>("ILoggerService");
+const authService = container.resolve<IAuthService>("IAuthService");
+const firestore = firebaseAdmin.getFirestore();
+
 export function CustomFirestoreAdapter(): Adapter {
-    const firebaseAdmin = container.resolve<IFirebaseAdmin>("IFirebaseAdmin");
-    const logger = container.resolve<ILoggerService>("ILoggerService");
-    const authService = container.resolve<IAuthService>("IAuthService");
-    const userService = container.resolve<IUserService>("IUserService");
-    const firestore = firebaseAdmin.getFirestore();
 
     const adapter: Adapter = {
-
         // ユーザーを作成
         async createUser(user: AdapterUser): Promise<AdapterUser> {
             const { email, name, image } = user;
@@ -350,5 +348,5 @@ export function CustomFirestoreAdapter(): Adapter {
         },
     };
 
-    return adapter as Adapter;
+    return adapter;
 }

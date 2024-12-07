@@ -1,34 +1,37 @@
 // src/handlers/authHandler.ts
 import "@/containers/diContainer";
 import { NextAuthConfig } from "next-auth";
-import GoogleProvider from "next-auth/providers/google";
+import GoogleProvider from "@auth/core/providers/google"; // `@auth/core/providers` からインポート
 import { container } from "tsyringe";
 import type { ILoggerService } from "@/interfaces/services/ILoggerService";
 import { CustomFirestoreAdapter } from "@/adapters/customFirestoreAdapter";
 
+// カスタムアダプターの初期化とログ出力
 const adapter = CustomFirestoreAdapter();
+console.log("Adapter keys:", Object.keys(adapter));
 
-export const authOptions: NextAuthConfig = {
+export const authOptions: NextAuthConfig = { // `AuthConfig` を使用
     debug: true,
     adapter: adapter,
     providers: [
         GoogleProvider({
             clientId: process.env.AUTH_GOOGLE_ID!,
             clientSecret: process.env.AUTH_GOOGLE_SECRET!,
+            checks: ["pkce", "nonce"],
             authorization: {
                 params: {
                     scope: "openid https://mail.google.com/ https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email",
                     access_type: "offline", // リフレッシュトークンを取得
                     prompt: "consent", // ユーザに許可を求める
                     redirect_uri: "http://localhost:3000/api/auth/callback/google",
-                  },
+                },
             },
         }),
     ],
     session: {
-      strategy: "jwt",
-      maxAge: 60 * 60,
-      updateAge: 60 * 60,
+        strategy: "jwt",
+        maxAge: 60 * 60, // 1時間
+        updateAge: 60 * 60, // 1時間
     },
     secret: process.env.AUTH_SECRET,
     callbacks: {
@@ -82,7 +85,7 @@ export const authOptions: NextAuthConfig = {
          * セッション生成時の処理
          */
         async session({ session, token }) {
-            session.user.role = token.role as string;
+            // session.user.role = token.role as string;
             session.user.id = token.id as string;
             return session;
         },
