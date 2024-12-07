@@ -1,10 +1,6 @@
 // src/container/diContainer.ts
 import "reflect-metadata";
 import { container } from "tsyringe";
-import { validateEnvVar } from "@/utils/env";
-
-import * as admin from "firebase-admin";
-import { Firestore } from "firebase-admin/firestore";
 
 // インターフェース群 (type importでdecoratorエラー回避)
 import type { IFirebaseAdmin } from "@/interfaces/services/IFirebaseAdmin";
@@ -49,18 +45,14 @@ import { SubscriptionRepository } from "@/repositories/subscriptionRepository";
 import { AccountRepository } from "@/repositories/accountRepository";
 import { BatchOperations } from "@/utils/batchOperations";
 
-if (!admin.apps.length) {
-    const projectId = validateEnvVar("FIREBASE_PROJECT_ID");
-    const clientEmail = validateEnvVar("FIREBASE_CLIENT_EMAIL");
-    let privateKey = validateEnvVar("FIREBASE_PRIVATE_KEY");
-    privateKey = privateKey.replace(/\\n/g, "\n");
+// Utility
+// 最初に他のサービスに依存しないサービスを登録 - tsyringeの仕様
+container.registerSingleton<ILoggerService>("ILoggerService", LoggerService);
 
-    admin.initializeApp({
-        credential: admin.credential.cert({ projectId, clientEmail, privateKey }),
-    });
-}
+container.registerSingleton<IFirebaseAdmin>("IFirebaseAdmin", FirebaseAdmin);
 
-container.registerInstance<Firestore>("Firestore", admin.firestore());
+// container.registerSingleton<BatchOperations>("BatchOperations", BatchOperations); // NOTE: "BatchOperations"のトークンを指定しなければならない
+container.registerSingleton(BatchOperations);
 
 // Repositories
 container.registerSingleton<IAccountRepository>("IAccountRepository", AccountRepository);
@@ -73,8 +65,6 @@ container.registerSingleton<IUserHistoryRepository>("IUserHistoryRepository", Us
 container.registerSingleton<ISubscriptionRepository>("ISubscriptionRepository", SubscriptionRepository);
 
 // Services
-container.registerSingleton<IFirebaseAdmin>("IFirebaseAdmin", FirebaseAdmin);
-container.registerSingleton<ILoggerService>("ILoggerService", LoggerService);
 container.registerSingleton<IAuthService>("IAuthService", AuthService);
 container.registerSingleton<IUserService>("IUserService", UserService);
 container.registerSingleton<IUserProfileService>("IUserProfileService", UserProfileService);
@@ -82,11 +72,9 @@ container.registerSingleton<IUserHistoryService>("IUserHistoryService", UserHist
 container.registerSingleton<IUserBookmarkService>("IUserBookmarkService", UserBookmarkService);
 container.registerSingleton<IProblemService>("IProblemService", ProblemService);
 container.registerSingleton<IPatternService>("IPatternService", PatternService);
-container.registerSingleton<IUserHistoryService>("IUserHistoryRepository", UserHistoryRepository);
+container.registerSingleton<IUserHistoryRepository>("IUserHistoryRepository", UserHistoryRepository);
 container.registerSingleton<ISubscriptionService>("ISubscriptionService", SubscriptionService);
 
-// Utility
-container.registerSingleton(BatchOperations);
 
 export { container };
 

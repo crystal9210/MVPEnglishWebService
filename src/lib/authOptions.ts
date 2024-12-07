@@ -1,23 +1,22 @@
 // src/handlers/authOptions.ts
-
 import NextAuth, { NextAuthConfig } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import GitHubProvider from "next-auth/providers/github";
-import { CustomFirestoreAdapter } from "@/services/customFirestoreAdapter";
+import { CustomFirestoreAdapter } from "@/adapters/customFirestoreAdapter";
+import { container } from "tsyringe";
 import { AuthService } from "@/services/authService";
 import { UserService } from "@/services/userService";
 import { sendVerificationEmail } from "@/lib/sendVerificationEmail";
-import { container } from "tsyringe";
-import { Logger } from "@/services/loggerService";
+import { LoggerService } from "@/services/loggerService";
 
+// DI コンテナからサービスを取得
 const authService = container.resolve(AuthService);
 const userService = container.resolve(UserService);
-
-const adapter: CustomFirestoreAdapter = container.resolve(CustomFirestoreAdapter);
+const logger = container.resolve(LoggerService);
+const adapter = container.resolve(CustomFirestoreAdapter);
 
 export const authOptions: NextAuthConfig = {
-  // debug: true,
-  adapter: adapter,
+  adapter: adapter as CustomFirestoreAdapter,
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -43,93 +42,85 @@ export const authOptions: NextAuthConfig = {
   },
   secret: process.env.AUTH_SECRET,
   callbacks: {
-    // サインイン時の処理
     async signIn({ user, account }) {
-      if (!account || account.provider !== "google") {
-        Logger.warn("現在、Googleアカウント以外の認証はサポートされていません。");
-        return '/login?error=unsupportedProvider';
-      }
-
-      if (!user.email) {
-        Logger.error("サインイン失敗: メールアドレスが提供されていません。");
-        return "/login?error=noEmail";
-      }
-
-      if (!user.email.endsWith("@gmail.com")) {
-        Logger.error("サインイン失敗: 許容規格：...@gmail.com 以外のメールアドレスです。");
-        return "/login?error=invalidEmail";
-      }
-
-      const email = user.email;
-      Logger.debug(`signIn callback: user: ${JSON.stringify(user, null, 2)}`);
-      Logger.debug(`signIn callback: account: ${JSON.stringify(account, null, 2)}`);
-
       try {
-        let firebaseUser = await authService.getUserByEmail(email);
-        if (!firebaseUser) {
-          Logger.info(`Firebase Authentication にユーザが存在しないため、新規作成します。: ${email}`);
-          firebaseUser = await authService.createUser(
-            email,
-            user.name || undefined,
-            user.image || undefined
-          );
-          Logger.info(`新規 Firebase ユーザ UID: ${firebaseUser.uid}`);
+        if (!account || account.provider !== "google") {
+          logger.warn("Unsupported provider attempted.");
+          return "/login?error=unsupportedProvider";
         }
 
-        // 認証プロバイダとの同期状態を反映
+        if (!user.email) {
+          logger.error("Sign-in failed: No email provided.");
+          return "/login?error=noEmail";
+        }
+
+        if (!user.email.endsWith("@gmail.com")) {
+          logger.error("Sign-in failed: Invalid email domain.");
+          return "/login?error=invalidEmail";
+        }
+
+        const email = user.email;
+        logger.info(`Sign-in initiated for user: ${email}`);
+
+        // Firebase User Fetch or Create
+        let firebaseUser = await authService.getUserByEmail(email);
+        if (!firebaseUser) {
+          logger.info(`Creating Firebase user for email: ${email}`);
+          firebaseUser = await authService.createUser(
+            email,
+            user.name || "Unnamed User",
+            user.image || undefined
+          );
+        }
+
+        // Link account with Firebase Authentication
         if (account) {
           await authService.createAccountEntry(firebaseUser.uid, account);
         }
 
-        // Firestoreにユーザーデータがなければ作成
+        // Check Firestore user existence
         const userData = await userService.getUserById(firebaseUser.uid);
         if (!userData) {
-          Logger.info(`Firestoreにユーザが存在しないため、新規作成します: ${email}`);
-          // User 型に適合するデータを作成
-          const newUserData = {
-            email: firebaseUser.email || email,
-            name: firebaseUser.displayName || user.name || `User_${Date.now()}`,
+          logger.info(`Creating Firestore user data for UID: ${firebaseUser.uid}`);
+          const newUser = {
+            email: firebaseUser.email!,
+            name: firebaseUser.displayName || user.name!,
             image: firebaseUser.photoURL || user.image || undefined,
             emailVerified: firebaseUser.emailVerified || false,
             createdAt: new Date(),
             updatedAt: new Date(),
           };
-          await userService.createUser(firebaseUser.uid, newUserData);
-        } else {
-          Logger.info(`Firestoreに既存ユーザが見つかりました: ${firebaseUser.uid}`);
+          await userService.createUser(firebaseUser.uid, newUser);
         }
 
-        // メールアドレス確認済みかチェック
+        // Email Verification
         if (!firebaseUser.emailVerified) {
-          Logger.warn(`ユーザ ${email} の登録が未完了です。確認メールを再送信します。`);
+          logger.warn(`Email verification pending for user: ${email}`);
           await sendVerificationEmail(email);
           return false;
         }
 
-        Logger.info(`ユーザー ${email} : 登録済み。ログイン処理を開始します。`);
+        logger.info(`User ${email} successfully signed in.`);
         return true;
       } catch (error) {
-        Logger.error("サインイン処理中にエラーが発生しました:", error);
+        logger.error("Error during sign-in process.", error);
         return false;
       }
     },
-    // JWTトークン生成時の処理
+
     async jwt({ token, user }) {
-      Logger.debug("JWTコールバック開始:", { token });
       if (user) {
-        token.role = "user";
-        token.subscriptionType = "free";
         token.id = user.id;
+        token.role = "user";
+        token.subscriptionType = "free"; // Example field
       }
-      Logger.debug(`カスタマイズされた JWT: ${JSON.stringify(token, null, 2)}`);
       return token;
     },
+
     async session({ session, token }) {
-      Logger.debug("セッションコールバック:", { session, token });
+      session.user.id = token.id as string;
       session.user.role = token.role as string;
-      session.user.id = token.id as string ?? undefined;
       return session;
     },
   },
-
 };

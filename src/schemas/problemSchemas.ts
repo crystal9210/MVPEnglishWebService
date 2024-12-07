@@ -35,11 +35,8 @@ const fillInTheBlankProblemSchema = baseProblemSchema.extend({
   ),
 });
 
-
-// WritingExerciseSchemaの型を生成
-const WritingExerciseSchema = baseProblemSchema.extend({
+const writingExerciseSchema = baseProblemSchema.extend({
   type: z.literal("writing"),
-  id: z.string(),
   title: z.string(),
   description: z.string(),
   text: z.string(),
@@ -52,62 +49,87 @@ const WritingExerciseSchema = baseProblemSchema.extend({
   ),
 });
 
-const basisProblemSchema = baseProblemSchema.extend({
-  type: z.literal("basis"),
-  id: z.string(),
-  example: z.string(),
-  explanation: z.string(),
-  options: z.array(
-    z.object({
-      text: z.string(),
-      images: z.array(z.string()),
-    })
-  ),
-  answer: z.string(),
-});
-
-// export type WritingExercise = z.infer<typeof WritingExerciseSchema>;
-
 export const PatternSchema = baseProblemSchema.extend({
   type: z.literal("pattern"),
-  id: z.string(),
   title: z.string(),
   description: z.string(),
-  difficulty: z.enum(["beginner", "intermediate", "advanced"]),
   examples: z.array(z.object({ en: z.string(), jp: z.string() })),
   problemIds: z.array(z.string()),
 });
 
-// TODO
-export const ProblemSchema = z.discriminatedUnion("type", [
-  multipleChoiceProblemSchema,
-  fillInTheBlankProblemSchema,
-  WritingExerciseSchema,
-  basisProblemSchema,
-  PatternSchema,
-]);
+export type Pattern = z.infer<typeof PatternSchema>;
 
-export type Problem = z.infer<typeof ProblemSchema>;
+// 手動でプロパティをオプショナル化
+const partialMultipleChoiceProblemSchema = multipleChoiceProblemSchema.extend({
+  question: z.string().optional(),
+  options: z.array(
+    z.object({
+      text: z.string(),
+      images: z.array(z.string()).optional(),
+    })
+  ).optional(),
+  answer: z.string().optional(),
+  explanation: z.string().optional(),
+});
 
-// 個々の問題スキーマの部分的なバージョン
-const partialMultipleChoiceProblemSchema = multipleChoiceProblemSchema.partial();
-const partialFillInTheBlankProblemSchema = fillInTheBlankProblemSchema.partial();
-const partialWritingExerciseSchema = WritingExerciseSchema.partial();
-const partialBasisProblemSchema = basisProblemSchema.partial();
-const partialPatternSchema = PatternSchema.partial();
+const partialFillInTheBlankProblemSchema = fillInTheBlankProblemSchema.extend({
+  title: z.string().optional(),
+  description: z.string().optional(),
+  text: z.string().optional(),
+  blanks: z.array(
+    z.object({
+      index: z.number(),
+      correctAnswer: z.string(),
+      tips: z.string().optional(),
+    })
+  ).optional(),
+});
 
+const partialWritingExerciseSchema = writingExerciseSchema.extend({
+  title: z.string().optional(),
+  description: z.string().optional(),
+  text: z.string().optional(),
+  blanks: z.array(
+    z.object({
+      index: z.number(),
+      correctAnswer: z.string(),
+      tips: z.string().optional(),
+    })
+  ).optional(),
+});
+
+const partialPatternSchema = PatternSchema.extend({
+  title: z.string().optional(),
+  description: z.string().optional(),
+  examples: z.array(z.object({ en: z.string(), jp: z.string() })).optional(),
+  problemIds: z.array(z.string()).optional(),
+});
+
+// Discriminated Union
 export const PartialProblemSchema = z.discriminatedUnion("type", [
   partialMultipleChoiceProblemSchema,
   partialFillInTheBlankProblemSchema,
   partialWritingExerciseSchema,
-  partialBasisProblemSchema,
   partialPatternSchema,
 ]);
 
 export type PartialProblem = z.infer<typeof PartialProblemSchema>;
 
+// 問題スキーマ全体
+export const ProblemSchema = {
+  "multiple-choice": multipleChoiceProblemSchema,
+  "fill-in-the-blank": fillInTheBlankProblemSchema,
+  writing: writingExerciseSchema,
+};
 
-export type Pattern = z.infer<typeof PatternSchema>;
+export const baseProblemValidationSchema = baseProblemSchema;
+
+// 型エイリアス
+export type Problem = z.infer<typeof baseProblemSchema>;
+export type MultipleChoiceProblem = z.infer<typeof multipleChoiceProblemSchema>;
+export type FillInTheBlankProblem = z.infer<typeof fillInTheBlankProblemSchema>;
+export type WritingProblem = z.infer<typeof writingExerciseSchema>;
+
 // export const ExerciseSchema = z.object({
 //     id: z.string(),
 //     type: z.enum(["fill-in-the-blank", "multiple-choice", "listening", "writing"]),

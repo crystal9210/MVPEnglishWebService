@@ -1,26 +1,23 @@
-import { Firestore, DocumentData } from "firebase-admin/firestore";
+// TODO 依存関係周りリファクタ
 import { injectable, inject } from "tsyringe";
+import type { IFirebaseAdmin } from "@/interfaces/services/IFirebaseAdmin";
+import type { ILoggerService } from "@/interfaces/services/ILoggerService";
 import { User, UserSchema } from "@/schemas/userSchemas";
 import { BatchOperations } from "@/utils/batchOperations";
-import { LoggerService } from "@/services/loggerService";
 import { IUserRepository } from "@/interfaces/repositories/IUserRepository";
+// import * as FirebaseFirestore from "firebase-admin/firestore";
+import type { DocumentData } from "firebase-admin/firestore";
 
 @injectable()
 export class UserRepository implements IUserRepository {
     private readonly collectionName = "users";
-    private readonly firestore: Firestore;
-    private readonly logger: LoggerService;
-    private readonly batchOperations: BatchOperations;
 
     constructor(
-        @inject("Firestore") firestore: Firestore,
-        @inject(LoggerService) logger: LoggerService,
-        @inject(BatchOperations) batchOperations: BatchOperations
-    ) {
-        this.firestore = firestore;
-        this.logger = logger;
-        this.batchOperations = batchOperations;
-    }
+        @inject("IFirebaseAdmin") private firebaseAdmin: IFirebaseAdmin,
+        @inject("ILoggerService") private logger: ILoggerService,
+        // @inject("BatchOperations") private batchOperations: BatchOperations
+        @inject(BatchOperations) private batchOperations: BatchOperations
+    ) {}
 
     /**
      * ユーザーをIDで検索
@@ -29,7 +26,7 @@ export class UserRepository implements IUserRepository {
      */
     async findUserById(uid: string): Promise<User | null> {
         try {
-            const userDoc = await this.firestore.collection(this.collectionName).doc(uid).get();
+            const userDoc = await this.firebaseAdmin.getFirestore().collection(this.collectionName).doc(uid).get();
             if (userDoc.exists) {
                 const data = userDoc.data() as DocumentData;
 

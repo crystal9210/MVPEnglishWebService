@@ -1,25 +1,27 @@
-import { Firestore, WithFieldValue, DocumentData } from "firebase-admin/firestore";
 import { injectable, inject } from "tsyringe";
+import { IProblemResultRepository } from "@/interfaces/repositories/IProblemResultRepository";
+import type { IFirebaseAdmin } from "@/interfaces/services/IFirebaseAdmin";
+import type { ILoggerService } from "@/interfaces/services/ILoggerService";
 import { ProblemResult, ProblemResultSchema } from "@/schemas/userHistorySchemas";
 import { BatchOperations } from "@/utils/batchOperations";
-import { LoggerService } from "@/services/loggerService";
-import { IProblemResultRepository } from "@/interfaces/repositories/IProblemResultRepository";
+import type { DocumentData, WithFieldValue, UpdateData } from "firebase-admin/firestore";
+import * as FirebaseFirestore from "firebase-admin/firestore";
 
 // TODO 問題形態のスキーマimport、使用->堅牢化
 @injectable()
 export class ProblemResultRepository implements IProblemResultRepository {
-    private readonly firestore: Firestore;
-    private readonly logger: LoggerService;
-    private readonly batchOperations: BatchOperations;
+    private readonly db: FirebaseFirestore.Firestore;
+    private readonly logger: ILoggerService;
 
     constructor(
-        @inject("Firestore") firestore: Firestore,
-        @inject(LoggerService) logger: LoggerService,
-        @inject(BatchOperations) batchOperations: BatchOperations
+        @inject("IFirebaseAdmin") firebaseAdmin: IFirebaseAdmin,
+        @inject("ILoggerService") logger: ILoggerService,
+        // @inject("BatchOperations") batchOperations: BatchOperations
+        @inject(BatchOperations) private batchOperations: BatchOperations
     ) {
-        this.firestore = firestore;
+        this.db = firebaseAdmin.getFirestore();
         this.logger = logger;
-        this.batchOperations = batchOperations;
+        // this.batchOperations = batchOperations;
     }
 
     /**
@@ -40,7 +42,7 @@ export class ProblemResultRepository implements IProblemResultRepository {
      */
     async findProblemResult(problemType: string, userId: string, problemId: string): Promise<ProblemResult | null> {
         try {
-            const doc = await this.firestore.collection(this.getCollectionName(problemType)).doc(problemId).get();
+            const doc = await this.db.collection(this.getCollectionName(problemType)).doc(problemId).get();
             if (doc.exists) {
                 const data = doc.data() as DocumentData;
 

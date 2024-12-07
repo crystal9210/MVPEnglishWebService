@@ -1,18 +1,18 @@
-import { Firestore, WithFieldValue, DocumentData } from "firebase-admin/firestore";
-import { UpdateData } from "firebase-admin/firestore";
 import { injectable, inject } from "tsyringe";
-import { LoggerService } from "@/services/loggerService";
+import type { IFirebaseAdmin } from "@/interfaces/services/IFirebaseAdmin";
+import type { ILoggerService } from "@/interfaces/services/ILoggerService";
+import type { DocumentData, WithFieldValue, UpdateData } from "firebase-admin/firestore";
 
 @injectable()
 export class BatchOperations {
-    private firestore: Firestore;
-    private logger: LoggerService;
+    private readonly db: FirebaseFirestore.Firestore;
+    private readonly logger: ILoggerService;
 
     constructor(
-        @inject(Firestore) firestore: Firestore,
-        @inject(LoggerService) logger: LoggerService
+        @inject("IFirebaseAdmin") firebaseAdmin: IFirebaseAdmin,
+        @inject("ILoggerService") logger: ILoggerService
     ) {
-        this.firestore = firestore;
+        this.db = firebaseAdmin.getFirestore();
         this.logger = logger;
     }
 
@@ -21,9 +21,12 @@ export class BatchOperations {
      * @param collectionName Firestoreのコレクション名
      * @param documents ドキュメントの配列（idとデータ）
      */
-    async batchSet<T extends WithFieldValue<DocumentData>>(collectionName: string, documents: { id: string, data: T }[]): Promise<void> {
-        const batch = this.firestore.batch();
-        const collectionRef = this.firestore.collection(collectionName);
+    async batchSet<T extends WithFieldValue<DocumentData>>(
+        collectionName: string,
+        documents: { id: string; data: T }[]
+    ): Promise<void> {
+        const batch = this.db.batch();
+        const collectionRef = this.db.collection(collectionName);
 
         documents.forEach(doc => {
             const docRef = collectionRef.doc(doc.id);
@@ -46,10 +49,10 @@ export class BatchOperations {
      */
     async batchUpdate<T extends DocumentData>(
         collectionName: string,
-        documents: { id: string; data: UpdateData<T> }[] // 型を UpdateData<T> に修正
+        documents: { id: string; data: UpdateData<T> }[]
     ): Promise<void> {
-        const batch = this.firestore.batch();
-        const collectionRef = this.firestore.collection(collectionName);
+        const batch = this.db.batch();
+        const collectionRef = this.db.collection(collectionName);
 
         documents.forEach(doc => {
             const docRef = collectionRef.doc(doc.id);
@@ -71,8 +74,8 @@ export class BatchOperations {
      * @param ids ドキュメントIDの配列
      */
     async batchDelete(collectionName: string, ids: string[]): Promise<void> {
-        const batch = this.firestore.batch();
-        const collectionRef = this.firestore.collection(collectionName);
+        const batch = this.db.batch();
+        const collectionRef = this.db.collection(collectionName);
 
         ids.forEach(id => {
             const docRef = collectionRef.doc(id);
