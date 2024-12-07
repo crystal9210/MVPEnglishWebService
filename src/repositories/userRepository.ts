@@ -1,12 +1,14 @@
 // TODO 依存関係周りリファクタ
+/* eslint-disable no-unused-vars */
 import { injectable, inject } from "tsyringe";
 import type { IFirebaseAdmin } from "@/interfaces/services/IFirebaseAdmin";
 import type { ILoggerService } from "@/interfaces/services/ILoggerService";
 import { User, UserSchema } from "@/schemas/userSchemas";
 import { BatchOperations } from "@/utils/batchOperations";
 import { IUserRepository } from "@/interfaces/repositories/IUserRepository";
-// import * as FirebaseFirestore from "firebase-admin/firestore";
 import type { DocumentData } from "firebase-admin/firestore";
+import { RetryService } from "@/services/retryService";
+import { isRetryableError } from "@/utils/isRetryableError";
 
 @injectable()
 export class UserRepository implements IUserRepository {
@@ -15,17 +17,17 @@ export class UserRepository implements IUserRepository {
     constructor(
         @inject("IFirebaseAdmin") private firebaseAdmin: IFirebaseAdmin,
         @inject("ILoggerService") private logger: ILoggerService,
-        // @inject("BatchOperations") private batchOperations: BatchOperations
-        @inject(BatchOperations) private batchOperations: BatchOperations
+        @inject(BatchOperations) private batchOperations: BatchOperations,
+        @inject(RetryService) private retryService: RetryService
     ) {}
 
     /**
-     * ユーザーをIDで検索
+     * ユーザーID検索
      * @param uid ユーザーID
      * @returns User | null
      */
     async findUserById(uid: string): Promise<User | null> {
-        try {
+        return this.retryService.retry(async () => {
             const userDoc = await this.firebaseAdmin.getFirestore().collection(this.collectionName).doc(uid).get();
             if (userDoc.exists) {
                 const data = userDoc.data() as DocumentData;
@@ -44,57 +46,65 @@ export class UserRepository implements IUserRepository {
             }
             this.logger.warn(`User not found in Firestore: UID = ${uid}`);
             return null;
-        } catch (error) {
-            this.logger.error(`Failed to find user with UID: ${uid}`, { error });
-            throw error;
-        }
+        }, {
+            retries: 3,
+            delay: 1000,
+            factor: 2,
+            shouldRetry: isRetryableError
+        });
     }
 
     /**
-     * ユーザーを作成
+     * ユーザー作成
      * @param user Userオブジェクト
      */
     async createUser(user: User): Promise<void> {
-        try {
+        await this.retryService.retry(async () => {
             // Firestoreに保存
             await this.batchOperations.batchSet<User>(this.collectionName, [{ id: user.uid, data: user }]);
 
             this.logger.info(`User created: UID = ${user.uid}`);
-        } catch (error) {
-            this.logger.error(`Failed to create user: UID = ${user.uid}`, { error });
-            throw error;
-        }
+        }, {
+            retries: 3,
+            delay: 1000,
+            factor: 2,
+            shouldRetry: isRetryableError
+        });
     }
 
     /**
-     * ユーザーを更新
+     * ユーザー更新
      * @param user Partial<User> & { uid: string }
      */
     async updateUser(user: Partial<User> & { uid: string }): Promise<void> {
-        try {
+        await this.retryService.retry(async () => {
             // Firestoreに更新
             await this.batchOperations.batchUpdate<Partial<User>>(this.collectionName, [{ id: user.uid, data: user }]);
 
             this.logger.info(`User updated: UID = ${user.uid}`);
-        } catch (error) {
-            this.logger.error(`Failed to update user: UID = ${user.uid}`, { error });
-            throw error;
-        }
+        }, {
+            retries: 3,
+            delay: 1000,
+            factor: 2,
+            shouldRetry: isRetryableError
+        });
     }
 
     /**
-     * ユーザーを削除
+     * ユーザー削除
      * @param uid ユーザーID
      */
     async deleteUser(uid: string): Promise<void> {
-        try {
+        await this.retryService.retry(async () => {
             // Firestoreから削除
             await this.batchOperations.batchDelete(this.collectionName, [uid]);
 
             this.logger.info(`User deleted: UID = ${uid}`);
-        } catch (error) {
-            this.logger.error(`Failed to delete user: UID = ${uid}`, { error });
-            throw error;
-        }
+        }, {
+            retries: 3,
+            delay: 1000,
+            factor: 2,
+            shouldRetry: isRetryableError
+        });
     }
 }

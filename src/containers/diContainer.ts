@@ -44,6 +44,7 @@ import { UserHistoryRepository } from "@/repositories/userHistoryRepository";
 import { SubscriptionRepository } from "@/repositories/subscriptionRepository";
 import { AccountRepository } from "@/repositories/accountRepository";
 import { BatchOperations } from "@/utils/batchOperations";
+import { RetryService } from "@/services/retryService";
 
 // Utility
 // 最初に他のサービスに依存しないサービスを登録 - tsyringeの仕様
@@ -53,6 +54,7 @@ container.registerSingleton<IFirebaseAdmin>("IFirebaseAdmin", FirebaseAdmin);
 
 // container.registerSingleton<BatchOperations>("BatchOperations", BatchOperations); // NOTE: "BatchOperations"のトークンを指定しなければならない
 container.registerSingleton(BatchOperations);
+container.registerSingleton(RetryService);
 
 // Repositories
 container.registerSingleton<IAccountRepository>("IAccountRepository", AccountRepository);
