@@ -51,6 +51,7 @@
     "@types/react-dom": "^18",
     "@types/winston-loggly-bulk": "^3.0.6",
     "chart.js": "^4.4.6",
+    "date-fns": "^4.1.0",
     "eslint": "^8",
     "eslint-config-next": "15.0.2",
     "jest-mock-extended": "^4.0.0-beta1",
