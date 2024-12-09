@@ -1,6 +1,8 @@
 All rights reverved@Yuto Seki(2024,2025)
 (NOTE: The above is temporary to avoid copyright related issues, and I'm not actually responsible for the codebase.)
 
+## This is one of the simple and small personal projects I am personally working on
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
