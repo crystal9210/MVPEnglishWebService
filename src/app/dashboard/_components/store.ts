@@ -1,5 +1,3 @@
-// app/dashboard/_components/store.ts
-
 import create from "zustand";
 
 type Store = {

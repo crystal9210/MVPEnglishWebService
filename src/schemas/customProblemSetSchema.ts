@@ -9,4 +9,4 @@ export const ProblemSetSchema = z.object({
   updatedAt: z.date(),
 });
 
-export type ProblemSet = z.infer<typeof ProblemSetSchema>;
+export type CustomProblemSet = z.infer<typeof ProblemSetSchema>;

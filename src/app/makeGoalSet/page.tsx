@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 // import { container } from 'tsyringe';
 // import { ProblemSetRepository } from '@/repositories/ProblemSetRepository';
-import { ProblemSet, ProblemSetSchema } from '@/schemas/problemSetSchema';
+import { ProblemSet, ProblemSetSchema } from '@/schemas/customProblemSetSchema';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { mockProblemSets } from '@/sample_datasets/v1/goals';

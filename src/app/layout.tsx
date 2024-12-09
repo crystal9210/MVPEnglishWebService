@@ -3,7 +3,7 @@ import localFont from "next/font/local";
 import { SessionProvider } from "next-auth/react";
 import "./globals.css";
 import { MemoProvider } from "./contexts/MemoContext";
-import { MockDataProvider } from "@/contexts/mockDataContext";
+import { ActivityProvider } from "@/contexts/activityContext";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -31,9 +31,9 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <SessionProvider>
           <MemoProvider>
-            <MockDataProvider>
-            {children}
-            </MockDataProvider>
+            <ActivityProvider>
+              {children}
+            </ActivityProvider>
           </MemoProvider>
         </SessionProvider>
       </body>

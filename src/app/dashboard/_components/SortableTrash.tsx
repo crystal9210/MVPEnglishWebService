@@ -1,5 +1,3 @@
-// app/dashboard/_components/SortableTrash.tsx
-
 import React from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { FiTrash2 } from "react-icons/fi"; // 正しくインポート

@@ -1,5 +1,17 @@
 import { z } from "zod";
 
+// TODO コレクションの設計からやり直すべき
+export const UserHistoryItemSchema = z.object({
+  problemId: z.string(),
+  result: z.enum(["correct", "incorrect"]),
+  attempts: z.number(),
+  lastAttemptAt: z.string().or(z.date()),
+  notes: z.string().optional(),
+});
+
+export type UserHistoryItem = z.infer<typeof UserHistoryItemSchema>;
+
+
 export const AttemptHistoryItemSchema = z.object({
     result: z.enum(["correct", "incorrect"]),
     timeSpent: z.number().min(0, "Time spent must be a positive number."),

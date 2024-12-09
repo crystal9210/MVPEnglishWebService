@@ -13,6 +13,9 @@ import type { IProblemService } from "@/interfaces/services/IProblemService";
 import type { IPatternService } from "@/interfaces/services/IPatternService";
 // import type { IHistoryService } from "@/interfaces/services/IHistoryService";
 import type { ISubscriptionService } from "@/interfaces/services/ISubscriptionService";
+import type { ActivityServiceInterface } from "@/interfaces/services/IActivityService";
+import type { ActivityManagerInterface } from "@/interfaces/components/managers/IActivityManager";
+
 import type { IAccountRepository } from "@/interfaces/repositories/IAccountRepository";
 import type { IUserRepository } from "@/interfaces/repositories/IUserRepository";
 import type { IProblemRepository } from "@/interfaces/repositories/IProblemRepository";
@@ -21,6 +24,7 @@ import type { IProblemResultRepository } from "@/interfaces/repositories/IProble
 import type { IProfileRepository } from "@/interfaces/repositories/IProfileRepository";
 import type { IUserHistoryRepository } from "@/interfaces/repositories/IUserHistoryRepository";
 import type { ISubscriptionRepository } from "@/interfaces/repositories/ISubscriptionRepository";
+import type { IActivitySessionRepository } from "@/interfaces/repositories/IActivitySessionRepository";
 
 // 実装クラス群
 import { AuthService } from "@/domain/services/authService";
@@ -44,6 +48,9 @@ import { SubscriptionRepository } from "@/domain/repositories/subscriptionReposi
 import { AccountRepository } from "@/domain/repositories/accountRepository";
 import { BatchOperations } from "@/utils/batchOperations";
 import { RetryService } from "@/domain/services/retryService";
+import { ActivityService } from "@/domain/services/activityService";
+import { ActivitySessionRepository } from "@/domain/repositories/activitySessionRepository";
+import { ActivityManager } from "@/components/managers/activityManager";
 
 // Utility
 // 最初に他のサービスに依存しないサービスを登録 - tsyringeの仕様
@@ -75,6 +82,9 @@ container.registerSingleton<IProblemService>("IProblemService", ProblemService);
 container.registerSingleton<IPatternService>("IPatternService", PatternService);
 container.registerSingleton<IUserHistoryRepository>("IUserHistoryRepository", UserHistoryRepository);
 container.registerSingleton<ISubscriptionService>("ISubscriptionService", SubscriptionService);
+container.registerSingleton<IActivitySessionRepository>("IActivitySessionRepository", ActivitySessionRepository);
+container.registerSingleton<ActivityServiceInterface>("IActivityService", ActivityService);
+container.registerSingleton<ActivityManagerInterface>("IActivityManager", ActivityManager);
 
 
 export { container };

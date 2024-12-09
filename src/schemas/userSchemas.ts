@@ -54,7 +54,6 @@ export type UserBookmarkItem = z.infer<typeof UserBookmarkItemSchema>;
 
 export const CustomProblemSetSchema = z.object({
     id: z.string(),
-    userId: z.string(),
     title: z.string(),
     description: z.string().optional(),
     problemIds: z.array(z.string()),

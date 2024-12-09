@@ -1,64 +1,109 @@
-// src/app/contexts/ActivityContext.tsx
+"use client";
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { Session } from '../../domain/models/Session';
-import { Problem } from '../../domain/models/Problem';
-import { SessionHistory } from '../../domain/models/SessionHistory';
-import { injectable, inject } from "tsyringe";
-import { ActivityManagerInterface } from "@/interfaces/services/IActivityManager";
-import { ActivityManager } from "@/domain/services/ActivityManager";
+import { container } from "@/containers/diContainer";
+import { ActivityManagerInterface } from "@/interfaces/components/managers/IActivityManager";
+import { ActivitySession } from "@/domain/entities/ActivitySession";
+import { UserHistoryItem } from "@/domain/entities/userHistoryItem";
 
+/**
+ * ActivityContextProps
+ *
+ * ActivityContext が提供する値の型定義。
+ * セッションの状態と操作メソッドを含む。
+ */
 interface ActivityContextProps {
-    session: Session | null;
-    currentProblem: Problem | null;
-    startSession: (userId: string, problems: Problem[]) => void;
-    endSession: () => void;
-    submitAnswer: (problemId: string, isCorrect: boolean, notes?: string) => void;
-    sessionHistory: SessionHistory[];
+    session: ActivitySession | null;
+    startSession: (session: ActivitySession) => Promise<void>;
+    endSession: () => Promise<void>;
+    submitAnswer: (historyItem: UserHistoryItem) => Promise<void>;
 }
 
+/**
+ * ActivityContext
+ *
+ * Reactのコンテキストオブジェクトを作成。
+ * ActivityContextProps 型の値を提供。
+ */
 const ActivityContext = createContext<ActivityContextProps | undefined>(undefined);
 
+/**
+ * ActivityProvider
+ *
+ * ActivityContext.Provider をラップし、コンテキストの値を管理。
+ * ActivityManager を介してセッションの状態を管理・操作する。
+ *
+ * @param children - プロバイダーの子要素
+ */
 export const ActivityProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const [session, setSession] = useState<Session | null>(null);
-    const [currentProblem, setCurrentProblem] = useState<Problem | null>(null);
-    const [sessionHistory, setSessionHistory] = useState<SessionHistory[]>([]);
+    const activityManager: ActivityManagerInterface = container.resolve<ActivityManagerInterface>("IActivityManager");
 
-    const activityManager: ActivityManagerInterface = new ActivityManager();
+    const [session, setSession] = useState<ActivitySession | null>(activityManager.getCurrentSession());
 
-    const startSessionHandler = (userId: string, problems: Problem[]) => {
-        activityManager.startSession(userId, problems);
-        const newSession = activityManager.getSession();
-        setSession(newSession);
-        setCurrentProblem(activityManager.getCurrentProblem());
+    /**
+     * セッション開始ハンドラー
+     *
+     * @param session - 開始するセッションのActivitySessionオブジェクト
+     */
+    const startSessionHandler = async (session: ActivitySession) => {
+        try {
+        await activityManager.startSession(session);
+        setSession(session);
+        } catch (error) {
+        console.error("Failed to start session", error);
+        // 必要に応じてUIにフィードバックを提供
+        }
     };
 
-    const endSessionHandler = () => {
-        activityManager.endSession();
+    /**
+     * セッション終了ハンドラー
+     */
+    const endSessionHandler = async () => {
+        if (!session) return;
+        try {
+        await activityManager.endSession(session.sessionId);
         setSession(null);
-        setCurrentProblem(null);
-        setSessionHistory([]);
+        } catch (error) {
+        console.error("Failed to end session", error);
+        // 必要に応じてUIにフィードバックを提供
+        }
     };
 
-    const submitAnswerHandler = (problemId: string, isCorrect: boolean, notes?: string) => {
-        activityManager.submitAnswer(problemId, isCorrect, notes);
-        setSessionHistory(activityManager.getSessionHistory());
-        setCurrentProblem(activityManager.getCurrentProblem());
+    /**
+     * 回答提出ハンドラー
+     *
+     * @param historyItem - 提出するUserHistoryItemオブジェクト
+     */
+    const submitAnswerHandler = async (historyItem: UserHistoryItem) => {
+        if (!session) return;
+        try {
+        await activityManager.submitAnswer(session.sessionId, historyItem);
+        // 必要に応じてセッションの再取得や更新
+        } catch (error) {
+        console.error("Failed to submit answer", error);
+        // 必要に応じてUIにフィードバックを提供
+        }
     };
 
     return (
         <ActivityContext.Provider value={{
-            session,
-            currentProblem,
-            startSession: startSessionHandler,
-            endSession: endSessionHandler,
-            submitAnswer: submitAnswerHandler,
-            sessionHistory
+        session,
+        startSession: startSessionHandler,
+        endSession: endSessionHandler,
+        submitAnswer: submitAnswerHandler,
         }}>
-            {children}
+        {children}
         </ActivityContext.Provider>
     );
 };
 
+/**
+ * useActivity
+ *
+ * ActivityContext を利用するためのカスタムフック。
+ * コンテキストが未定義の場合はエラーをスロー。
+ *
+ * @returns ActivityContextProps 型のコンテキスト値
+ */
 export const useActivity = (): ActivityContextProps => {
     const context = useContext(ActivityContext);
     if (!context) {

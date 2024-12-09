@@ -8,7 +8,7 @@ import { Goal, GoalSchema } from '@/schemas/goalSchemas';
 import { zodResolver } from '@hookform/resolvers/zod';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { ProblemSet } from '@/schemas/ProblemSetSchema';
+import { ProblemSet } from '@/schemas/customProblemSetSchema';
 import { z } from 'zod';
 
 type GoalFormInput = Omit<Goal, 'id' | 'createdAt' | 'updatedAt'>;

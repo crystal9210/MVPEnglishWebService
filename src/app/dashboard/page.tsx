@@ -15,6 +15,7 @@ import HistoryPanel from "./_components/HistoryPanel";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Image from "next/image";
+import ActivityManagerComponent from "@/components/ActivityManagerComponent"; // 追加
 
 export default function DashboardPage() {
     const { data: session, status } = useSession();
@@ -107,6 +108,11 @@ export default function DashboardPage() {
                         </div>
                     </div>
                 </div>
+            </div>
+
+            {/* TODO */}
+            <div className="mt-12">
+                <ActivityManagerComponent />
             </div>
 
             <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>

@@ -1,7 +1,7 @@
 // src/sample_datasets/v1/goals.ts
 
 import { Goal } from '@/schemas/goalSchemas';
-import { ProblemSet } from '@/schemas/problemSetSchema';
+import { ProblemSet } from '@/schemas/customProblemSetSchema';
 import { Session } from '@/schemas/sessionSchemas';
 import { History } from '@/schemas/historySchemas';
 import { Notification } from '@/schemas/notificationSchema';
