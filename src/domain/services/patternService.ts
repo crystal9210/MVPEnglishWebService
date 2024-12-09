@@ -1,7 +1,7 @@
 import { injectable, inject } from "tsyringe";
-import { Pattern } from "../schemas/problemSchemas";
-import { PatternRepository } from "@/repositories/patternRepository";
-import { LoggerService } from "@/services/loggerService";
+import { Pattern } from "../../schemas/problemSchemas";
+import { PatternRepository } from "@/domain/repositories/patternRepository";
+import { LoggerService } from "@/domain/services/loggerService";
 import { IPatternService } from "@/interfaces/services/IPatternService";
 
 @injectable()

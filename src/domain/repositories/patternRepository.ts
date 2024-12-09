@@ -1,9 +1,9 @@
 /* eslint-disable no-unused-vars */
 import { injectable, inject } from "tsyringe";
 import { CollectionReference, DocumentData, QuerySnapshot } from "firebase-admin/firestore";
-import { PatternSchema, Pattern } from "../schemas/problemSchemas";
+import { PatternSchema, Pattern } from "../../schemas/problemSchemas";
 import { Firestore } from "firebase-admin/firestore";
-import { LoggerService } from "@/services/loggerService";
+import { LoggerService } from "@/domain/services/loggerService";
 import { IPatternRepository } from "@/interfaces/repositories/IPatternRepository";
 
 @injectable()

@@ -1,5 +1,5 @@
 import { Adapter, AdapterUser } from "next-auth/adapters";
-import { firestoreAdmin } from "../services/firebaseAdmin";
+import { firestoreAdmin } from "../domain/services/firebaseAdmin";
 import { FieldValue } from "firebase-admin/firestore";
 import { getUserByEmail, createUser, deleteUserFromAuth } from "./authService";
 

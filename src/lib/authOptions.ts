@@ -4,10 +4,10 @@ import GoogleProvider from "next-auth/providers/google";
 import GitHubProvider from "next-auth/providers/github";
 import { CustomFirestoreAdapter } from "@/adapters/customFirestoreAdapter";
 import { container } from "tsyringe";
-import { AuthService } from "@/services/authService";
-import { UserService } from "@/services/userService";
+import { AuthService } from "@/domain/services/authService";
+import { UserService } from "@/domain/services/userService";
 import { sendVerificationEmail } from "@/lib/sendVerificationEmail";
-import { LoggerService } from "@/services/loggerService";
+import { LoggerService } from "@/domain/services/loggerService";
 
 // DI コンテナからサービスを取得
 const authService = container.resolve(AuthService);

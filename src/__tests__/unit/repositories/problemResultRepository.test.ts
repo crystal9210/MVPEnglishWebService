@@ -3,7 +3,7 @@ import { ProblemResultRepository } from "../problemResultRepository";
 import { IFirebaseAdmin } from "@/interfaces/services/IFirebaseAdmin";
 import { ILoggerService } from "@/interfaces/services/ILoggerService";
 import { BatchOperations } from "@/utils/batchOperations";
-import { RetryService } from "@/services/retryService";
+import { RetryService } from "@/domain/services/retryService";
 import { container } from "tsyringe";
 import { jest } from "@jest/globals";
 import { isRetryableError } from "@/utils/isRetryableError";

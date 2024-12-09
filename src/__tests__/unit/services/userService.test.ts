@@ -18,10 +18,10 @@
 
 import "reflect-metadata";
 import { UserService } from "../userService"; // UserService のインポートを確認してください
-import { UserRepository } from "@/repositories/userRepository";
-import { ProblemResultRepository } from "@/repositories/problemResultRepository";
+import { UserRepository } from "@/domain/repositories/userRepository";
+import { ProblemResultRepository } from "@/domain/repositories/problemResultRepository";
 import { ILoggerService } from "@/interfaces/services/ILoggerService";
-import { RetryService } from "@/services/retryService";
+import { RetryService } from "@/domain/services/retryService";
 import { User, UserSchema } from "@/schemas/userSchemas";
 import { ProblemResult } from "@/schemas/userHistorySchemas";
 import { container } from "tsyringe";

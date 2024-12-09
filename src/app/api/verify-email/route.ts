@@ -1,5 +1,5 @@
 // 確認メール送信エンドポイント
-import { authAdmin } from "@/services/firebaseAdmin";
+import { authAdmin } from "@/domain/services/firebaseAdmin";
 import { sendEmail } from "@/lib/sendEmail";
 
 export async function POST(req: Request) {

@@ -1,0 +1,183 @@
+.
+├── README.md
+├── dir_structure.txt
+├── jest.config.ts
+├── logs
+│   └── exceptions.log
+├── next-env.d.ts
+├── next.config.ts
+├── package-lock.json
+├── package.json
+├── postcss.config.mjs
+├── private.key
+├── private.key.base64
+├── public
+│   ├── file.svg
+│   ├── globe.svg
+│   ├── images
+│   │   └── basis
+│   ├── next.svg
+│   ├── vercel.svg
+│   └── window.svg
+├── public.key
+├── public.key.base64
+├── src
+│   ├── adapters
+│   │   └── customFirestoreAdapter.ts
+│   ├── app
+│   │   ├── api
+│   │   ├── basis
+│   │   ├── contexts
+│   │   ├── dashboard
+│   │   ├── favicon.ico
+│   │   ├── fonts
+│   │   ├── globals.css
+│   │   ├── grammar
+│   │   ├── hello_world
+│   │   ├── layout.tsx
+│   │   ├── login
+│   │   ├── makeGoalSet
+│   │   ├── page.tsx
+│   │   ├── privacy-policy
+│   │   ├── register
+│   │   ├── success
+│   │   ├── terms-of-service
+│   │   ├── verify-email-sent
+│   │   └── writing
+│   ├── components
+│   │   ├── CreateGoalForm.tsx
+│   │   ├── FileUpload
+│   │   ├── GoalCard.tsx
+│   │   ├── LoginForm.tsx
+│   │   ├── Notifications.tsx
+│   │   ├── RegisterForm.tsx
+│   │   ├── UnitProblemList.tsx
+│   │   └── signout_button.tsx
+│   ├── config.ts
+│   ├── constants
+│   │   └── retryConfig.ts
+│   ├── containers
+│   │   └── diContainer.ts
+│   ├── contexts
+│   │   ├── NotificationContext.tsx
+│   │   └── mockDataContext.tsx
+│   ├── domain
+│   ├── handlers
+│   │   └── authHandler.ts
+│   ├── hooks
+│   ├── index.ts
+│   ├── interfaces
+│   │   ├── repositories
+│   │   └── services
+│   ├── lib
+│   │   ├── auth.ts
+│   │   ├── authCallbacks.ts
+│   │   ├── authOptions.ts
+│   │   ├── authService.ts
+│   │   ├── customAuth.ts
+│   │   ├── customFirestoreAdapter.ts
+│   │   ├── firebase.ts
+│   │   ├── firebaseAuthCheck.ts
+│   │   ├── sendEmail.ts
+│   │   └── sendVerificationEmail.ts
+│   ├── middleware.ts
+│   ├── middlewares
+│   │   ├── __tests__
+│   │   ├── authenticate.ts
+│   │   ├── authorize.ts
+│   │   ├── bandwidthLimit.ts
+│   │   ├── contentTypeCheck.ts
+│   │   ├── errorHandler.ts
+│   │   ├── index.ts
+│   │   ├── logging.ts
+│   │   ├── rateLimit.ts
+│   │   ├── sanitize.ts
+│   │   ├── securityHeaders.ts
+│   │   ├── validate.ts
+│   │   ├── validateAndSanitize.ts
+│   │   └── withMiddleware.ts
+│   ├── repositories
+│   │   ├── __tests__
+│   │   ├── accountRepository.ts
+│   │   ├── goalRepository.ts
+│   │   ├── patternRepository.ts
+│   │   ├── problemRepository.ts
+│   │   ├── problemResultRepository.ts
+│   │   ├── subscriptionRepository.ts
+│   │   ├── userBookmarkRepository.ts
+│   │   ├── userHistoryRepository.ts
+│   │   ├── userProfileRepository.ts
+│   │   └── userRepository.ts
+│   ├── sample_datasets
+│   │   ├── adverbs.json
+│   │   ├── comparatives_and_superlatives.json
+│   │   ├── demonstratives.json
+│   │   ├── v1
+│   │   └── writing
+│   ├── schemas
+│   │   ├── FileSchemas.ts
+│   │   ├── UserInputSchemas.ts
+│   │   ├── WritingExerciseSchema.ts
+│   │   ├── account.ts
+│   │   ├── auth.ts
+│   │   ├── baseSchemas.ts
+│   │   ├── bookmarkSchemas.ts
+│   │   ├── customUserSchema.ts
+│   │   ├── goalSchemas.ts
+│   │   ├── historySchemas.ts
+│   │   ├── index.ts
+│   │   ├── notificationSchema.ts
+│   │   ├── problemSchemas.ts
+│   │   ├── problemSetSchema.ts
+│   │   ├── sessionSchemas.ts
+│   │   ├── signInSchemas.ts
+│   │   ├── subscriptionSchema.ts
+│   │   ├── subscriptionSchemas.ts
+│   │   ├── userHistorySchemas.ts
+│   │   └── userSchemas.ts
+│   ├── services
+│   │   ├── __tests__
+│   │   ├── authService.ts
+│   │   ├── firebaseAdmin.ts
+│   │   ├── firebaseClient.ts
+│   │   ├── loggerService.ts
+│   │   ├── patternService.ts
+│   │   ├── problemResultService.ts
+│   │   ├── problemService.ts
+│   │   ├── retryService.ts
+│   │   ├── subscriptionService.ts
+│   │   ├── userBookmarkService.ts
+│   │   ├── userHistoryService.ts
+│   │   ├── userProfileService.ts
+│   │   └── userService.ts
+│   ├── styles
+│   │   └── global.css
+│   ├── types
+│   │   ├── auth.ts
+│   │   ├── customAdapterAccount.ts
+│   │   ├── customUser.ts
+│   │   ├── index.ts
+│   │   └── next-auth.d.ts
+│   └── utils
+│       ├── __tests__
+│       ├── auth.ts
+│       ├── batchOperations.ts
+│       ├── customError.ts
+│       ├── env.ts
+│       ├── errorHandler.ts
+│       ├── fileExtensions.ts
+│       ├── fileUtils.ts
+│       ├── helpers.ts
+│       ├── isRetryableError.ts
+│       ├── keys.ts
+│       ├── redisClient.ts
+│       ├── sanitizeInput.ts
+│       ├── sanitizeUtils.ts
+│       ├── validation.ts
+│       └── validators
+├── tailwind.config.ts
+├── tsconfig.json
+├── tsconfig.tsbuildinfo
+└── utilCommands.md
+
+50 directories, 131 files

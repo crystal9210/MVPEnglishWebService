@@ -7,7 +7,7 @@ import { User, UserSchema } from "@/schemas/userSchemas";
 import { BatchOperations } from "@/utils/batchOperations";
 import { IUserRepository } from "@/interfaces/repositories/IUserRepository";
 import type { DocumentData } from "firebase-admin/firestore";
-import { RetryService } from "@/services/retryService";
+import { RetryService } from "@/domain/services/retryService";
 import { isRetryableError } from "@/utils/isRetryableError";
 
 @injectable()

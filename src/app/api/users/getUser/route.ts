@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { container } from 'tsyringe';
-import { UserRepository } from '@/repositories/userRepository';
-import { LoggerService } from '@/services/loggerService';
+import { UserRepository } from '@/domain/repositories/userRepository';
+import { LoggerService } from '@/domain/services/loggerService';
 
 /**
  * ユーザー取得エンドポイント (GET /api/users/me)

@@ -9,7 +9,7 @@ import { CustomFirestoreAdapter } from "@/adapters/customFirestoreAdapter";
 // カスタムアダプターの初期化とログ出力
 const adapter = CustomFirestoreAdapter();
 console.log("Adapter keys:", Object.keys(adapter));
-console.log(`AUTH_SECRET: ${process.env.AUTH_SECRET}`)
+// console.log(`AUTH_SECRET: ${process.env.AUTH_SECRET}`)
 
 export const authOptions: NextAuthConfig = { // `AuthConfig` を使用
     // debug: true,

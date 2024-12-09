@@ -1,4 +1,3 @@
-// src/container/diContainer.ts
 import "reflect-metadata";
 import { container } from "tsyringe";
 
@@ -24,27 +23,27 @@ import type { IUserHistoryRepository } from "@/interfaces/repositories/IUserHist
 import type { ISubscriptionRepository } from "@/interfaces/repositories/ISubscriptionRepository";
 
 // 実装クラス群
-import { AuthService } from "@/services/authService";
-import { FirebaseAdmin } from "@/services/firebaseAdmin";
-import { LoggerService } from "@/services/loggerService";
-import { UserService } from "@/services/userService";
-import { UserProfileService } from "@/services/userProfileService";
-import { UserHistoryService } from "@/services/userHistoryService";
-import { UserBookmarkService } from "@/services/userBookmarkService";
-import { ProblemService } from "@/services/problemService";
-import { PatternService } from "@/services/patternService";
-import { SubscriptionService } from "@/services/subscriptionService";
+import { AuthService } from "@/domain/services/authService";
+import { FirebaseAdmin } from "@/domain/services/firebaseAdmin";
+import { LoggerService } from "@/domain/services/loggerService";
+import { UserService } from "@/domain/services/userService";
+import { UserProfileService } from "@/domain/services/userProfileService";
+import { UserHistoryService } from "@/domain/services/userHistoryService";
+import { UserBookmarkService } from "@/domain/services/userBookmarkService";
+import { ProblemService } from "@/domain/services/problemService";
+import { PatternService } from "@/domain/services/patternService";
+import { SubscriptionService } from "@/domain/services/subscriptionService";
 
-import { UserRepository } from "@/repositories/userRepository";
-import { ProblemRepository } from "@/repositories/problemRepository";
-import { PatternRepository } from "@/repositories/patternRepository";
-import { ProblemResultRepository } from "@/repositories/problemResultRepository";
-import { ProfileRepository } from "@/repositories/userProfileRepository";
-import { UserHistoryRepository } from "@/repositories/userHistoryRepository";
-import { SubscriptionRepository } from "@/repositories/subscriptionRepository";
-import { AccountRepository } from "@/repositories/accountRepository";
+import { UserRepository } from "@/domain/repositories/userRepository";
+import { ProblemRepository } from "@/domain/repositories/problemRepository";
+import { PatternRepository } from "@/domain/repositories/patternRepository";
+import { ProblemResultRepository } from "@/domain/repositories/problemResultRepository";
+import { ProfileRepository } from "@/domain/repositories/userProfileRepository";
+import { UserHistoryRepository } from "@/domain/repositories/userHistoryRepository";
+import { SubscriptionRepository } from "@/domain/repositories/subscriptionRepository";
+import { AccountRepository } from "@/domain/repositories/accountRepository";
 import { BatchOperations } from "@/utils/batchOperations";
-import { RetryService } from "@/services/retryService";
+import { RetryService } from "@/domain/services/retryService";
 
 // Utility
 // 最初に他のサービスに依存しないサービスを登録 - tsyringeの仕様

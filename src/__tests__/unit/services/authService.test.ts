@@ -1,6 +1,6 @@
 // src/services/__tests__/authService.test.ts
 import { container } from "@/containers/diContainer";
-import { AuthService } from "@/services/authService";
+import { AuthService } from "@/domain/services/authService";
 import type { IFirebaseAdmin } from "@/interfaces/services/IFirebaseAdmin";
 import type { ILoggerService } from "@/interfaces/services/ILoggerService";
 import { mock, MockProxy } from "jest-mock-extended";

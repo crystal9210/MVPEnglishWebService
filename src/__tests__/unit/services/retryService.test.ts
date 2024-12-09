@@ -14,7 +14,7 @@
 // src/services/__tests__/retryService.test.ts
 
 import "reflect-metadata";
-import { RetryService } from "../retryService";
+import { RetryService } from "../../../domain/services/retryService";
 import { ILoggerService } from "@/interfaces/services/ILoggerService";
 import { container } from "tsyringe";
 import { jest } from "@jest/globals";

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { firestoreAdmin } from "@/services/firebaseAdmin";
+import { firestoreAdmin } from "@/domain/services/firebaseAdmin";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);

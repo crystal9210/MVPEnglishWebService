@@ -1,6 +1,6 @@
 import * as admin from "firebase-admin";
 import { injectable, inject } from "tsyringe";
-import { LoggerService } from "@/services/loggerService";
+import { LoggerService } from "@/domain/services/loggerService";
 import { Firestore } from "firebase-admin/firestore";
 import { IFirebaseAdmin } from "@/interfaces/services/IFirebaseAdmin";
 
