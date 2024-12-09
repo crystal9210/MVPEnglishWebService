@@ -1,7 +1,11 @@
 All rights reverved@Yuto Seki(2024,2025)
 (NOTE: The above is temporary to avoid copyright related issues, and I'm not actually responsible for the codebase.)
 
-## This is one of the simple and small personal projects I am personally working on
+## NOTES
+
+### 1. This is one of the simple and small personal projects I am personally working on
+
+### 2. I have been working with TypeScript for about 2 months now, so I'm still learning as I am not familiar with the specification.
 
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 

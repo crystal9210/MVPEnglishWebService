@@ -22,6 +22,11 @@
 ├── public.key
 ├── public.key.base64
 ├── src
+│   ├── __tests__
+│   │   ├── integration
+│   │   ├── penetration
+│   │   ├── system
+│   │   └── unit
 │   ├── adapters
 │   │   └── customFirestoreAdapter.ts
 │   ├── app
@@ -35,16 +40,17 @@
 │   │   ├── grammar
 │   │   ├── hello_world
 │   │   ├── layout.tsx
-│   │   ├── login
 │   │   ├── makeGoalSet
 │   │   ├── page.tsx
 │   │   ├── privacy-policy
 │   │   ├── register
+│   │   ├── signIn
 │   │   ├── success
 │   │   ├── terms-of-service
 │   │   ├── verify-email-sent
 │   │   └── writing
 │   ├── components
+│   │   ├── ActivityManagerComponent.tsx
 │   │   ├── CreateGoalForm.tsx
 │   │   ├── FileUpload
 │   │   ├── GoalCard.tsx
@@ -52,7 +58,12 @@
 │   │   ├── Notifications.tsx
 │   │   ├── RegisterForm.tsx
 │   │   ├── UnitProblemList.tsx
+│   │   ├── activityManager.tsx
+│   │   ├── managers
 │   │   └── signout_button.tsx
+│   ├── config
+│   │   ├── constants
+│   │   └── index.ts
 │   ├── config.ts
 │   ├── constants
 │   │   └── retryConfig.ts
@@ -60,13 +71,20 @@
 │   │   └── diContainer.ts
 │   ├── contexts
 │   │   ├── NotificationContext.tsx
+│   │   ├── activityContext.tsx
 │   │   └── mockDataContext.tsx
 │   ├── domain
+│   │   ├── entities
+│   │   ├── repositories
+│   │   └── services
 │   ├── handlers
 │   │   └── authHandler.ts
 │   ├── hooks
+│   │   ├── useActivitySession.ts
+│   │   └── useAuth.ts
 │   ├── index.ts
 │   ├── interfaces
+│   │   ├── components
 │   │   ├── repositories
 │   │   └── services
 │   ├── lib
@@ -96,18 +114,6 @@
 │   │   ├── validate.ts
 │   │   ├── validateAndSanitize.ts
 │   │   └── withMiddleware.ts
-│   ├── repositories
-│   │   ├── __tests__
-│   │   ├── accountRepository.ts
-│   │   ├── goalRepository.ts
-│   │   ├── patternRepository.ts
-│   │   ├── problemRepository.ts
-│   │   ├── problemResultRepository.ts
-│   │   ├── subscriptionRepository.ts
-│   │   ├── userBookmarkRepository.ts
-│   │   ├── userHistoryRepository.ts
-│   │   ├── userProfileRepository.ts
-│   │   └── userRepository.ts
 │   ├── sample_datasets
 │   │   ├── adverbs.json
 │   │   ├── comparatives_and_superlatives.json
@@ -119,37 +125,23 @@
 │   │   ├── UserInputSchemas.ts
 │   │   ├── WritingExerciseSchema.ts
 │   │   ├── account.ts
+│   │   ├── activitySessionSchema.ts
 │   │   ├── auth.ts
 │   │   ├── baseSchemas.ts
 │   │   ├── bookmarkSchemas.ts
+│   │   ├── customProblemSetSchema.ts
 │   │   ├── customUserSchema.ts
 │   │   ├── goalSchemas.ts
 │   │   ├── historySchemas.ts
 │   │   ├── index.ts
 │   │   ├── notificationSchema.ts
 │   │   ├── problemSchemas.ts
-│   │   ├── problemSetSchema.ts
 │   │   ├── sessionSchemas.ts
 │   │   ├── signInSchemas.ts
 │   │   ├── subscriptionSchema.ts
 │   │   ├── subscriptionSchemas.ts
 │   │   ├── userHistorySchemas.ts
 │   │   └── userSchemas.ts
-│   ├── services
-│   │   ├── __tests__
-│   │   ├── authService.ts
-│   │   ├── firebaseAdmin.ts
-│   │   ├── firebaseClient.ts
-│   │   ├── loggerService.ts
-│   │   ├── patternService.ts
-│   │   ├── problemResultService.ts
-│   │   ├── problemService.ts
-│   │   ├── retryService.ts
-│   │   ├── subscriptionService.ts
-│   │   ├── userBookmarkService.ts
-│   │   ├── userHistoryService.ts
-│   │   ├── userProfileService.ts
-│   │   └── userService.ts
 │   ├── styles
 │   │   └── global.css
 │   ├── types
@@ -177,7 +169,6 @@
 │       └── validators
 ├── tailwind.config.ts
 ├── tsconfig.json
-├── tsconfig.tsbuildinfo
 └── utilCommands.md
 
-50 directories, 131 files
+58 directories, 114 files
