@@ -1,10 +1,12 @@
 "use client";
-// src/app/_components/managers/activityManager.ts
 
 import { openDB, DBSchema, IDBPDatabase } from "idb";
-import { ClientActivitySession } from "@/domain/entities/clientSide/clientActivitySession";
 import { IActivitySessionHistoryItem } from "@/schemas/activity/clientSide/activitySessionHistoryItemSchema";
 import { IProblemSet } from "@/schemas/activity/clientSide/problemSetSchema";
+import { IClientActivitySession } from "@/schemas/activity/clientSide/clientActivitySessionSchema";
+
+// TODO
+interface ClientActivitySession extends IClientActivitySession {}
 
 interface ActivityDB extends DBSchema {
     sessions: {

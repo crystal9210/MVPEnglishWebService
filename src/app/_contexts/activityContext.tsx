@@ -8,8 +8,10 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { ActivityManager } from "@/app/_components/managers/activityManager";
-import { ClientActivitySession } from "@/domain/entities/clientSide/clientActivitySession";
+import { IClientActivitySession } from "@/schemas/activity/clientSide/clientActivitySessionSchema";
 import { ClientActivitySessionHistoryItem } from "@/domain/entities/clientSide/activitySessionHistoryItem";
+
+interface ClientActivitySession extends IClientActivitySession{}
 
 interface ActivityContextProps {
     session: ClientActivitySession | null;

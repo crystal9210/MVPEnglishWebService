@@ -2,11 +2,20 @@
 
 import React, { useEffect, useState } from "react";
 import { useActivity } from "@/app/_contexts/activityContext";
-import { ClientActivitySession } from "@/domain/entities/clientSide/clientActivitySession";
+import { IClientActivitySession } from "@/schemas/activity/clientSide/clientActivitySessionSchema";
 import { ClientActivitySessionHistoryItem } from "@/domain/entities/clientSide/activitySessionHistoryItem";
 
+interface ClientActivitySession extends IClientActivitySession{}
+
 const ManageActivityPage = () => {
-    const { getAllSessions, deleteSession, updateSession, getAllHistory, deleteHistoryItem, updateHistoryItem } = useActivity();
+    const {
+        getAllSessions,
+        deleteSession,
+        updateSession,
+        getAllHistory,
+        deleteHistoryItem,
+        updateHistoryItem
+    } = useActivity();
     const [sessions, setSessions] = useState<ClientActivitySession[]>([]);
     const [history, setHistory] = useState<{ id: number; sessionId: string; historyItem: ClientActivitySessionHistoryItem }[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
@@ -46,11 +55,19 @@ const ManageActivityPage = () => {
         const newGoal = prompt("新しいゴールを入力してください:");
         if (newGoal) {
             try {
-                await updateSession(sessionId, { problemSet: { ...sessions.find(s => s.sessionId === sessionId)?.problemSet, goal: newGoal } });
+                const session = sessions.find(s => s.sessionId === sessionId);
+                if (!session) {
+                    throw new Error("セッションが見つかりません。");
+                }
+                const updatedProblemSet = {
+                    ...session.problemSet,
+                    goal: newGoal
+                };
+                await updateSession(sessionId, { problemSet: updatedProblemSet });
                 setSessions(prev =>
                     prev.map(session =>
                         session.sessionId === sessionId
-                            ? { ...session, problemSet: { ...session.problemSet, goal: newGoal } }
+                            ? { ...session, problemSet: updatedProblemSet }
                             : session
                     )
                 );
