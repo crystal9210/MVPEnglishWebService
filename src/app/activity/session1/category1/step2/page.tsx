@@ -2,10 +2,12 @@
 import React from "react";
 import ActivityStepComponent from "./_components/ActivityStepComponent";
 
-export async function ActivityStepPage() {
+const ActivityStepPage = () => {
     return (
         <div>
             <ActivityStepComponent />
         </div>
     );
 };
+
+export default ActivityStepPage;

@@ -7,7 +7,7 @@ import { FcGoogle } from "react-icons/fc";
 import { FaGithub } from "react-icons/fa";
 import Modal from "./_components/Modal";
 
-export default function LoginPage() {
+export default function SignInPage() {
     const { status } = useSession();
     const [loadingProvider, setLoadingProvider] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -72,7 +72,7 @@ export default function LoginPage() {
 
     const handleCloseModal = () => {
         setShowVerificationSent(false);
-        router.replace('/login'); // クエリパラメータを削除
+        router.replace('/signIn'); // クエリパラメータを削除
     };
 
     return (

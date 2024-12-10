@@ -49,17 +49,17 @@ export const { auth, handlers, signIn, signOut, unstable_update } = NextAuth({
 
           if (!account || account.provider !== "google") {
             console.warn("現在、Googleアカウント以外の認証はサポートされていません。");
-            return '/login?error=unsupportedProvider';
+            return '/signIn?error=unsupportedProvider';
           }
 
           if (!user.email) {
             console.error("サインイン失敗: メールアドレスが提供されていません。");
-            return "/login?error=noEmail";
+            return "/signIn?error=noEmail";
           }
           console.log(`user.email: ${user.email}`);
           if(!user.email.endsWith("@gmail.com")) {
             console.error("サインイン失敗: 許容規格：...@gmail.com 以外のメールアドレスです。");
-            return "/login?error=invalidEmail";
+            return "/signIn?error=invalidEmail";
           }
 
           const email = user.email;
@@ -110,7 +110,7 @@ export const { auth, handlers, signIn, signOut, unstable_update } = NextAuth({
 
             if (userDocs.length > 1) {
               console.error(`ユーザ ${email} が存在しますが複数アカウントあり規約に違反しています。`);
-              return "/login?error=multipleAccounts";
+              return "/signIn?error=multipleAccounts";
             }
             if (userDocs.length === 1 && userDocs[0].data().emailVerified !== true) {
                 console.log(`ユーザー ${email} の登録が未完了です。確認メールを再送信します。`);

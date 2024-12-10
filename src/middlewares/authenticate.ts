@@ -13,15 +13,15 @@ export async function authenticateMiddleware(req: NextRequest) {
     console.log(`debugging pathname in middleware: ${pathname}`);
 
     // 認証不要なパス
-    const publicPaths = ['/api/auth', '/register', '/login'];
+    const publicPaths = ['/api/auth', '/register', '/signIn'];
     if (publicPaths.some(path => pathname.startsWith(path))) {
         return NextResponse.next();
     }
 
     // TODO sub調査・調整、token詳細設計反映
     if (!token || !token.sub) { // 'sub' は標準的なJWTクレーム
-        const loginUrl = new URL('/login', req.url);
-        return NextResponse.redirect(loginUrl);
+        const signInUrl = new URL('/signIn', req.url);
+        return NextResponse.redirect(signInUrl);
     }
 
     // ユーザーIDをヘッダーに添付

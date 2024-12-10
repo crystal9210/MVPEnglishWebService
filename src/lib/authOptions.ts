@@ -46,17 +46,17 @@ export const authOptions: NextAuthConfig = {
       try {
         if (!account || account.provider !== "google") {
           logger.warn("Unsupported provider attempted.");
-          return "/login?error=unsupportedProvider";
+          return "/signIn?error=unsupportedProvider";
         }
 
         if (!user.email) {
           logger.error("Sign-in failed: No email provided.");
-          return "/login?error=noEmail";
+          return "/signIn?error=noEmail";
         }
 
         if (!user.email.endsWith("@gmail.com")) {
           logger.error("Sign-in failed: Invalid email domain.");
-          return "/login?error=invalidEmail";
+          return "/signIn?error=invalidEmail";
         }
 
         const email = user.email;

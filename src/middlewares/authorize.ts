@@ -12,8 +12,8 @@ export function authorizeMiddleware(req: NextRequest, requiredRoles: string[]) {
     const userRole = req.headers.get('x-user-role');
 
     if (!userId || !userRole) {
-        const loginUrl = new URL('/login', req.url);
-        return NextResponse.redirect(loginUrl);
+        const signInUrl = new URL('/signIn', req.url);
+        return NextResponse.redirect(signInUrl);
     }
 
     if (!requiredRoles.includes(userRole)) {

@@ -75,7 +75,7 @@ export default function VerifyEmailSent() {
             <h1 className="text-3xl font-bold text-green-600">登録完了</h1>
             <p className="mt-4 text-lg text-gray-700">登録が完了しました。</p>
             <a
-              href="/login"
+              href="/signIn"
               className="mt-6 inline-block px-6 py-3 text-white bg-blue-600 rounded-lg hover:bg-blue-700"
             >
               ログイン

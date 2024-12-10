@@ -4,8 +4,7 @@ export default function SuccessPage() {
       <div>
         <h1>登録が完了しました！</h1>
         <p>登録ありがとうございました。以下のリンク、ログインページからログインしてください。</p>
-        <Link href={"http://localhost:3000/login"}>ログインページ</Link>
+        <Link href={"http://localhost:3000/signIn"}>ログインページ</Link>
       </div>
     );
   }
-  

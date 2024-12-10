@@ -49,24 +49,24 @@ export const authOptions: NextAuthConfig = { // `AuthConfig` を使用
                 // Googleプロバイダー以外をブロック
                 if (!account || account.provider !== "google") {
                     logger.warn("現在、Googleアカウント以外の認証はサポートされていません。");
-                    return "/login?error=unsupportedProvider";
+                    return "/signIn?error=unsupportedProvider";
                 }
 
                 // メールアドレスの検証
                 if (!user.email) {
                     logger.error("サインイン失敗: メールアドレスが提供されていません。");
-                    return "/login?error=noEmail";
+                    return "/signIn?error=noEmail";
                 }
                 if (!user.email.endsWith("@gmail.com")) {
                     logger.error("サインイン失敗: 許容規格：...@gmail.com 以外のメールアドレスです。");
-                    return "/login?error=invalidEmail";
+                    return "/signIn?error=invalidEmail";
                 }
 
                 logger.info(`Sign-in allowed for email: ${user.email}`);
                 return true;
             } catch (error) {
                 logger.error("サインイン処理中にエラーが発生しました", { error });
-                return "/login?error=serverError"; // エラー時にリダイレクト先を指定
+                return "/signIn?error=serverError"; // エラー時にリダイレクト先を指定
             }
         },
 

@@ -24,7 +24,7 @@ export default function DashboardPage() {
     // セッションがない場合はログインページにリダイレクト
     useEffect(() => {
         if (status === "unauthenticated") {
-            router.push("/login");
+            router.push("/signIn");
         }
     }, [status, router]);
 
