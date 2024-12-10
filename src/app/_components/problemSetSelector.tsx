@@ -1,6 +1,6 @@
 "use client";
-import React from "react";
-import { useRouter } from "next/navigation";
+import React, { useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
 import { mockProblemSets } from "@/sample_datasets/v1/activity/mockProblemSets1";
 import { IProblemSet } from "@/schemas/activity/clientSide/problemSetSchema";
 import { useActivity } from "@/app/_contexts/activityContext";
@@ -8,7 +8,27 @@ import { ClientActivitySession } from "@/domain/entities/clientSide/clientActivi
 
 const ProblemSetSelector: React.FC = () => {
     const router = useRouter();
+    const params = useParams();
+    const { serviceId, categoryId, stepId } = params;
     const { startSession } = useActivity();
+
+    useEffect(() => {
+        console.log("ProblemSetSelector params:", { serviceId, categoryId, stepId });
+    }, [serviceId, categoryId, stepId]);
+
+    if (!serviceId || !categoryId || !stepId) {
+        return <p>Invalid selection parameters.</p>;
+    }
+
+    const filteredProblemSets = mockProblemSets.filter(ps =>
+        ps.serviceId === serviceId &&
+        (ps.categoryId ?? "defaultCategory") === categoryId &&
+        (ps.stepId ?? "defaultStep") === stepId
+    );
+
+    if (filteredProblemSets.length === 0) {
+        return <p>選択された条件に一致する問題セットがありません。</p>;
+    }
 
     const handleSelectProblemSet = async (problemSet: IProblemSet) => {
         // 新規セッション作成
@@ -18,9 +38,11 @@ const ProblemSetSelector: React.FC = () => {
             history: [],
             problemSet: problemSet,
         });
+        console.log("Starting session:", newSession);
         await startSession(newSession);
         // アクティビティページ(最初の問題)に遷移
         const firstProblemId = problemSet.problems[0].problemId;
+        console.log("Navigating to first problem:", firstProblemId);
         router.push(`/activity/${problemSet.serviceId}/${problemSet.categoryId}/${problemSet.stepId}/${firstProblemId}`);
     };
 
@@ -28,7 +50,7 @@ const ProblemSetSelector: React.FC = () => {
         <div className="mb-6">
             <h3 className="text-xl font-bold mb-2">Select Problem Set</h3>
             <div className="flex space-x-4 overflow-x-auto">
-                {mockProblemSets.map((problemSet) => (
+                {filteredProblemSets.map((problemSet) => (
                     <button
                         key={problemSet.serviceId}
                         onClick={() => handleSelectProblemSet(problemSet)}

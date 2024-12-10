@@ -1,13 +1,9 @@
-// src/app/activity/[serviceId]/[categoryId]/[stepId]/[problemId]/page.tsx
 "use client";
 import React, { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useActivity } from "@/app/_contexts/activityContext";
 import { ClientActivitySessionHistoryItem } from "@/domain/entities/clientSide/activitySessionHistoryItem";
 import { toast } from "react-toastify";
-import ProblemSetSelector from "@/app/_components/problemSetSelector";
-import { mockProblemSets } from "@/sample_datasets/v1/activity/mockProblemSets1";
-import { IProblemSet } from "@/schemas/activity/clientSide/problemSetSchema";
 
 const ActivityPage = () => {
     const router = useRouter();
@@ -84,7 +80,7 @@ const ActivityPage = () => {
 
     const handleNextProblem = () => {
         if (!currentProblem) return;
-        const { serviceId, categoryId, stepId, problemId } = params;
+        const { serviceId, categoryId, stepId } = params; // deleted "problemId" from const {...} because of unusual of that property.
 
         const problemSet = session?.problemSet;
         if (!problemSet) {
@@ -117,7 +113,6 @@ const ActivityPage = () => {
 
     return (
         <div className="p-8">
-            <ProblemSetSelector />
             <div className="bg-white shadow-md rounded p-6 mb-6">
                 <h2 className="text-2xl font-bold mb-4">Problem: {currentProblem.problemId}</h2>
                 <p className="mb-4">{currentProblem.question}</p>

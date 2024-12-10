@@ -23,11 +23,11 @@ const ActivityLayout = ({ children }: { children: React.ReactNode }) => {
 
     useEffect(() => {
         // セッションが存在しない場合、/dashboardにリダイレクトしつつ、エラートーストを表示
-        if (!session) {
+        if (!session && !pathname.startsWith("/activity/select")) {
             toast.error("No active session. Please start a session from the dashboard.");
             router.push("/dashboard");
         }
-    }, [session, router]);
+    }, [session, router, pathname]);
 
     useEffect(() => {
         // パスネームが/activity/*以外に変更された場合情報トーストを表示

@@ -11,9 +11,8 @@ const ProblemSetCard: React.FC<ProblemSetCardProps> = ({ problemSet }) => {
     const router = useRouter();
 
     const handleStart = () => {
-        // `/dashboard` から `/activity/*` への遷移は `ProblemSetSelector` を経由して処理
-        router.push("/dashboard");
-        // TODO 直接遷移する場合、セッション管理を行わない(今回の仕様としては現段階では直接遷移しない)
+        // `/dashboard` から `/activity/*` への遷移は `/activity/select/*` を経由して処理
+        router.push(`/activity/select/${problemSet.serviceId}/${problemSet.categoryId ?? "defaultCategory"}/${problemSet.stepId ?? "defaultStep"}`);
     };
 
     return (

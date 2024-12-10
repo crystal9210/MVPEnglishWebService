@@ -18,6 +18,7 @@ import Image from "next/image";
 // TODO 調整
 import ProblemSetCard from "@/app/_components/problemSetCard";
 import { mockProblemSets } from "@/sample_datasets/v1/activity/mockProblemSets1";
+import Link from "next/link";
 
 export default function DashboardPage() {
     const { data: session, status } = useSession();
@@ -116,6 +117,12 @@ export default function DashboardPage() {
                 {mockProblemSets.map((problemSet) => (
                     <ProblemSetCard key={problemSet.serviceId} problemSet={problemSet} />
                 ))}
+            </div>
+
+            <div className="mt-8">
+                <Link href="/activity/manage" className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded">
+                        Activity Management
+                </Link>
             </div>
 
             <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
