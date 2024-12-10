@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { container } from "@/containers/diContainer";
 import { IActivityService } from "@/interfaces/services/IActivityService";
-import { ActivitySessionSchema } from "@/schemas/serverSide/activitySessionSchema";
+import { ActivitySessionSchema } from "@/schemas/activity/serverSide/activitySessionSchema";
 
 export async function POST(request: Request) {
     try {

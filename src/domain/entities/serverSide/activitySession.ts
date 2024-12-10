@@ -1,4 +1,4 @@
-import { ActivitySessionSchema, ActivitySessionType } from "@/schemas/serverSide/activitySessionSchema";
+import { ActivitySessionSchema, ActivitySessionType } from "@/schemas/activity/serverSide/activitySessionSchema";
 import { ServerActivitySessionHistoryItemClass } from "./activitySessionHistoryItem";
 
 export interface ServerActivitySession {

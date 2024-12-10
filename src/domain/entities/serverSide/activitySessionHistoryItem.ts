@@ -1,4 +1,4 @@
-import { ActivitySessionHistoryItemSchema, ActivitySessionHistoryItemType } from "@/schemas/serverSide/activitySessionHistoryItemSchema";
+import { ActivitySessionHistoryItemSchema, ActivitySessionHistoryItemType } from "@/schemas/activity/serverSide/activitySessionHistoryItemSchema";
 
 export interface ServerActivitySessionHistoryItem {
     problemId: string;

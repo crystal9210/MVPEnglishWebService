@@ -1,4 +1,4 @@
-import { ClientActivitySessionSchema, ClientActivitySessionType } from "@/schemas/clientSide/clientActivitySessionSchema";
+import { ClientActivitySessionSchema, ClientActivitySessionType } from "@/schemas/activity/clientSide/clientActivitySessionSchema";
 import { ClientActivitySessionHistoryClass } from "./activitySessionHistoryItem";
 
 export interface ClientActivitySession {
