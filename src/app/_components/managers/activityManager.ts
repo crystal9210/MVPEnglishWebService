@@ -1,10 +1,8 @@
+"use client";
 import { openDB, DBSchema, IDBPDatabase } from "idb";
 import { ClientActivitySession } from "@/domain/entities/clientSide/clientActivitySession";
 import { ClientActivitySessionHistoryItem } from "@/domain/entities/clientSide/activitySessionHistoryItem";
 
-interface HistoryItem extends ClientActivitySessionHistoryItem {
-    sessionId: string;
-}
 
 interface ActivityDB extends DBSchema {
     sessions: {
@@ -13,7 +11,10 @@ interface ActivityDB extends DBSchema {
     };
     history: {
         key: number; // auto-increment
-        value: HistoryItem;
+        value: {
+            sessionId: string;
+            historyItem: ClientActivitySessionHistoryItem;
+        }
         indexes: { "by-sessionId": string };
     };
 }
@@ -30,7 +31,7 @@ export class ActivityManager {
             upgrade(db) {
                 db.createObjectStore("sessions", { keyPath: "sessionId" });
                 const historyStore = db.createObjectStore("history", { keyPath: "id", autoIncrement: true });
-                historyStore.createIndex("by-sessionId", "sessionId"); // 正しいキーでインデックスを作成
+                historyStore.createIndex("by-sessionId", "sessionId");
             },
         });
 
@@ -38,7 +39,7 @@ export class ActivityManager {
     }
 
     private async initialize() {
-        // DB から現在のセッションをロード
+        // DBから現在のセッションをロード
         const db = await this.dbPromise;
         const allSessions = await db.getAll("sessions");
         this.currentSession = allSessions.length > 0 ? allSessions[0] : null;
@@ -63,14 +64,14 @@ export class ActivityManager {
     async submitAnswer(historyItem: ClientActivitySessionHistoryItem): Promise<void> {
         if (!this.currentSession) throw new Error("No active session");
         const db = await this.dbPromise;
-        const historyWithSession: HistoryItem = { ...historyItem, sessionId: this.currentSession.sessionId };
-        await db.add("history", historyWithSession);
+        await db.add("history", { sessionId: this.currentSession.sessionId, historyItem });
     }
 
     getCurrentSession(): ClientActivitySession | null {
         return this.currentSession;
     }
 
+    // TODO *3
     subscribe(listener: Listener): () => void {
         this.listeners.push(listener);
         // 現在の状態をリスナーに即時通知
@@ -86,8 +87,7 @@ export class ActivityManager {
 
     async getSessionHistory(sessionId: string): Promise<ClientActivitySessionHistoryItem[]> {
         const db = await this.dbPromise;
-        const historyWithSession = await db.getAllFromIndex("history", "by-sessionId", sessionId);
-        // sessionId を除外して返す
-        return historyWithSession.map(({ sessionId: _, ...rest }) => rest);
+        const historyEntries = await db.getAllFromIndex("history", "by-sessionId", sessionId);
+        return historyEntries.map(entry => entry.historyItem);
     }
 }

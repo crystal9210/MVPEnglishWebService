@@ -1,21 +1,14 @@
-import { ActivitySessionHistoryItemSchema, ActivitySessionHistoryItemType } from "@/schemas/activity/clientSide/activitySessionHistoryItemSchema";
+import { ActivitySessionHistoryItemSchema, IActivitySessionHistoryItem } from "@/schemas/activity/clientSide/activitySessionHistoryItemSchema";
 
-export interface ClientActivitySessionHistoryItem {
-    problemId: string;
-    result: "correct" | "incorrect";
-    attempts: number;
-    lastAttemptAt: string; // ISO string
-    notes?: string;
-}
-
-export class ClientActivitySessionHistoryClass implements ClientActivitySessionHistoryItem {
+export class ClientActivitySessionHistoryItem implements IActivitySessionHistoryItem {
+    // TODO TSの変数のスコープ・アクセス制御・ライフサイクルなどの仕様調査・アクセス修飾子調整
     problemId: string;
     result: "correct" | "incorrect";
     attempts: number;
     lastAttemptAt: string;
     notes?: string;
 
-    constructor(data: ActivitySessionHistoryItemType) {
+    constructor(data: IActivitySessionHistoryItem) {
         const parseResult = ActivitySessionHistoryItemSchema.safeParse(data);
         if (!parseResult.success) {
             throw new Error(`Invalid UserHistoryItem data: ${JSON.stringify(parseResult.error.errors)}`);
@@ -27,6 +20,4 @@ export class ClientActivitySessionHistoryClass implements ClientActivitySessionH
         this.lastAttemptAt = parseResult.data.lastAttemptAt;
         this.notes = parseResult.data.notes;
     }
-
-    // TODO メソッド追加・調整
 }

@@ -15,6 +15,9 @@ import HistoryPanel from "./_components/HistoryPanel";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Image from "next/image";
+// TODO 調整
+import ProblemSetCard from "@/app/_components/problemSetCard";
+import { mockProblemSets } from "@/sample_datasets/v1/activity/mockProblemSets1";
 
 export default function DashboardPage() {
     const { data: session, status } = useSession();
@@ -107,6 +110,12 @@ export default function DashboardPage() {
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {mockProblemSets.map((problemSet) => (
+                    <ProblemSetCard key={problemSet.serviceId} problemSet={problemSet} />
+                ))}
             </div>
 
             <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>

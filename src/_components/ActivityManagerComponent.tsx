@@ -1,8 +1,8 @@
 "use client";
 import React, { useState } from "react";
 import { useActivity } from "@/app/_contexts/activityContext";
-import { ClientActivitySessionHistoryClass } from "@/domain/entities/clientSide/activitySessionHistoryItem";
-import { ClientActivitySessionClass } from "@/domain/entities/clientSide/clientActivitySession";
+import { ClientActivitySessionHistoryItem } from "@/domain/entities/clientSide/activitySessionHistoryItem";
+import { ClientActivitySession } from "@/domain/entities/clientSide/clientActivitySession";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 
@@ -16,7 +16,7 @@ const ActivityManagerComponent = () => {
     const router = useRouter();
 
     const handleStartSession = async () => {
-        const newSession = new ClientActivitySessionClass({
+        const newSession = new ClientActivitySession({
             sessionId: `session-${Date.now()}`,
             startedAt: new Date().toISOString(),
             history: [],
@@ -31,7 +31,7 @@ const ActivityManagerComponent = () => {
             toast.error("Problem ID cannot be empty.");
             return;
         }
-        const historyItem = new ClientActivitySessionHistoryClass({
+        const historyItem = new ClientActivitySessionHistoryItem({
             problemId,
             result,
             attempts,

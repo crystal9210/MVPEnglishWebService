@@ -4,6 +4,9 @@ import { SessionProvider } from "next-auth/react";
 import "./globals.css";
 import { MemoProvider } from "./_contexts/MemoContext";
 
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
@@ -31,6 +34,16 @@ export default function RootLayout({
         <SessionProvider>
           <MemoProvider>
               {children}
+              <ToastContainer
+                    position="top-right"
+                    autoClose={3000}
+                    hideProgressBar={false}
+                    newestOnTop={false}
+                    closeOnClick
+                    pauseOnFocusLoss
+                    draggable
+                    pauseOnHover
+                />
           </MemoProvider>
         </SessionProvider>
       </body>

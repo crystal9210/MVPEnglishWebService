@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { ActivitySessionHistoryItemSchema } from "./activitySessionHistoryItemSchema";
+import { ProblemSetSchema } from "./problemSetSchema";
 
 export const ClientActivitySessionSchema = z.object({
     sessionId: z.string(),
@@ -7,7 +8,7 @@ export const ClientActivitySessionSchema = z.object({
         message: "Invalid date string",
     }),
     history: z.array(ActivitySessionHistoryItemSchema),
-    // 必要ならプロパティ追加
+    problemSet: ProblemSetSchema,
 });
 
-export type ClientActivitySessionType = z.infer<typeof ClientActivitySessionSchema>;
+export type IClientActivitySession = z.infer<typeof ClientActivitySessionSchema>;

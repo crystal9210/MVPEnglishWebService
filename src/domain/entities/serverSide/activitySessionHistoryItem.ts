@@ -1,21 +1,13 @@
-import { ActivitySessionHistoryItemSchema, ActivitySessionHistoryItemType } from "@/schemas/activity/serverSide/activitySessionHistoryItemSchema";
+import { ActivitySessionHistoryItemSchema, IActivitySessionHistoryItem } from "@/schemas/activity/serverSide/activitySessionHistoryItemSchema";
 
-export interface ServerActivitySessionHistoryItem {
-    problemId: string;
-    result: "correct" | "incorrect";
-    attempts: number;
-    lastAttemptAt: string; // ISO string
-    notes?: string;
-}
-
-export class ServerActivitySessionHistoryItemClass implements ServerActivitySessionHistoryItem {
+export class ServerActivitySessionHistoryItemClass implements IActivitySessionHistoryItem {
     problemId: string;
     result: "correct" | "incorrect";
     attempts: number;
     lastAttemptAt: string;
     notes?: string;
 
-    constructor(data: ActivitySessionHistoryItemType) {
+    constructor(data: IActivitySessionHistoryItem) {
         const parseResult = ActivitySessionHistoryItemSchema.safeParse(data);
         if (!parseResult.success) {
             throw new Error(`Invalid ActivitySessionHistoryItem data: ${JSON.stringify(parseResult.error.errors)}`);

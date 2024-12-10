@@ -10,4 +10,4 @@ export const ActivitySessionHistoryItemSchema = z.object({
     notes: z.string().optional(),
 });
 
-export type ActivitySessionHistoryItemType = z.infer<typeof ActivitySessionHistoryItemSchema>;
+export type IActivitySessionHistoryItem = z.infer<typeof ActivitySessionHistoryItemSchema>;

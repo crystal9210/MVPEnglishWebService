@@ -1,31 +1,28 @@
-import { ClientActivitySessionSchema, ClientActivitySessionType } from "@/schemas/activity/clientSide/clientActivitySessionSchema";
-import { ClientActivitySessionHistoryClass } from "./activitySessionHistoryItem";
+import { ClientActivitySessionSchema, IClientActivitySession } from "@/schemas/activity/clientSide/clientActivitySessionSchema";
+import { ClientActivitySessionHistoryItem } from "./activitySessionHistoryItem";
+import { IProblemSet } from "@/schemas/activity/clientSide/problemSetSchema";
 
-export interface ClientActivitySession {
-    sessionId: string;
-    startedAt: string; // ISO string
-    history: ClientActivitySessionHistoryClass[];
-    // 必要に応じてクライアントサイド専用のプロパティを追加
-}
-
-export class ClientActivitySessionClass implements ClientActivitySession {
+export class ClientActivitySession implements IClientActivitySession {
     sessionId: string;
     startedAt: string;
-    history: ClientActivitySessionHistoryClass[];
+    // TODO classかitemかI...か、命名規則決定・調整
+    history: ClientActivitySessionHistoryItem[];
+    problemSet: IProblemSet;
 
-    constructor(data: ClientActivitySessionType) {
+    constructor(data: IClientActivitySession) {
         const parseResult = ClientActivitySessionSchema.safeParse(data);
         if (!parseResult.success) {
             throw new Error(`Invalid ClientActivitySession data: ${JSON.stringify(parseResult.error.errors)}`);
         }
 
-        this.sessionId = parseResult.data.sessionId;
-        this.startedAt = parseResult.data.startedAt;
-        this.history = parseResult.data.history.map(item => new ClientActivitySessionHistoryClass(item));
+        this.sessionId = parseResult.data.sessionId as string;
+        this.startedAt = parseResult.data.startedAt as string;
+        this.history = parseResult.data.history as ClientActivitySessionHistoryItem[];
+        this.problemSet = parseResult.data.problemSet;
     }
 
     // クライアントサイド専用のメソッドを追加
-    addHistoryItem(item: ClientActivitySessionHistoryClass) {
+    addHistoryItem(item: ClientActivitySessionHistoryItem) {
         this.history.push(item);
     }
 
