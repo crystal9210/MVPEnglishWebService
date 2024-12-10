@@ -1,9 +1,8 @@
-// src/app/activity/components/ActivityManagerComponent.tsx
 "use client";
 import React, { useState } from "react";
 import { useActivity } from "@/app/_contexts/activityContext"; // 正しいインポートパス
 import { ClientActivitySessionHistoryClass } from "@/domain/entities/clientSide/activitySessionHistoryItem";
-import { ClientActivitySessionClass } from "@/domain/entities/ClientActivitySession";
+import { ClientActivitySessionClass } from "@/domain/entities/clientSide/clientActivitySession";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation"; // `useRouter` のインポート
 

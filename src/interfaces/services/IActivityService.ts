@@ -1,9 +1,5 @@
-import { ActivitySession } from "@/domain/entities/clientSide/clientActivitySession";
-import { UserHistoryItem } from "@/domain/entities/userHistoryItem";
+import { ServerActivitySession } from "@/domain/entities/serverSide/activitySession";
 
-export interface ActivityServiceInterface {
-    createSession(session: ActivitySession): Promise<void>;
-    endSession(sessionId: string): Promise<void>;
-    getSession(sessionId: string): Promise<ActivitySession | null>;
-    submitAnswer(sessionId: string, historyItem: UserHistoryItem): Promise<void>;
+export interface IActivityService {
+    saveActivitySession(session: ServerActivitySession): Promise<void>;
 }

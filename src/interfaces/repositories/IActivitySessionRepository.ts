@@ -1,8 +1,5 @@
-import { ActivitySession } from "@/domain/entities/clientSide/clientActivitySession";
+import { ServerActivitySession } from "@/domain/entities/serverSide/activitySession";
 
 export interface IActivitySessionRepository {
-    findById(sessionId: string): Promise<ActivitySession | null>;
-    create(session: ActivitySession): Promise<void>;
-    update(session: ActivitySession): Promise<void>;
-    delete(sessionId: string): Promise<void>;
+    saveActivitySession(session: ServerActivitySession): Promise<void>;
 }
