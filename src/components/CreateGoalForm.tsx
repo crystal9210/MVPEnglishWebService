@@ -1,5 +1,3 @@
-// src/components/CreateGoalForm.tsx
-
 'use client';
 
 import React from 'react';
