@@ -1,7 +1,7 @@
 // app/grammar/list/page.tsx
 import fs from 'fs';
 import path from 'path';
-import UnitProblemList from '@/components/UnitProblemList';
+import UnitProblemList from '@/_components/UnitProblemList';
 import Link from 'next/link';
 
 type Problem = {

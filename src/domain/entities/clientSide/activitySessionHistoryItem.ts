@@ -1,6 +1,6 @@
-import { UserHistoryItemSchema, UserHistoryItem as UserHistoryItemType } from "@/schemas/userHistorySchemas";
+import { ActivitySessionHistoryItemSchema, ActivitySessionHistoryItemType } from "@/schemas/clientSide/activitySessionHistoryItemSchema";
 
-export interface UserHistoryItem {
+export interface ClientActivitySessionHistoryItem {
     problemId: string;
     result: "correct" | "incorrect";
     attempts: number;
@@ -8,15 +8,15 @@ export interface UserHistoryItem {
     notes?: string;
 }
 
-export class UserHistoryItemClass implements UserHistoryItem {
+export class ClientActivitySessionHistoryClass implements ClientActivitySessionHistoryItem {
     problemId: string;
     result: "correct" | "incorrect";
-    attempts: number; // TODO 設計に合わせ調整
+    attempts: number;
     lastAttemptAt: string;
     notes?: string;
 
-    constructor(data: UserHistoryItemType) {
-        const parseResult = UserHistoryItemSchema.safeParse(data);
+    constructor(data: ActivitySessionHistoryItemType) {
+        const parseResult = ActivitySessionHistoryItemSchema.safeParse(data);
         if (!parseResult.success) {
             throw new Error(`Invalid UserHistoryItem data: ${JSON.stringify(parseResult.error.errors)}`);
         }
@@ -24,9 +24,9 @@ export class UserHistoryItemClass implements UserHistoryItem {
         this.problemId = parseResult.data.problemId;
         this.result = parseResult.data.result;
         this.attempts = parseResult.data.attempts;
-        this.lastAttemptAt = parseResult.data.lastAttemptAt instanceof Date
-            ? parseResult.data.lastAttemptAt.toISOString()
-            : parseResult.data.lastAttemptAt;
+        this.lastAttemptAt = parseResult.data.lastAttemptAt;
         this.notes = parseResult.data.notes;
     }
+
+    // TODO メソッド追加・調整
 }

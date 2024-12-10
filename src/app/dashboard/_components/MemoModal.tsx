@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useMemoContext } from "@/app/contexts/MemoContext";
+import { useMemoContext } from "@/app/_contexts/MemoContext";
 
 interface MemoModalProps {
   isOpen: boolean;

@@ -1,4 +1,4 @@
-import { ActivitySession } from "@/domain/entities/ActivitySession";
+import { ActivitySession } from "@/domain/entities/clientSide/clientActivitySession";
 
 export interface IActivitySessionRepository {
     findById(sessionId: string): Promise<ActivitySession | null>;

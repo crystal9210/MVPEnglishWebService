@@ -1,6 +1,6 @@
 import { injectable, inject } from "tsyringe";
 import { ActivityServiceInterface } from "@/interfaces/services/IActivityService";
-import { ActivitySession } from "@/domain/entities/ActivitySession";
+import { ActivitySession } from "@/domain/entities/clientSide/clientActivitySession";
 import { UserHistoryItem } from "@/domain/entities/userHistoryItem";
 import type { IActivitySessionRepository } from "@/interfaces/repositories/IActivitySessionRepository";
 import type { ILoggerService } from "@/interfaces/services/ILoggerService";

@@ -4,6 +4,12 @@
 tree -I 'node_modules|.git' -L 3 > directory_structure.txt
 ```
 
+## プロジェクト内部行数カウント
+
+```bash copy
+find . -type d \( -name "node_modules" -o -name ".next" -o -name ".git" \) -prune -o -type f -print | xargs wc -l
+```
+
 ## cspell の Unknown word エラーを排除
 
 ### premise: make 'cspell.json' file in the root of the project like below.

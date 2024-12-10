@@ -50,7 +50,7 @@ import { BatchOperations } from "@/utils/batchOperations";
 import { RetryService } from "@/domain/services/retryService";
 import { ActivityService } from "@/domain/services/activityService";
 import { ActivitySessionRepository } from "@/domain/repositories/activitySessionRepository";
-import { ActivityManager } from "@/components/managers/activityManager";
+import { ActivityManager } from "@/_components/managers/activityManager";
 
 // Utility
 // 最初に他のサービスに依存しないサービスを登録 - tsyringeの仕様

@@ -3,7 +3,7 @@
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { SignOutButton } from "@/components/signout_button";
+import { SignOutButton } from "@/_components/signout_button";
 import NavigationButtons from "./_components/NavigationButtons";
 import MemoButton from "./_components/MemoButton";
 import ActivityChart from "./_components/ActivityChart";
@@ -15,7 +15,6 @@ import HistoryPanel from "./_components/HistoryPanel";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Image from "next/image";
-import ActivityManagerComponent from "@/components/ActivityManagerComponent"; // 追加
 
 export default function DashboardPage() {
     const { data: session, status } = useSession();
@@ -108,11 +107,6 @@ export default function DashboardPage() {
                         </div>
                     </div>
                 </div>
-            </div>
-
-            {/* TODO */}
-            <div className="mt-12">
-                <ActivityManagerComponent />
             </div>
 
             <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>

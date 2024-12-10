@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { SessionProvider } from "next-auth/react";
 import "./globals.css";
-import { MemoProvider } from "./contexts/MemoContext";
-import { ActivityProvider } from "@/contexts/activityContext";
+import { MemoProvider } from "./_contexts/MemoContext";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -31,9 +30,7 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <SessionProvider>
           <MemoProvider>
-            <ActivityProvider>
               {children}
-            </ActivityProvider>
           </MemoProvider>
         </SessionProvider>
       </body>

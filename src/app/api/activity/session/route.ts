@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { container } from '@/containers/diContainer';
 import { ActivityServiceInterface } from '@/interfaces/services/IActivityService';
 import { ActivitySessionSchema } from '@/schemas/activitySessionSchema';
-import { ActivitySession } from '@/domain/entities/ActivitySession';
+import { ActivitySession } from '@/domain/entities/clientSide/clientActivitySession';
 
 // セッション作成
 export async function POST(req: NextRequest) {
