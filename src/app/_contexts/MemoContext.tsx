@@ -2,17 +2,15 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { Memo, MemoSchema, MemoArraySchema } from "@/schemas/app/_contexts/memoSchemas";
+import { IMemoContext } from "@/interfaces/clientSide/memo/memoContext";
+import { MyDB } from "@/interfaces/clientSide/memo/idb";
+import { MemoManager } from "../_components/memo/memoManager";
 
-// コンテキスト型定義
-interface MemoContext {
-  memos: Memo[];
-  addMemo: (content: string) => void;
-  editMemo: (id: string, content: string) => void;
-  deleteMemo: (id: string) => void;
-}
+
+
 
 // コンテキストの作成
-const MemoContext = createContext<MemoContext | undefined>(undefined);
+const MemoContext = createContext<IMemoContext | undefined>(undefined);
 
 // プロバイダーコンポーネント
 export const MemoProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
