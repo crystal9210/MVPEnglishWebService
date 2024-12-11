@@ -16,7 +16,7 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Image from "next/image";
 // TODO 調整
-import ProblemSetCard from "@/app/_components/problemSetCard";
+import ProblemSetCard from "@/app/_components/dashboard/problemSetCard";
 import { mockProblemSets } from "@/sample_datasets/v1/activity/mockProblemSets1";
 import Link from "next/link";
 

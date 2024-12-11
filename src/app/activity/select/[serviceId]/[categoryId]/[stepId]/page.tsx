@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import { useParams } from "next/navigation";
-import ProblemSetSelector from "@/app/_components/problemSetSelector";
+import ProblemSetSelector from "@/app/_components/activity/problemSetSelector";
 
 const SelectProblemSetPage = () => {
     const params = useParams();

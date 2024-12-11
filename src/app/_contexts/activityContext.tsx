@@ -7,7 +7,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { ActivityManager } from "@/app/_components/managers/activityManager";
+import { ActivityManager } from "@/app/_components/activity/managers/activityManager";
 import { IClientActivitySession } from "@/schemas/activity/clientSide/clientActivitySessionSchema";
 import { ClientActivitySessionHistoryItem } from "@/domain/entities/clientSide/activitySessionHistoryItem";
 

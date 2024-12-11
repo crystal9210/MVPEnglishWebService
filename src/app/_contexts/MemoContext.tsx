@@ -1,17 +1,10 @@
-// app/contexts/MemoContext.tsx
-
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
+import { Memo, MemoSchema, MemoArraySchema } from "@/schemas/app/_contexts/memoSchemas";
 
-// メモの型定義
-interface Memo {
-  id: string;
-  content: string;
-}
-
-// コンテキストの型定義
-interface MemoContextType {
+// コンテキスト型定義
+interface MemoContext {
   memos: Memo[];
   addMemo: (content: string) => void;
   editMemo: (id: string, content: string) => void;
@@ -19,7 +12,7 @@ interface MemoContextType {
 }
 
 // コンテキストの作成
-const MemoContext = createContext<MemoContextType | undefined>(undefined);
+const MemoContext = createContext<MemoContext | undefined>(undefined);
 
 // プロバイダーコンポーネント
 export const MemoProvider: React.FC<{ children: ReactNode }> = ({ children }) => {

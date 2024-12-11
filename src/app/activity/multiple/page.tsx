@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useActivity } from "@/app/_contexts/activityContext";
 import { ClientActivitySessionHistoryItem } from "@/domain/entities/clientSide/activitySessionHistoryItem";
 import { toast } from "react-toastify";
-import ProblemSetSelector from "@/app/_components/problemSetSelector";
+import ProblemSetSelector from "@/app/_components/activity/problemSetSelector";
 import { IProblemSet } from "@/schemas/activity/clientSide/problemSetSchema";
 
 const MultipleActivityPage = () => {
