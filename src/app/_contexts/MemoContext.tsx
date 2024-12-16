@@ -2,27 +2,45 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { Memo, MemoSchema, MemoArraySchema } from "@/schemas/app/_contexts/memoSchemas";
-import { IMemoContext } from "@/interfaces/clientSide/memo/memoContext";
-import { MyDB } from "@/interfaces/clientSide/memo/idb";
+import { IMemoContext } from "@/interfaces/clientSide/memo/IMemoContext";
+import { MyIDB } from "@/interfaces/clientSide/memo/idb";
 import { MemoManager } from "../_components/memo/memoManager";
+import { openDB, IDBPDatabase } from "idb";
+// import { useAuth } from "@/components/AuthProvider";
 
 
+const initDB = async (): Promise<IDBPDatabase<MyIDB>> => {
+  return await openDB<MyIDB>("memoDB", 1, {
+    upgrade(db) {
+      // すでにクライアントサイドに存在している場合のハンドリング
+      // - アップデート処理・そもそもアップデート部分がなければ処理を回避、など
+      const memoStore = db.createObjectStore("memoList", { keyPath: "id" });
+      memoStore.createIndex("by-createdAt", "createdAt");
+      memoStore.createIndex("by-tags", "tags", { multiEntry: true });
 
+      const trashedStore = db.createObjectStore("trashedMemoList", { keyPath: "id" });
+      trashedStore.createIndex("by-deletedAt", "deletedAt");
+    }
+  })
+}
 
-// コンテキストの作成
+// メモコンテキスト作成
+// TODO undefinedの扱い - 本当にこの初期化でいいか - 脅威モデル
 const MemoContext = createContext<IMemoContext | undefined>(undefined);
 
-// プロバイダーコンポーネント
+// メモプロバイダーコンポーネント
 export const MemoProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [memos, setMemos] = useState<Memo[]>([]);
+  // const { user } =useAuth();
+  const [memoList, setMemoList] = useState<Memo[]>([]);
+  const [trashedMemoList, setTrashedMemoList] = useState<Memo[]>([]);
+  const [idb, setIDb] = useState<IDBPDatabase<MyIDB> | null>(null);
 
-  // ローカルストレージからメモを取得
+  // セットアップ
   useEffect(() => {
-    const storedMemos = localStorage.getItem("memos");
-    if (storedMemos) {
-      setMemos(JSON.parse(storedMemos));
+    const setupDB = async () => {
+      if (!user) {}
     }
-  }, []);
+  })
 
   // メモの更新時にローカルストレージに保存
   useEffect(() => {

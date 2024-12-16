@@ -1,15 +1,21 @@
-import { IDBPDatabase } from "idb";
+// 責任: ビジネスロジック処理、APIサービス層・indexedDB永続化層との連携
 import { Memo } from "@/schemas/app/_contexts/memoSchemas";
-import { promise } from "zod";
+import { ApiService } from "@/interfaces/clientSide/services/memoApiService.ts";
+import { toast } from "react-toastify";
+import { IDBPDatabase } from "idb";
+import { IMemoRepository } from "@/interfaces/clientSide/repositories/IMemoRepository";
 // TODO Firestoreに対するアクセスや制御に関しては後で追加
 
 export class MemoManager {
-    private db: IDBPDatabase<unknown>; // TODO handle unkonwn type
-    private userId: string;
+    private memoRepo: IMemoRepository;
+    constructor(memoRepo: IMemoRepository) {
+        this.memoRepo = memoRepo;
+    }
 
-    constructor(db: IDBPDatabase<unknown>, userId: string) {
-        this.db = db;
-        this.userId = userId;
+    async createMemo(content: string, tags: string[]): Promise<void> {
+        const memo: Memo = {
+            id: this.generateId();
+        }
     }
 
     async autoDeleteExpiredMemoList(): Promise<void> {
@@ -20,7 +26,7 @@ export class MemoManager {
         const deletionPromises = trashedMemoList.map(async (memo) => {
             if (memo.deletedAt && memo.deletedAt < timeOfAWeekBefore) {
                 try {
-                await this.db.delete("trashedMemoList", memo.id);
+                await this.memoRepo.deleteMemo("trashedMemoList", memo.id);
 
                 // const memoDoc = doc(dbFirestore, "memoList", memo.id);
                 // await deleteDoc(memoDoc);
@@ -32,5 +38,11 @@ export class MemoManager {
         });
 
         await Promise.all(deletionPromises); // TODO ここで返すように実装しているのは何故か
+    }
+
+    // TODO ID生成系のユーティリティ関数を実装し、抽象化、各リポジトリおよび永続化層オブジェクトに対応した配列をサーバサイドで保持・キャッシングするように実装し、アクセス制御を厳密化 + マネージャによりRBACを設計・実装・セキュリティ対策、マネージャにより処理の抽象化
+    // 優先度が低いので仮としてプライベートメソッド実装
+    private generateId(): string {
+        return "_" + Math.random().toString(36).substring(2, 9);
     }
 }

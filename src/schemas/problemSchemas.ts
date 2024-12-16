@@ -1,11 +1,23 @@
 import { z } from "zod";
 
+const OptiosSchema = z.object({
+
+})
+
+const ContentsBaseSchema = z.object({
+  difficulty: z.enum(["beginner", "intermediate", "hard"]), // TODO
+  answer: z.array(z.string()),
+  tips: z.array(z.string()),
+})
+
 // 抽象スキーマ・共通ルール
 const baseProblemSchema = z.object({
-  id: z.string(),
-  type: z.enum(["multiple-choice", "fill-in-the-blank", "writing", "basis", "pattern"]),
-  category: z.string(),
-  difficulty: z.enum(["beginner", "intermediate", "advanced"]),
+  // this "id" fields(serviceId, categoryId, stepId) are expressed by the names.
+  serviceId: z.string(), // "multiple-choice" | "fill-in-the-blank" | "writing" |  "basis" | "pattern"
+  categoryId: z.string().optional(),
+  stepId: z.string().optional(),
+  contents: z.object({}), // 抽象フィールド
+  userInputs: z.object({})
 });
 
 const multipleChoiceProblemSchema = baseProblemSchema.extend({

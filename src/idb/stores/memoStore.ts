@@ -7,23 +7,27 @@ export class MemoStore implements IMemoRepository {
 
     async addMemo(memo: Memo): Promise<void> {
         const db = await this.dbPromise;
-        await db.put('memoList', memo);
+        await db.put("memoList", memo);
     }
 
     async getMemo(id: string): Promise<Memo | undefined> {
         const db = await this.dbPromise;
-        return db.get('memoList', id);
+        return db.get("memoList", id);
     }
 
     async getAllMemos(): Promise<Memo[]> {
         const db = await this.dbPromise;
-        return db.getAll('memoList');
+        return db.getAll("memoList");
+    }
+
+    async updateMemo(id: string, memo: Memo): Promise<void> {
+        const db = await this.dbPromise;
+        await db.put("memoList", memo);
     }
 
     async deleteMemo(id: string): Promise<void> {
         const db = await this.dbPromise;
-        await db.delete('memoList', id);
+        await db.delete("memoList", id);
     }
 
-    // その他のメソッド実装
 }

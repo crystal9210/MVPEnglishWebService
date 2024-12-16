@@ -8,12 +8,13 @@ import { sanitizedString } from "@/schemas/baseSchemas";
 // TODO 各フィールドにおけるバイパスや攻撃のエントリポイントとなりうる可能性の脅威モデリング - 普通にユーティリティ化してベースモデルとなるサニタイズ処理等を実装したベーススキーマをextendするように - スキーマのプロトコル設計
 export const MemoSchema = z.object({
     id: z.string(),
-    content: sanitizedString(1000), // TODO sanitization and made and pass test of the utility until 12/12
+    // TODO sanitization and made and pass test of the utility until 12/13
+    content: sanitizedString(1000), // encryption data
     createdAt: z.date(),
     lastUpdatedAt: z.date(),
     tags: z.array(z.string()).default([]),
     // ownerId: z.string(),
-    deleted: z.boolean().default(false), // optionalとすると"true" | "false" | "undefined"となり扱う状態の数とハンドリング不足によるバグの可能性が増えるためデフォルト:"false"としてスキーマを固定化、undefined, nullの時はバグとしてエラーハンドリング
+    deleted: z.boolean().default(false),
     deletedAt: z.date().default(new Date(0)), // default value: "000000..."みたいな感じ
 });
 
