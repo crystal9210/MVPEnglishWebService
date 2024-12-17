@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { Memo } from '@/schemas/app/_contexts/memoSchemas';
 
 export interface IMemoRepository {

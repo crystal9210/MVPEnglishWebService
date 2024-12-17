@@ -8,39 +8,19 @@ import { openDB, IDBPDatabase, IDBPTransaction } from "idb";
 import { MyIDB } from "@/interfaces/clientSide/memo/idb";
 import { OBJECT_STORE_CONFIGS, ObjectStoreName } from "@/constants/clientSide/idb/objectStores";
 import { DB_NAME, DB_VERSION } from "@/constants/clientSide/idb/dbConfig";
-import { Memo } from "@/schemas/app/_contexts/memoSchemas";
-import { ClientActivitySession } from "@/domain/entities/clientSide/clientActivitySession";
-import { IActivitySessionHistoryItem } from "@/schemas/activity/serverSide/activitySessionHistoryItemSchema";
 import { IIndexedDBManager } from "@/interfaces/clientSide/repositories/managers/IIndexedDBManager";
 
+// 各オブジェクトストアのデータを型安全に保持
+type BackupData = {
+    [K in ObjectStoreName]?: MyIDB[K]["value"][];
+};
 
 export class IndexedDBManager implements IIndexedDBManager {
     private static instance: IndexedDBManager;
     private dbPromise: Promise<IDBPDatabase<MyIDB>>; // 非同期にindexedDBを開きデータベース接続管理
 
     private constructor() {
-        this.dbPromise = openDB<MyIDB>(DB_NAME, DB_VERSION, {
-            upgrade(idb, oldVersion, newVersion, transaction) {
-                OBJECT_STORE_CONFIGS.forEach(storeConfig => {
-                    if (!idb.objectStoreNames.contains(storeConfig.name)) {
-                        const store = idb.createObjectStore(storeConfig.name, storeConfig.options);
-                        storeConfig.indexes?.forEach(index => {
-                            store.createIndex(index.name, index.keyPath, index.options);
-                        })
-                    } else {
-                        const store = transaction.objectStore(storeConfig.name);
-                        storeConfig.indexes?.forEach(indexes => {
-                            if (!store.indexNames.contains(indexes.name)) {
-                                store.createIndex(indexes.name, indexes.keyPath, indexes.options);
-                            }
-                        })
-                    }
-                });
-            }
-        }).catch(error => {
-            console.error("Failed to open IndexedDB:", error);
-            throw error; // TODO リカバリ処理実装
-        })
+        this.dbPromise = this.initializeDB();
     }
 
     public static getInstance(): IndexedDBManager {
@@ -50,14 +30,119 @@ export class IndexedDBManager implements IIndexedDBManager {
         return IndexedDBManager.instance;
     }
 
+    private async initializeDB(): Promise<IDBPDatabase<MyIDB>> {
+        let attempts = 0;
+        const maxRetries = 3;
+
+        while (attempts < maxRetries) {
+            try {
+                console.log(`Attempting to open IndexedDB (Attempt ${attempts + 1})`);
+                return await openDB<MyIDB>(DB_NAME, DB_VERSION, {
+                    upgrade(idb, oldVersion, newVersion, transaction) {
+                        console.log("Upgrading Database...");
+                        OBJECT_STORE_CONFIGS.forEach((storeConfig) => {
+                            if (!idb.objectStoreNames.contains(storeConfig.name)) {
+                                const store = idb.createObjectStore(storeConfig.name, storeConfig.options);
+                                storeConfig.indexes?.forEach((index) => {
+                                    store.createIndex(index.name, index.keyPath, index.options);
+                                });
+                            }
+                        });
+                    },
+                });
+            } catch (error) {
+                console.error(`Failed to open IndexedDB: ${error}`);
+                attempts++;
+
+                // 通信エラーの場合は再試行
+                if (this.isTemporaryError(error)) {
+                    console.warn("Detected temporary error. Retrying...");
+                    await this.sleep(2000);
+                    continue;
+                }
+
+                if (attempts < maxRetries) {
+                    console.warn("Attempting to backup data and delete corrupted database...");
+                    await this.backupAndRecover();
+                } else {
+                    console.error("Max retries exceeded. Unable to open IndexedDB.");
+                    throw new Error("Database initialization failed after multiple attempts.");
+                }
+            }
+        }
+        throw new Error("Unexpected error during database initialization.");
+    }
+
+    // データベースのバックアップとリカバリ処理
+    private async backupAndRecover(): Promise<void> {
+        const backupData: BackupData = {};
+
+        try {
+            const idb = await openDB<MyIDB>(DB_NAME, DB_VERSION);
+
+            // 各オブジェクトストアのデータをバックアップ
+            for (const storeConfig of OBJECT_STORE_CONFIGS) {
+                const storeName = storeConfig.name as ObjectStoreName;
+                const storeData = await idb.getAll(storeName);
+                backupData[storeName] = storeData;
+            }
+
+            console.log("Backup successful. Deleting corrupted database...");
+            await this.deleteDatabase();
+
+            console.log("Restoring data from backup...");
+            for (const storeName of Object.keys(backupData) as ObjectStoreName[]) {
+                const data = backupData[storeName] || [];
+                for (const item of data) {
+                    await this.put(storeName, item); // 既存のputメソッドを利用
+                }
+            }
+
+            console.log("Data restoration completed successfully.");
+        } catch (backupError) {
+            console.error("Failed to backup or recover data:", backupError);
+            throw backupError;
+        }
+    }
+
+    // 通信エラー(ブラウザ固有エラー・ネットワークエラー)判定
+    private isTemporaryError(error: Error): boolean {
+        return error.name === "NetworkError" || error.message.includes("Failed to fetch");
+    }
+
+    private async deleteDatabase(): Promise<void> {
+        console.warn(`Deleting IndexedDB database: ${DB_NAME}`);
+        return new Promise((resolve, reject) => {
+            const deleteRequest = indexedDB.deleteDatabase(DB_NAME);
+
+            deleteRequest.onsuccess = () => {
+                console.log(`Successfully deleted database: ${DB_NAME}`);
+                resolve();
+            };
+
+            deleteRequest.onerror = (event) => {
+                console.error("Failed to delete database", event);
+                reject(event);
+            };
+
+            deleteRequest.onblocked = () => {
+                console.warn("Database deletion is blocked. Please close all database connections.");
+            };
+        });
+    }
+
+
     public async get<K extends ObjectStoreName>(storeName: K, key: MyIDB[K]["key"]): Promise<MyIDB[K]["value"] | undefined> {
         const idb = await this.getDB();
         return idb.get(storeName, key);
     }
 
     public async add<K extends ObjectStoreName>(storeName: K, value: MyIDB[K]["value"], key?: MyIDB[K]["key"]): Promise<MyIDB[K]["key"]> {
+        const resolvedKey = await this.resolveKey(storeName, value, key);
+        await this.checkNotExists(storeName, resolvedKey);
+
         const idb = await this.getDB();
-        return idb.add(storeName, value, key);
+        return idb.add(storeName, value, resolvedKey);
     }
 
     public async put<K extends ObjectStoreName>(
@@ -65,8 +150,11 @@ export class IndexedDBManager implements IIndexedDBManager {
         value: MyIDB[K]["value"],
         key?: MyIDB[K]["key"]
     ): Promise<void> {
+        const resolvedKey = await this.resolveKey(storeName, value, key);
+        await this.checkExists(storeName, resolvedKey);
+
         const idb = await this.getDB();
-        await idb.put(storeName, value, key);
+        await idb.put(storeName, value, resolvedKey);
     }
 
     public async getAll<K extends ObjectStoreName>(
@@ -80,6 +168,8 @@ export class IndexedDBManager implements IIndexedDBManager {
         storeName: K,
         key: MyIDB[K]["key"]
     ): Promise<void> {
+        await this.checkExists(storeName, key);
+
         const idb = await this.getDB();
         await idb.delete(storeName, key);
     }
@@ -111,6 +201,15 @@ export class IndexedDBManager implements IIndexedDBManager {
         })
     }
 
+    public async updateMultiple<K extends ObjectStoreName>(
+        storeName: K,
+        values: MyIDB[K]["value"][]
+    ): Promise<void> {
+        return this.performTransaction([storeName], "readwrite", async () => {
+            await Promise.all(values.map((value) => this.put(storeName, value)));
+        });
+    }
+
     public async deleteMultiple<K extends ObjectStoreName>(
         storeName: K,
         keys: MyIDB[K]["key"][]
@@ -123,6 +222,7 @@ export class IndexedDBManager implements IIndexedDBManager {
                     throw new Error(`Item with key ${keys[index]} does not exist in ${storeName}`);
                 }
             });
+            // browser環境によってはdeleteがない可能性があるため(現在はあまりないが仕様としてこのチェックを入れる必要がある)
             if (!store.delete) {
                 throw new Error("The delete method is not available on this object store.");
             }
@@ -137,14 +237,7 @@ export class IndexedDBManager implements IIndexedDBManager {
         mode: IDBTransactionMode,
         callback: (tx: IDBPTransaction<MyIDB, K[], "versionchange" | "readonly" | "readwrite">) => Promise<T>
     ): Promise<T> {
-        return this.executeWithRetry(() => this._performTransaction(storeNames, mode, callback));
-    }
-
-    private async _performTransaction<T, K extends ObjectStoreName>(
-        storeNames: K[],
-        mode: IDBTransactionMode,
-        callback: (tx: IDBPTransaction<MyIDB, K[], "versionchange" | "readonly" | "readwrite">) => Promise<T>
-    ): Promise<T> {
+        return this.executeWithRetry(async () => {
         const idb = await this.getDB();
         const tx = idb.transaction(storeNames, mode);
         try {
@@ -156,7 +249,63 @@ export class IndexedDBManager implements IIndexedDBManager {
             tx.abort(); // トランザクションが失敗したら、トランザクション処理前の状態に戻す
             throw error;
         }
+        });
     }
+
+    private async resolveKey<K extends ObjectStoreName>(
+        storeName: K,
+        value: MyIDB[K]["value"],
+        key?: MyIDB[K]["key"]
+    ): Promise<MyIDB[K]["key"]> {
+        if (key !== undefined) return key;
+
+        const idb = await this.getDB();
+        const store = idb.transaction(storeName, "readonly").objectStore(storeName);
+        const keyPath = store.keyPath;
+
+        if (typeof keyPath === "string") {
+            const resolvedKey = value[keyPath as keyof MyIDB[K]["value"]];
+            if (resolvedKey === undefined) {
+                throw new Error(`Key '${keyPath}' is missing in the value for store '${storeName}'.`);
+            }
+            return resolvedKey as MyIDB[K]["key"];
+        } else {
+            throw new Error(`Key path for store '${storeName}' is not a string. Cannot resolve key.`);
+        }
+    }
+
+    private async checkExists<K extends ObjectStoreName>(
+        storeName: K,
+        key: MyIDB[K]["key"] | MyIDB[K]["key"][]
+    ): Promise<void> {
+        if (Array.isArray(key)) {
+            const results = await this.getMultiple(storeName, key);
+            results.forEach((item, index) => {
+                const currentKey = (key as MyIDB[K]["key"][])[index];
+                if (!item) {
+                    throw new Error(`Item with key '${currentKey}' does not exist in '${storeName}'.`);
+                }
+            });
+        } else {
+            const idb = await this.getDB();
+            const existingItem = await idb.get(storeName, key);
+            if (!existingItem) {
+                throw new Error(`Item with key '${key}' does not exist in '${storeName}'.`);
+            }
+        }
+    }
+
+    private async checkNotExists<K extends ObjectStoreName>(
+        storeName: K,
+        key: MyIDB[K]["key"]
+    ): Promise<void> {
+        const idb = await this.getDB();
+        const existingItem = await idb.get(storeName, key);
+        if (existingItem) {
+            throw new Error(`Item with key '${key}' already exists in '${storeName}'.`);
+        }
+}
+
 
     // トランザクションの安定性・信頼性の向上のために導入
     private async executeWithRetry<T>(fn: () => Promise<T>, retries = 3, delay = 1000): Promise<T> {
@@ -165,8 +314,9 @@ export class IndexedDBManager implements IIndexedDBManager {
                 return await fn();
             } catch (error) {
                 if (attempt < retries - 1) {
-                    console.warn(`Operation failed, retrying in ${delay}ms... (Attempt ${attempt + 1}/${retries})`);
-                    await this.sleep(delay);
+                    const backoff = delay * Math.pow(2, attempt); // 指数バックオフ
+                    console.warn(`Operation failed, retrying in ${backoff}ms... (Attempt ${attempt + 1}/${retries})`);
+                    await this.sleep(backoff);
                 } else {
                     console.error("Max retries exceeded");
                     throw error;
@@ -180,37 +330,38 @@ export class IndexedDBManager implements IIndexedDBManager {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
-    private validateValue<K extends ObjectStoreName>(
-        storeName: K,
-        value: MyIDB[K]["value"]
-    ): boolean {
-        switch (storeName) {
-            case "memoList":
-                return (
-                    (typeof (value as Memo).id === "string" || typeof (value as Memo).id === "number") &&
-                    typeof (value as Memo).content === "string"
-                );
-            case "trashedMemoList":
-                return (
-                    (typeof (value as Memo).id === "string" || typeof (value as Memo).id === "number") &&
-                    typeof (value as Memo).content === "string" &&
-                    (value as Memo).deletedAt instanceof Date
-                );
-            case "activitySessions":
-                return (
-                    typeof (value as ClientActivitySession).sessionId === "string" &&
-                    (value as ClientActivitySession).startedAt instanceof Date &&
-                    (value as ClientActivitySession).endedAt instanceof Date
-                );
-            case "history":
-                return (
-                    typeof (value as { sessionId: string; historyItem: IActivitySessionHistoryItem }).sessionId === "string" &&
-                    typeof (value as { sessionId: string; historyItem: IActivitySessionHistoryItem }).historyItem === "object"
-                );
-            default:
-                return false;
-        }
-    }
+    // TODO サービス層に移行
+    // private validateValue<K extends ObjectStoreName>(
+    //     storeName: K,
+    //     value: MyIDB[K]["value"]
+    // ): boolean {
+    //     switch (storeName) {
+    //         case "memoList":
+    //             return (
+    //                 (typeof (value as Memo).id === "string" || typeof (value as Memo).id === "number") &&
+    //                 typeof (value as Memo).content === "string"
+    //             );
+    //         case "trashedMemoList":
+    //             return (
+    //                 (typeof (value as Memo).id === "string" || typeof (value as Memo).id === "number") &&
+    //                 typeof (value as Memo).content === "string" &&
+    //                 (value as Memo).deletedAt instanceof Date
+    //             );
+    //         case "activitySessions":
+    //             return (
+    //                 typeof (value as ClientActivitySession).sessionId === "string" &&
+    //                 (value as ClientActivitySession).startedAt instanceof Date &&
+    //                 (value as ClientActivitySession).endedAt instanceof Date
+    //             );
+    //         case "history":
+    //             return (
+    //                 typeof (value as { sessionId: string; historyItem: IActivitySessionHistoryItem }).sessionId === "string" &&
+    //                 typeof (value as { sessionId: string; historyItem: IActivitySessionHistoryItem }).historyItem === "object"
+    //             );
+    //         default:
+    //             return false;
+    //     }
+    // }
 
     public getDB(): Promise<IDBPDatabase<MyIDB>> {
         return this.dbPromise;

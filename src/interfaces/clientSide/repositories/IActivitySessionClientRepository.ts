@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { ActivitySession } from "@/schemas/activitySessionSchema";
 
 export interface IActivitySessionClientRepository {
