@@ -3,8 +3,8 @@ import { MyIDB } from "@/interfaces/clientSide/memo/idb";
 import { ObjectStoreName } from "@/constants/clientSide/idb/objectStores";
 
 export class GenericRepository<K extends ObjectStoreName> {
-    private idbManager: IIndexedDBManager;
-    private storeName: K;
+    protected idbManager: IIndexedDBManager;
+    protected storeName: K;
 
     constructor(idbManager: IIndexedDBManager, storeName: K) {
         this.idbManager = idbManager;
