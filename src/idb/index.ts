@@ -11,7 +11,7 @@ import { DB_NAME, DB_VERSION } from "@/constants/clientSide/idb/dbConfig";
 import { Memo } from "@/schemas/app/_contexts/memoSchemas";
 import { ClientActivitySession } from "@/domain/entities/clientSide/clientActivitySession";
 import { IActivitySessionHistoryItem } from "@/schemas/activity/serverSide/activitySessionHistoryItemSchema";
-import { IIndexedDBManager } from "@/interfaces/clientSide/memo/IIndexedDBManager";
+import { IIndexedDBManager } from "@/interfaces/clientSide/repositories/managers/IIndexedDBManager";
 
 
 export class IndexedDBManager implements IIndexedDBManager {
@@ -20,10 +20,10 @@ export class IndexedDBManager implements IIndexedDBManager {
 
     private constructor() {
         this.dbPromise = openDB<MyIDB>(DB_NAME, DB_VERSION, {
-            upgrade(db, oldVersion, newVersion, transaction) {
+            upgrade(idb, oldVersion, newVersion, transaction) {
                 OBJECT_STORE_CONFIGS.forEach(storeConfig => {
-                    if (!db.objectStoreNames.contains(storeConfig.name)) {
-                        const store = db.createObjectStore(storeConfig.name, storeConfig.options);
+                    if (!idb.objectStoreNames.contains(storeConfig.name)) {
+                        const store = idb.createObjectStore(storeConfig.name, storeConfig.options);
                         storeConfig.indexes?.forEach(index => {
                             store.createIndex(index.name, index.keyPath, index.options);
                         })
@@ -50,9 +50,14 @@ export class IndexedDBManager implements IIndexedDBManager {
         return IndexedDBManager.instance;
     }
 
+    public async get<K extends ObjectStoreName>(storeName: K, key: MyIDB[K]["key"]): Promise<MyIDB[K]["value"] | undefined> {
+        const idb = await this.getDB();
+        return idb.get(storeName, key);
+    }
+
     public async add<K extends ObjectStoreName>(storeName: K, value: MyIDB[K]["value"], key?: MyIDB[K]["key"]): Promise<MyIDB[K]["key"]> {
-        const db = await this.getDB();
-        return db.add(storeName, value, key);
+        const idb = await this.getDB();
+        return idb.add(storeName, value, key);
     }
 
     public async put<K extends ObjectStoreName>(
@@ -60,30 +65,30 @@ export class IndexedDBManager implements IIndexedDBManager {
         value: MyIDB[K]["value"],
         key?: MyIDB[K]["key"]
     ): Promise<void> {
-        const db = await this.getDB();
-        await db.put(storeName, value, key);
+        const idb = await this.getDB();
+        await idb.put(storeName, value, key);
     }
 
     public async getAll<K extends ObjectStoreName>(
         storeName: K
     ): Promise<MyIDB[K]["value"][]> {
-        const db = await this.getDB();
-        return db.getAll(storeName);
+        const idb = await this.getDB();
+        return idb.getAll(storeName);
     }
 
     public async delete<K extends ObjectStoreName>(
         storeName: K,
         key: MyIDB[K]["key"]
     ): Promise<void> {
-        const db = await this.getDB();
-        await db.delete(storeName, key);
+        const idb = await this.getDB();
+        await idb.delete(storeName, key);
     }
 
     public async clear<K extends ObjectStoreName>(
         storeName: K
     ): Promise<void> {
-        const db = await this.getDB();
-        await db.clear(storeName);
+        const idb = await this.getDB();
+        await idb.clear(storeName);
     }
 
     public async getAllFromIndex<K extends ObjectStoreName, I extends keyof MyIDB[K]["indexes"]>(
@@ -91,8 +96,40 @@ export class IndexedDBManager implements IIndexedDBManager {
         indexName: I,
         query: IDBKeyRange | (string extends keyof MyIDB[K]["indexes"] ? MyIDB[K]["indexes"][keyof MyIDB[K]["indexes"] & string] : IDBValidKey) | null | undefined
     ): Promise<MyIDB[K]["value"][]> {
-        const db = await this.getDB();
-        return db.getAllFromIndex(storeName, indexName as string, query);
+        const idb = await this.getDB();
+        return idb.getAllFromIndex(storeName, indexName as string, query);
+    }
+
+    public async getMultiple<K extends ObjectStoreName>(
+        storeName: K,
+        keys: MyIDB[K]['key'][]
+    ): Promise<(MyIDB[K]["value"] | undefined)[]> {
+        return this.performTransaction([storeName], "readonly", async (tx) => {
+            const store = tx.objectStore(storeName);
+            const results = await Promise.all(keys.map((key) => store.get(key))); // forで回すと逐次処理となりパフォが落ちる可能性ありー＞並行処理
+            return results;
+        })
+    }
+
+    public async deleteMultiple<K extends ObjectStoreName>(
+        storeName: K,
+        keys: MyIDB[K]["key"][]
+    ): Promise<void> {
+        return this.performTransaction([storeName], "readwrite", async (tx) => {
+            const store = tx.objectStore(storeName);
+            const existingItems = await this.getMultiple(storeName, keys);
+            existingItems.forEach((item, index) => {
+                if (!item) {
+                    throw new Error(`Item with key ${keys[index]} does not exist in ${storeName}`);
+                }
+            });
+            if (!store.delete) {
+                throw new Error("The delete method is not available on this object store.");
+            }
+            for (const key of keys) {
+                await store.delete(key);
+            }
+        })
     }
 
     public async performTransaction<T, K extends ObjectStoreName>(
@@ -108,8 +145,8 @@ export class IndexedDBManager implements IIndexedDBManager {
         mode: IDBTransactionMode,
         callback: (tx: IDBPTransaction<MyIDB, K[], "versionchange" | "readonly" | "readwrite">) => Promise<T>
     ): Promise<T> {
-        const db = await this.getDB();
-        const tx = db.transaction(storeNames, mode);
+        const idb = await this.getDB();
+        const tx = idb.transaction(storeNames, mode);
         try {
             const result = await callback(tx);
             await tx.done; // トランザクション完了待機
