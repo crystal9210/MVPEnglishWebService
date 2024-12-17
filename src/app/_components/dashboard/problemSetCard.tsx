@@ -1,10 +1,10 @@
 "use client";
 import React from "react";
 import { useRouter } from "next/navigation";
-import { IProblemSet } from "@/schemas/activity/clientSide/problemSetSchema";
+import { ProblemSet } from "@/schemas/activity/clientSide/problemSetSchema";
 
 interface ProblemSetCardProps {
-    problemSet: IProblemSet;
+    problemSet: ProblemSet;
 }
 
 const ProblemSetCard: React.FC<ProblemSetCardProps> = ({ problemSet }) => {

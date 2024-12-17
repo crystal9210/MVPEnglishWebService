@@ -1,36 +1,38 @@
-import { ClientActivitySessionSchema, IClientActivitySession } from "@/schemas/activity/clientSide/clientActivitySessionSchema";
+import { ClientActivitySessionSchema, ClientActivitySessionType } from "@/schemas/activity/clientSide/clientActivitySessionSchema";
 import { ClientActivitySessionHistoryItem } from "./activitySessionHistoryItem";
-import { IProblemSet } from "@/schemas/activity/clientSide/problemSetSchema";
+import { ProblemSet } from "@/schemas/activity/clientSide/problemSetSchema";
 
-export class ClientActivitySession implements IClientActivitySession {
+export class ClientActivitySession implements ClientActivitySessionType {
     sessionId: string;
-    startedAt: string;
-    // TODO classかitemかI...か、命名規則決定・調整
+    startedAt: Date;
+    endedAt: Date;
     history: ClientActivitySessionHistoryItem[];
-    problemSet: IProblemSet;
+    problemSet: ProblemSet;
 
-    constructor(data: IClientActivitySession) {
+    constructor(data: ClientActivitySessionType) {
         const parseResult = ClientActivitySessionSchema.safeParse(data);
         if (!parseResult.success) {
             throw new Error(`Invalid ClientActivitySession data: ${JSON.stringify(parseResult.error.errors)}`);
         }
 
-        this.sessionId = parseResult.data.sessionId as string;
-        this.startedAt = parseResult.data.startedAt as string;
-        this.history = parseResult.data.history as ClientActivitySessionHistoryItem[];
+        this.sessionId = parseResult.data.sessionId;
+        this.startedAt = new Date(parseResult.data.startedAt);
+        this.endedAt = new Date(parseResult.data.endedAt);
+        this.history = parseResult.data.history;
         this.problemSet = parseResult.data.problemSet;
     }
 
-    // クライアントサイド専用のメソッドを追加
     addHistoryItem(item: ClientActivitySessionHistoryItem) {
         this.history.push(item);
     }
 
-    // endSession(endTime: string) {
-    //     // セッション終了時の処理を追加
-    //     // 例: セッション終了時刻の設定など
-    //     // クライアントサイド専用のプロパティがあれば追加
-    // }
+    endSession(endTime: string) {
+        this.endedAt = new Date(endTime);
+    }
 
-    // その他必要なメソッドを追加
+    // TODO
+    isSessionEnded(): boolean {
+        return this.endedAt !== new Date(0);
+    }
+
 }

@@ -2,7 +2,7 @@
 import React, { useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { mockProblemSets } from "@/sample_datasets/v1/activity/mockProblemSets1";
-import { IProblemSet } from "@/schemas/activity/clientSide/problemSetSchema";
+import { ProblemSet } from "@/schemas/activity/clientSide/problemSetSchema";
 import { useActivity } from "@/app/_contexts/activityContext";
 import { ClientActivitySession } from "@/domain/entities/clientSide/clientActivitySession";
 
@@ -30,7 +30,7 @@ const ProblemSetSelector: React.FC = () => {
         return <p>選択された条件に一致する問題セットがありません。</p>;
     }
 
-    const handleSelectProblemSet = async (problemSet: IProblemSet) => {
+    const handleSelectProblemSet = async (problemSet: ProblemSet) => {
         // 新規セッション作成
         const newSession = new ClientActivitySession({
             sessionId: `session-${Date.now()}`,

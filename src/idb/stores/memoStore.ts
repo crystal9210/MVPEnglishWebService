@@ -1,9 +1,9 @@
 import { IMemoRepository } from '@/interfaces/clientSide/repositories/IMemoRepository';
 import { Memo } from '@/schemas/app/_contexts/memoSchemas';
-import { DBManager } from '..';
+import { IndexedDBManager } from '..';
 
 export class MemoStore implements IMemoRepository {
-    private dbPromise = DBManager.getInstance().getDB();
+    private dbPromise = IndexedDBManager.getInstance().getDB();
 
     async addMemo(memo: Memo): Promise<void> {
         const db = await this.dbPromise;

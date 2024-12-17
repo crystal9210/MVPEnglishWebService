@@ -5,13 +5,13 @@ import { useActivity } from "@/app/_contexts/activityContext";
 import { ClientActivitySessionHistoryItem } from "@/domain/entities/clientSide/activitySessionHistoryItem";
 import { toast } from "react-toastify";
 import ProblemSetSelector from "@/app/_components/activity/problemSetSelector";
-import { IProblemSet } from "@/schemas/activity/clientSide/problemSetSchema";
+import { ProblemSet } from "@/schemas/activity/clientSide/problemSetSchema";
 
 const MultipleActivityPage = () => {
     const router = useRouter();
     const { session, submitAnswer, getSessionHistory } = useActivity();
 
-    const [selectedProblemSet, setSelectedProblemSet] = useState<IProblemSet | null>(null);
+    const [selectedProblemSet, setSelectedProblemSet] = useState<ProblemSet | null>(null);
     const [currentAnswers, setCurrentAnswers] = useState<{ [problemId: string]: string }>({});
     const [feedbacks, setFeedbacks] = useState<{ [problemId: string]: string }>({});
     const [isCompleted, setIsCompleted] = useState<boolean>(false);

@@ -58,3 +58,7 @@ export const OBJECT_STORE_CONFIGS: readonly ObjectStoreConfig[] = [
 ] as const;
 
 export type ObjectStoreConfigs = typeof OBJECT_STORE_CONFIGS;
+
+// --- NOTE ---
+// type StoreNames = typeof OBJECT_STORE_CONFIGS[number]["name"];
+// >> "memoList" | "trashedMemoList" | "activitySessions" | "history"

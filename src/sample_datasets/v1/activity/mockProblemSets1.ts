@@ -1,7 +1,7 @@
 
-import { IProblemSet } from "@/schemas/activity/clientSide/problemSetSchema";
+import { ProblemSet } from "@/schemas/activity/clientSide/problemSetSchema";
 
-export const mockProblemSets: IProblemSet[] = [
+export const mockProblemSets: ProblemSet[] = [
     {
         serviceId: "service1",
         categoryId: "category1",

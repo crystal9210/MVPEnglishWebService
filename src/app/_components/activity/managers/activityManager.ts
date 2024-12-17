@@ -2,11 +2,11 @@
 
 import { openDB, DBSchema, IDBPDatabase } from "idb";
 import { IActivitySessionHistoryItem } from "@/schemas/activity/clientSide/activitySessionHistoryItemSchema";
-import { IProblemSet } from "@/schemas/activity/clientSide/problemSetSchema";
-import { IClientActivitySession } from "@/schemas/activity/clientSide/clientActivitySessionSchema";
+import { ProblemSet } from "@/schemas/activity/clientSide/problemSetSchema";
+import { ClientActivitySessionType } from "@/schemas/activity/clientSide/clientActivitySessionSchema";
 
 // TODO
-interface ClientActivitySession extends IClientActivitySession {}
+interface ClientActivitySession extends ClientActivitySessionType {}
 
 interface ActivityDB extends DBSchema {
     sessions: {

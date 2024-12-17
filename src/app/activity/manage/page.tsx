@@ -2,10 +2,10 @@
 
 import React, { useEffect, useState } from "react";
 import { useActivity } from "@/app/_contexts/activityContext";
-import { IClientActivitySession } from "@/schemas/activity/clientSide/clientActivitySessionSchema";
+import { ClientActivitySessionType } from "@/schemas/activity/clientSide/clientActivitySessionSchema";
 import { ClientActivitySessionHistoryItem } from "@/domain/entities/clientSide/activitySessionHistoryItem";
 
-interface ClientActivitySession extends IClientActivitySession{}
+interface ClientActivitySession extends ClientActivitySessionType{}
 
 const ManageActivityPage = () => {
     const {

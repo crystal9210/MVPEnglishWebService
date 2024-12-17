@@ -16,4 +16,4 @@ export const ProblemSetSchema = z.object({
 });
 
 
-export type IProblemSet = z.infer<typeof ProblemSetSchema>;
+export type ProblemSet = z.infer<typeof ProblemSetSchema>;

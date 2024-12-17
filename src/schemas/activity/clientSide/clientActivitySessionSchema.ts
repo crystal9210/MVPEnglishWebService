@@ -4,11 +4,10 @@ import { ProblemSetSchema } from "./problemSetSchema";
 
 export const ClientActivitySessionSchema = z.object({
     sessionId: z.string(),
-    startedAt: z.string().refine((val) => !isNaN(Date.parse(val)), {
-        message: "Invalid date string",
-    }),
+    startedAt: z.date().default(new Date(0)),
+    endedAt: z.date().default(new Date(0)),
     history: z.array(ActivitySessionHistoryItemSchema),
     problemSet: ProblemSetSchema,
 });
 
-export type IClientActivitySession = z.infer<typeof ClientActivitySessionSchema>;
+export type ClientActivitySessionType = z.infer<typeof ClientActivitySessionSchema>;
