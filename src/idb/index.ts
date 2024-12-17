@@ -1,15 +1,20 @@
 // 設計
 // アプリケーション全体で一つのIndexedDBManagerインスタンスを共有・indexedDBへのアクセスを統一的に管理
-import { openDB, IDBPDatabase, type IDBPTransaction } from "idb";
+// 責任分離モデル
+// indexedDBManager: 低レベルのデータアクセス、MemoRepository:indexedDBManagerを利用しドメイン固有のデータ操作、MemoService: リポジトリを利用しビジネスロジック実装
+// 抽象化強化: リポジトリを介してデータアクセスをすることで将来的なデータストア変更時、リポジトリの実装変更だけで済む
+
+import { openDB, IDBPDatabase, IDBPTransaction } from "idb";
 import { MyIDB } from "@/interfaces/clientSide/memo/idb";
 import { OBJECT_STORE_CONFIGS, ObjectStoreName } from "@/constants/clientSide/idb/objectStores";
 import { DB_NAME, DB_VERSION } from "@/constants/clientSide/idb/dbConfig";
 import { Memo } from "@/schemas/app/_contexts/memoSchemas";
 import { ClientActivitySession } from "@/domain/entities/clientSide/clientActivitySession";
 import { IActivitySessionHistoryItem } from "@/schemas/activity/serverSide/activitySessionHistoryItemSchema";
+import { IIndexedDBManager } from "@/interfaces/clientSide/memo/IIndexedDBManager";
 
 
-export class IndexedDBManager {
+export class IndexedDBManager implements IIndexedDBManager {
     private static instance: IndexedDBManager;
     private dbPromise: Promise<IDBPDatabase<MyIDB>>; // 非同期にindexedDBを開きデータベース接続管理
 
@@ -107,19 +112,16 @@ export class IndexedDBManager {
         const tx = db.transaction(storeNames, mode);
         try {
             const result = await callback(tx);
-            await new Promise<void>((resolve, reject) => {
-                tx.oncomplete = () => resolve();
-                tx.onerror = () => reject(tx.error);
-                tx.onabort = () => reject(tx.error);
-            });
+            await tx.done; // トランザクション完了待機
             return result;
         } catch (error) {
             console.error("Transaction failed:", error);
-            tx.abort();
+            tx.abort(); // トランザクションが失敗したら、トランザクション処理前の状態に戻す
             throw error;
         }
     }
 
+    // トランザクションの安定性・信頼性の向上のために導入
     private async executeWithRetry<T>(fn: () => Promise<T>, retries = 3, delay = 1000): Promise<T> {
         for (let attempt = 0; attempt < retries; attempt++) {
             try {
