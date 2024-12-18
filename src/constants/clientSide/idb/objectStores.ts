@@ -35,6 +35,8 @@ export type BaseValue =
         historyItem: IActivitySessionHistoryItem;
     };
 
+type GetKeyPath<Value> = Value extends { [key: string]: any } ? keyof Value : never;
+
 export interface ObjectStoreConfig<
     T extends ObjectStoreName = ObjectStoreName,
     Value extends BaseValue = BaseValue,
@@ -43,7 +45,7 @@ export interface ObjectStoreConfig<
 > {
     name: T;
     options: {
-        keyPath: string;
+        keyPath: GetKeyPath<Value>;
         autoIncrement?: boolean;
     } & IDBObjectStoreParameters;
     indexes?: Indexes;
@@ -91,13 +93,13 @@ const TrashedMemoListConfig: ObjectStoreConfig<"trashedMemoList", Memo,{
             keyPath: "deletedAt"
         }
     ]
-};
+} as const;
 
 const ActivitySessionsConfig: ObjectStoreConfig<"activitySessions", ClientActivitySession> = {
     name: "activitySessions",
     options: { keyPath: "sessionId" },
     indexes: [],
-};
+} as const;
 
 const HistoryConfig: ObjectStoreConfig<"history", {
     id?: number;
@@ -117,17 +119,47 @@ const HistoryConfig: ObjectStoreConfig<"history", {
     indexes: [
         { name: "by-sessionId", keyPath: "sessionId" }, // セッションIDで検索・フィルタリングすることを想定
     ],
-};
+} as const;
 
 
-export const OBJECT_STORE_CONFIGS: readonly ObjectStoreConfig[] = [
+export type ObjectStoreConfigs = readonly [
+    ObjectStoreConfig<"memoList", Memo, {
+        createdAt: Date;
+        lastUpdatedAt: Date;
+        deleted: boolean;
+        tags: string[];
+    }, [
+        IndexConfig<Memo, "createdAt">,
+        IndexConfig<Memo, "lastUpdatedAt">,
+        IndexConfig<Memo, "tags">
+    ]>,
+    ObjectStoreConfig<"trashedMemoList", Memo, {
+        deletedAt: Date;
+    }, [
+        IndexConfig<Memo, "deletedAt">
+    ]>,
+    ObjectStoreConfig<"activitySessions", ClientActivitySession>,
+    ObjectStoreConfig<"history", {
+        id?: number;
+        sessionId: string;
+        historyItem: IActivitySessionHistoryItem;
+    }, {
+        sessionId: string;
+    }, [
+        IndexConfig<{
+            id?: number;
+            sessionId: string;
+            historyItem: IActivitySessionHistoryItem;
+        }, "sessionId">
+    ]>
+];
+
+export const OBJECT_STORE_CONFIGS: ObjectStoreConfigs = [
     MemoListConfig,
     TrashedMemoListConfig,
     ActivitySessionsConfig,
     HistoryConfig
 ] as const;
-
-export type ObjectStoreConfigs = typeof OBJECT_STORE_CONFIGS;
 
 // --- NOTE ---
 // type StoreNames = typeof OBJECT_STORE_CONFIGS[number]["name"];
