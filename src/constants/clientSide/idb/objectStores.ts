@@ -37,13 +37,13 @@ export type BaseValue =
 
 export interface ObjectStoreConfig<
     T extends ObjectStoreName = ObjectStoreName,
-    Value = any,
+    Value extends BaseValue = BaseValue,
     Index extends Record<string, IndexableValue> = Record<string, IndexableValue>,
     Indexes extends IndexConfig<Value, keyof Index>[] = IndexConfig<Value, keyof Index>[]
 > {
     name: T;
     options: {
-        keyPath: keyof Value;
+        keyPath: string;
         autoIncrement?: boolean;
     } & IDBObjectStoreParameters;
     indexes?: Indexes;
@@ -76,7 +76,7 @@ const MemoListConfig: ObjectStoreConfig<"memoList", Memo, {
             options: { multiEntry: true }
         }
     ],
-}
+} as const;
 
 const TrashedMemoListConfig: ObjectStoreConfig<"trashedMemoList", Memo,{
     deletedAt: Date;
@@ -91,9 +91,8 @@ const TrashedMemoListConfig: ObjectStoreConfig<"trashedMemoList", Memo,{
             keyPath: "deletedAt"
         }
     ]
-}
+};
 
-// ActivitySessionsConfigの定義
 const ActivitySessionsConfig: ObjectStoreConfig<"activitySessions", ClientActivitySession> = {
     name: "activitySessions",
     options: { keyPath: "sessionId" },
