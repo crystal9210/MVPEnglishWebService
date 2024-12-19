@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 export const ActivitySessionHistoryItemSchema = z.object({
+    id: z.string(),
     problemId: z.string(),
     result: z.enum(["correct", "incorrect"]),
     attempts: z.number().int().min(1),

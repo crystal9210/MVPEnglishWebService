@@ -1,12 +1,13 @@
-// schemas/GoalSchema.ts
 import { z } from 'zod';
+import { integerNonNegative } from './utils/numbers';
 
+// TODO
 // Criteria schemas
 const IterationCriteriaSchema = z.object({
   mode: z.literal('iteration'),
   details: z.object({
     problemSetIds: z.array(z.string()).min(1),
-    requiredIterations: z.number().int().positive(),
+    requiredIterations: integerNonNegative(),
   }),
 });
 
@@ -59,17 +60,18 @@ const PerPeriodTargetsSchema = z.object({
   message: 'When enabled is true, period and targetRate must be specified.',
 });
 
-// Goal schema
+
 export const GoalSchema = z.object({
     id: z.string(),
-    type: z.enum(['short-term', 'medium-term', 'long-term']),
+    termType: z.enum(["short", "medium", "long"]),
     criteria: CriteriaSchema,
-    targetQuestions: z.number().int().positive(),
+    targetQuestions: z.number().int().positive(), // TODO
     currentProgress: z.number().int().nonnegative(),
     createdAt: z.date(),
     updatedAt: z.date(),
-    status: z.enum(['active', 'failed', 'good clear', 'best clear', 'archived']),
-    iterationCount: z.number().int().positive().optional(),
+    status: z.enum(["active", "failed", "good clear", "best clear", "archived"]),
+    // TODO
+    iterateCount: z.number().int().positive().optional(),
     completedIterations: z.number().int().nonnegative().optional(),
     deadlines: z.object({
         reasonableDeadline: z.date(),

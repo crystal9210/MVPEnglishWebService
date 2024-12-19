@@ -1,7 +1,9 @@
 import { Memo } from "@/schemas/app/_contexts/memoSchemas";
 import { ClientActivitySession } from "@/domain/entities/clientSide/clientActivitySession";
 import { IActivitySessionHistoryItem } from "@/schemas/activity/serverSide/activitySessionHistoryItemSchema";
+import { ClientActivitySessionHistoryItem } from "@/domain/entities/clientSide/activitySessionHistoryItem";
 
+// オブジェクトストア命名
 export const IDB_OBJECT_STORES = {
     MEMO_LIST: "memoList",
     TRASHED_MEMO_LIST: "trashedMemoList",
@@ -9,7 +11,8 @@ export const IDB_OBJECT_STORES = {
     HISTORY: "history",
 } as const;
 
-export type IdbObjectStoreName = typeof IDB_OBJECT_STORES[keyof typeof IDB_OBJECT_STORES]; // TODO
+
+export type IdbObjectStoreName = typeof IDB_OBJECT_STORES[keyof typeof IDB_OBJECT_STORES];
 
 export interface IndexConfig<
     Value,
@@ -19,27 +22,32 @@ export interface IndexConfig<
     keyPath: Index;
     options?: IDBIndexParameters;
 }
+// --- index example ---
+// {
+//     name: "by-createdAt",
+//     keyPath: "createdAt"
+// }
+
 
 export type SimpleValue = string | number | Date | boolean | null | undefined;
 export type IndexableValue = SimpleValue | Array<SimpleValue>;
 
 export type BaseValue =
-    | {
-        [key: string]: unknown | Date | number | string | boolean | null | undefined | BaseValue | BaseValue[];
-        }
     | ClientActivitySession
     | Memo
-    | {
-        id?: number;
-        sessionId: string;
-        historyItem: IActivitySessionHistoryItem;
-    };
+    | ClientActivitySessionHistoryItem;
 
-type GetPrimaryKey<ValueType> = ValueType extends { [key: string]: any } ?
-    keyof ValueType | (keyof ValueType)[]
-    : never;
+type GetPrimaryKey<ValueType extends Record<string, unknown>> =
+    keyof ValueType extends infer K
+        ? K extends "id" | "sessionId"
+            ? K | K[]
+            :never
+        :never;
+// >> keyPath: "id" | "sessionId" | ("id" | "sessionId")[]
+// --- NOTE ---
+// type Example = keyof "memoList"; // >> never
 
-export interface ObjectStoreConfig<
+export interface IdbObjectStoreConfig<
     StoreName extends IdbObjectStoreName = IdbObjectStoreName,
     ValueType extends BaseValue = BaseValue,
     Index extends Record<string, IndexableValue> = Record<string, IndexableValue>,
@@ -53,7 +61,7 @@ export interface ObjectStoreConfig<
     indexes?: Indexes;
 }
 
-const MemoListConfig: ObjectStoreConfig<"memoList", Memo, {
+const MemoListConfig: IdbObjectStoreConfig<"memoList", Memo, {
     createdAt: Date;
     lastUpdatedAt: Date;
     deleted: boolean;
@@ -82,7 +90,7 @@ const MemoListConfig: ObjectStoreConfig<"memoList", Memo, {
     ],
 } as const;
 
-const TrashedMemoListConfig: ObjectStoreConfig<"trashedMemoList", Memo,{
+const TrashedMemoListConfig: IdbObjectStoreConfig<"trashedMemoList", Memo,{
     deletedAt: Date;
 }, [
     IndexConfig<Memo, "deletedAt">
@@ -97,13 +105,13 @@ const TrashedMemoListConfig: ObjectStoreConfig<"trashedMemoList", Memo,{
     ]
 } as const;
 
-const ActivitySessionsConfig: ObjectStoreConfig<"activitySessions", ClientActivitySession> = {
+const ActivitySessionsConfig: IdbObjectStoreConfig<"activitySessions", ClientActivitySession> = {
     name: IDB_OBJECT_STORES.ACTIVITY_SESSIONS,
     options: { keyPath: "sessionId" },
     indexes: [],
 } as const;
 
-const HistoryConfig: ObjectStoreConfig<"history", {
+const HistoryConfig: IdbObjectStoreConfig<"history", {
     id?: number;
     sessionId: string;
     historyItem: IActivitySessionHistoryItem;
@@ -125,7 +133,7 @@ const HistoryConfig: ObjectStoreConfig<"history", {
 
 
 export type IdbObjectStoreConfigs = readonly [
-    ObjectStoreConfig<"memoList", Memo, {
+    IdbObjectStoreConfig<"memoList", Memo, {
         createdAt: Date;
         lastUpdatedAt: Date;
         deleted: boolean;
@@ -135,13 +143,13 @@ export type IdbObjectStoreConfigs = readonly [
         IndexConfig<Memo, "lastUpdatedAt">,
         IndexConfig<Memo, "tags">
     ]>,
-    ObjectStoreConfig<"trashedMemoList", Memo, {
+    IdbObjectStoreConfig<"trashedMemoList", Memo, {
         deletedAt: Date;
     }, [
         IndexConfig<Memo, "deletedAt">
     ]>,
-    ObjectStoreConfig<"activitySessions", ClientActivitySession>,
-    ObjectStoreConfig<"history", {
+    IdbObjectStoreConfig<"activitySessions", ClientActivitySession>,
+    IdbObjectStoreConfig<"history", {
         id?: number;
         sessionId: string;
         historyItem: IActivitySessionHistoryItem;
@@ -166,3 +174,12 @@ export const IDB_OBJECT_STORE_CONFIGS: IdbObjectStoreConfigs = [
 // --- NOTE ---
 // type StoreNames = typeof OBJECT_STORE_CONFIGS[number]["name"];
 // >> "memoList" | "trashedMemoList" | "activitySessions" | "history"
+
+// --- Readonly utility example ---
+// interface Example {
+//     a: number;
+//     b: number;
+// }
+
+// const obj: Readonly<Example> = { a: 1, b: 2 };
+// obj.a = 3; // エラー

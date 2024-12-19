@@ -1,34 +1,148 @@
-import { z } from "zod";
+import { intersection, z } from "zod";
+import { integer, integerNonNegative } from "./utils/numbers";
 
-// TODO コレクションの設計からやり直すべき
-export const UserHistoryItemSchema = z.object({
-  problemId: z.string(),
-  result: z.enum(["correct", "incorrect"]),
-  attempts: z.number(),
-  lastAttemptAt: z.string().or(z.date()),
-  notes: z.string().optional(),
+
+// TODO UI設計から逆算する形で設計を進める >> DDD(UIはビジネスロジックをそのまま反映したと言えるため)
+// 1. 単調な履歴データ
+// 2. サービスごとの履歴データ
+// 3.
+
+const SessionTypeEnum = z.enum(["goal", "service"]);
+type SessionType = z.infer<typeof SessionTypeEnum>;
+
+// TODO @/constants/...にcategoryIdなど階層化
+const ServiceIdEnum = z.enum(["basis", "writing", "multiple-choice"]);
+type SessionId = z.infer<typeof ServiceIdEnum>;
+
+// /dashboard用 - /dashboardページの履歴セッション一覧にて閲覧できるセッション数:最大100個
+// TODO セッションに関してあまりないと思うがセッション数が増えすぎてクエリなどのコストが増大することを回避するために月毎でidを付与してサブコレクション化
+
+const GoalSessionSchema = z.object({
+  sessionId: z.string(), // === activitySession's id / 一意性の担保: セッションは1ユーザに対して同時に1つを上限として設ける仕様 -> 取り組み日時をid化 (取り組み日時データの整合性はどうするか問題 - どこの日時を基準とするか - ユーザのプロフィールか何かに住んでいる場所を入力させてそこから日時を計算するように設計)
+  sessionType: z.literal("goal"),
+  goalId: z.string(),
+  time: integerNonNegative().min(0, { message: " Time must be non-negative" }),
+  problemCount: integerNonNegative().min(0, { message: "Problem count must be non-negative" }),
+  correctAnswerRate: z.number().min(0, { message: "Problem count must be at least 0%" }).max(100, { message: "Correct answer rate cannot exceed 100%" }),
+  score: integerNonNegative().min(0, { message: "Score must be non-negative." }),
+  maxScore: integerNonNegative().min(0, { message: "Max score must be non-negative." }),
+  historyItems: z.array(
+    z.object({
+      serviceId: ServiceIdEnum,
+      categoryId: z.string().optional(),
+      stepId: z.string().optional(),
+      problemId: z.string(),
+      attempts: z.number().int().nonnegative(),
+      lastResult: z.enum(["correct", "incorrect"]),
+      historyDetailId: z.string(),
+    })
+  )
+});
+
+export const ServiceSessionSchema = z.object({
+  sessionId: integerNonNegative().min(100000).max(999999, { message: "Session ID must be a 6-digit number." }),
+  sessionType: z.literal("service"), // 'service' 固定
+  serviceId: ServiceIdEnum,
+  time: integerNonNegative().min(0, { message: "Time must be non-negative." }),
+  problemCount: integerNonNegative().min(0, { message: "Problem count must be non-negative." }),
+  correctAnswerRate: z.number().min(0, { message: "Correct answer rate must be at least 0%." }).max(100, { message: "Correct answer rate cannot exceed 100%." }),
+  score: integerNonNegative().min(0, { message: "Score must be non-negative." }),
+  maxScore: integerNonNegative().min(0, { message: "Max score must be non-negative." }),
+  historyItems: z
+    .array(
+      z.object({
+        serviceId: ServiceIdEnum,
+        categoryId: z.string().optional(),
+        stepId: z.string().optional(),
+        problemId: z.string(),
+        attempts: integerNonNegative().min(0, { message: "Attempts must be non-negative." }),
+        lastResult: z.enum(["correct", "incorrect"]),
+        historyDetailId: z.string(),
+      })
+    )
+    .max(100, { message: "Maximum of 100 history items allowed." }),
+});
+
+export const UserHistoryItemSchema = z.discriminatedUnion("sessionType", [
+  GoalSessionSchema,
+  ServiceSessionSchema
+]).superRefine((data, ctx) => {
+  if (data.score > data.maxScore) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Score must be less than or equal to maxScore.",
+      path: ["score"],
+    });
+  }
 });
 
 export type UserHistoryItem = z.infer<typeof UserHistoryItemSchema>;
 
 
+// フィールドにserviceIdを保持 >> /dashboardの履歴一覧にもデータ格納し、そこでデータ情報の識別として必要
+export const ServiceSessionHistoryItemSchema = z.object({
+  serviceId: z.enum(["basis", "writing", "multiple-choice"]), // TODO @/constants/...からユニオン型を定義、実装しインポートするように@/schemas/...にて別ファイルモジュール化・インポート・適用
+  sessionId: z.string(), // common field with UserHistoryItemSchema
+  time: z.number().nonnegative(),
+  problemCount: z.number().nonnegative(),
+});
+
+
+export const GoalSessionHistoryItemSchema = z.object({
+
+})
+
+
+// /[serviceId]/dashboard用
+
+export const ProblemHistorySchema = z.object({
+  serviceId: ServiceIdEnum,
+  categoryId: z.string(), // optional i.e. default value: "none"
+  stepId: z.string(), // optional i.e. default value: "none"
+  problemId: z.string(),
+  latestAttemptAt: z.date(),
+  attemptCount: z.number().int().nonnegative(),
+  correctRate: z.number().min(0).max(100),
+  lastResult: z.enum(["correct", "incorrect"]),
+  everCorrect: z.boolean(), // : whether the user have answered the problem correctly in the past
+  isBookmarked: z.boolean(),
+  historyDetailIds: z.array(z.string()),
+  memos: z.array(z.string().max(200)).max(3).optional(),
+});
+
+export const DetailedHistorySchema = z.object({
+  sessionId: z.string(),
+  serviceId: ServiceIdEnum,
+  categoryId: z.string(), // optional i.e. default value: "none"
+  stepId: z.string(), // optional i.e. default value: "none"
+  problemId: z.string(),
+  attemptedAt: z.date(),
+  result: z.enum(["correct", "incorrect"]),
+  timeSpent: z.number().int().nonnegative(),
+  feedback: z.string().max(50).optional(), // : comments on user's approach to the problem by the user
+});
+
 export const AttemptHistoryItemSchema = z.object({
-    result: z.enum(["correct", "incorrect"]),
-    timeSpent: z.number().min(0, "Time spent must be a positive number."),
-    attemptAt: z.date(),
+  result: z.enum(["correct", "incorrect"]),
+  timeSpent: z.number().min(0, "Time spent must be a positive number."),
+  attemptAt: z.date(),
 });
 
 export type AttemptHistoryItem = z.infer<typeof AttemptHistoryItemSchema>;
 
+//
+
 export const ProblemResultSchema = z.object({
-    uid: z.string().uuid("Invalid UID format"),
-    categoryId: z.string(),
-    problemId: z.string(),
-    latestAttemptAt: z.date(),
-    timeSpent: z.number().min(0, "Time spent must be a positive number."),
-    result: z.enum(["correct", "incorrect"]),
-    notes: z.array(z.string().max(200, "Each note must be at most 200 characters.")),
-    // attemptHisotry:サブコレクションとして管理
+  uid: z.string().uuid("Invalid UID format"),
+  serviceId: ServiceIdEnum,
+  categoryId: z.string(), // optional i.e. default value: "none"
+  stepId: z.string(), // optional i.e. default value: "none"
+  problemId: z.string(),
+  latestAttemptAt: z.date(),
+  timeSpent: z.number().gt(0, "Time spent must be a positive number."),
+  result: z.enum(["correct", "incorrect"]),
+  notes: z.array(z.string().max(200, "Each note must be at most 200 characters.")),
+  // attemptHisotry:サブコレクションとして管理
 });
 
 export type ProblemResult = z.infer<typeof ProblemResultSchema>;

@@ -1,8 +1,8 @@
 import { IIndexedDBManager } from "@/interfaces/clientSide/repositories/managers/IIndexedDBManager";
 import { MyIDB } from "@/interfaces/clientSide/memo/idb";
-import { ObjectStoreName } from "@/constants/clientSide/idb/objectStores";
+import { IdbObjectStoreName } from "@/constants/clientSide/idb/objectStores";
 
-export class GenericRepository<K extends ObjectStoreName> {
+export class GenericRepository<K extends IdbObjectStoreName> {
     protected idbManager: IIndexedDBManager;
     protected storeName: K;
 

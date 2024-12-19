@@ -1,7 +1,7 @@
 import { ActivitySessionHistoryItemSchema, IActivitySessionHistoryItem } from "@/schemas/activity/clientSide/activitySessionHistoryItemSchema";
 
 export class ClientActivitySessionHistoryItem implements IActivitySessionHistoryItem {
-    // TODO TSの変数のスコープ・アクセス制御・ライフサイクルなどの仕様調査・アクセス修飾子調整
+    id: string;
     problemId: string;
     result: "correct" | "incorrect";
     attempts: number;
@@ -14,6 +14,7 @@ export class ClientActivitySessionHistoryItem implements IActivitySessionHistory
             throw new Error(`Invalid UserHistoryItem data: ${JSON.stringify(parseResult.error.errors)}`);
         }
 
+        this.id = parseResult.data.id;
         this.problemId = parseResult.data.problemId;
         this.result = parseResult.data.result;
         this.attempts = parseResult.data.attempts;

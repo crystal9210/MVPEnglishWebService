@@ -6,13 +6,13 @@
 
 import { openDB, IDBPDatabase, IDBPTransaction } from "idb";
 import { MyIDB } from "@/interfaces/clientSide/memo/idb";
-import { OBJECT_STORE_CONFIGS, ObjectStoreName } from "@/constants/clientSide/idb/objectStores";
+import { IDB_OBJECT_STORE_CONFIGS, IdbObjectStoreName } from "@/constants/clientSide/idb/objectStores";
 import { DB_NAME, DB_VERSION } from "@/constants/clientSide/idb/dbConfig";
 import { IIndexedDBManager } from "@/interfaces/clientSide/repositories/managers/IIndexedDBManager";
 
 // 各オブジェクトストアのデータを型安全に保持
 type BackupData = {
-    [K in ObjectStoreName]?: MyIDB[K]["value"][];
+    [K in IdbObjectStoreName]?: MyIDB[K]["value"][];
 };
 
 export class IndexedDBManager implements IIndexedDBManager {
@@ -40,7 +40,7 @@ export class IndexedDBManager implements IIndexedDBManager {
                 return await openDB<MyIDB>(DB_NAME, DB_VERSION, {
                     upgrade(idb, oldVersion, newVersion, transaction) {
                         console.log("Upgrading Database...");
-                        OBJECT_STORE_CONFIGS.forEach((storeConfig) => {
+                        IDB_OBJECT_STORE_CONFIGS.forEach((storeConfig) => {
                             if (!idb.objectStoreNames.contains(storeConfig.name)) {
                                 const store = idb.createObjectStore(storeConfig.name, storeConfig.options);
                                 storeConfig.indexes?.forEach((index) => {
@@ -81,8 +81,8 @@ export class IndexedDBManager implements IIndexedDBManager {
             const idb = await openDB<MyIDB>(DB_NAME, DB_VERSION);
 
             // 各オブジェクトストアのデータをバックアップ
-            for (const storeConfig of OBJECT_STORE_CONFIGS) {
-                const storeName = storeConfig.name as ObjectStoreName;
+            for (const storeConfig of IDB_OBJECT_STORE_CONFIGS) {
+                const storeName = storeConfig.name as IdbObjectStoreName;
                 const storeData = await idb.getAll(storeName);
                 backupData[storeName] = storeData;
             }
@@ -91,7 +91,7 @@ export class IndexedDBManager implements IIndexedDBManager {
             await this.deleteDatabase();
 
             console.log("Restoring data from backup...");
-            for (const storeName of Object.keys(backupData) as ObjectStoreName[]) {
+            for (const storeName of Object.keys(backupData) as IdbObjectStoreName[]) {
                 const data = backupData[storeName] || [];
                 for (const item of data) {
                     await this.put(storeName, item); // 既存のputメソッドを利用
@@ -132,12 +132,12 @@ export class IndexedDBManager implements IIndexedDBManager {
     }
 
 
-    public async get<K extends ObjectStoreName>(storeName: K, key: MyIDB[K]["key"]): Promise<MyIDB[K]["value"] | undefined> {
+    public async get<K extends IdbObjectStoreName>(storeName: K, key: MyIDB[K]["key"]): Promise<MyIDB[K]["value"] | undefined> {
         const idb = await this.getDB();
         return idb.get(storeName, key);
     }
 
-    public async add<K extends ObjectStoreName>(storeName: K, value: MyIDB[K]["value"], key?: MyIDB[K]["key"]): Promise<MyIDB[K]["key"]> {
+    public async add<K extends IdbObjectStoreName>(storeName: K, value: MyIDB[K]["value"], key?: MyIDB[K]["key"]): Promise<MyIDB[K]["key"]> {
         const resolvedKey = await this.resolveKey(storeName, value, key);
         await this.checkNotExists(storeName, resolvedKey);
 
@@ -145,7 +145,7 @@ export class IndexedDBManager implements IIndexedDBManager {
         return idb.add(storeName, value, resolvedKey);
     }
 
-    public async put<K extends ObjectStoreName>(
+    public async put<K extends IdbObjectStoreName>(
         storeName: K,
         value: MyIDB[K]["value"],
         key?: MyIDB[K]["key"]
@@ -157,14 +157,14 @@ export class IndexedDBManager implements IIndexedDBManager {
         await idb.put(storeName, value, resolvedKey);
     }
 
-    public async getAll<K extends ObjectStoreName>(
+    public async getAll<K extends IdbObjectStoreName>(
         storeName: K
     ): Promise<MyIDB[K]["value"][]> {
         const idb = await this.getDB();
         return idb.getAll(storeName);
     }
 
-    public async delete<K extends ObjectStoreName>(
+    public async delete<K extends IdbObjectStoreName>(
         storeName: K,
         key: MyIDB[K]["key"]
     ): Promise<void> {
@@ -174,14 +174,14 @@ export class IndexedDBManager implements IIndexedDBManager {
         await idb.delete(storeName, key);
     }
 
-    public async clear<K extends ObjectStoreName>(
+    public async clear<K extends IdbObjectStoreName>(
         storeName: K
     ): Promise<void> {
         const idb = await this.getDB();
         await idb.clear(storeName);
     }
 
-    public async getAllFromIndex<K extends ObjectStoreName, I extends keyof MyIDB[K]["indexes"]>(
+    public async getAllFromIndex<K extends IdbObjectStoreName, I extends keyof MyIDB[K]["indexes"]>(
         storeName: K,
         indexName: I,
         query: IDBKeyRange | (string extends keyof MyIDB[K]["indexes"] ? MyIDB[K]["indexes"][keyof MyIDB[K]["indexes"] & string] : IDBValidKey) | null | undefined
@@ -190,7 +190,7 @@ export class IndexedDBManager implements IIndexedDBManager {
         return idb.getAllFromIndex(storeName, indexName as string, query);
     }
 
-    public async getMultiple<K extends ObjectStoreName>(
+    public async getMultiple<K extends IdbObjectStoreName>(
         storeName: K,
         keys: MyIDB[K]['key'][]
     ): Promise<(MyIDB[K]["value"] | undefined)[]> {
@@ -201,7 +201,7 @@ export class IndexedDBManager implements IIndexedDBManager {
         })
     }
 
-    public async updateMultiple<K extends ObjectStoreName>(
+    public async updateMultiple<K extends IdbObjectStoreName>(
         storeName: K,
         values: MyIDB[K]["value"][]
     ): Promise<void> {
@@ -210,7 +210,7 @@ export class IndexedDBManager implements IIndexedDBManager {
         });
     }
 
-    public async deleteMultiple<K extends ObjectStoreName>(
+    public async deleteMultiple<K extends IdbObjectStoreName>(
         storeName: K,
         keys: MyIDB[K]["key"][]
     ): Promise<void> {
@@ -232,7 +232,7 @@ export class IndexedDBManager implements IIndexedDBManager {
         })
     }
 
-    public async performTransaction<T, K extends ObjectStoreName>(
+    public async performTransaction<T, K extends IdbObjectStoreName>(
         storeNames: K[],
         mode: IDBTransactionMode,
         callback: (tx: IDBPTransaction<MyIDB, K[], "versionchange" | "readonly" | "readwrite">) => Promise<T>
@@ -252,7 +252,7 @@ export class IndexedDBManager implements IIndexedDBManager {
         });
     }
 
-    private async resolveKey<K extends ObjectStoreName>(
+    private async resolveKey<K extends IdbObjectStoreName>(
         storeName: K,
         value: MyIDB[K]["value"],
         key?: MyIDB[K]["key"]
@@ -274,7 +274,7 @@ export class IndexedDBManager implements IIndexedDBManager {
         }
     }
 
-    private async checkExists<K extends ObjectStoreName>(
+    private async checkExists<K extends IdbObjectStoreName>(
         storeName: K,
         key: MyIDB[K]["key"] | MyIDB[K]["key"][]
     ): Promise<void> {
@@ -295,7 +295,7 @@ export class IndexedDBManager implements IIndexedDBManager {
         }
     }
 
-    private async checkNotExists<K extends ObjectStoreName>(
+    private async checkNotExists<K extends IdbObjectStoreName>(
         storeName: K,
         key: MyIDB[K]["key"]
     ): Promise<void> {
@@ -331,7 +331,7 @@ export class IndexedDBManager implements IIndexedDBManager {
     }
 
     // TODO サービス層に移行
-    // private validateValue<K extends ObjectStoreName>(
+    // private validateValue<K extends IdbObjectStoreName>(
     //     storeName: K,
     //     value: MyIDB[K]["value"]
     // ): boolean {
