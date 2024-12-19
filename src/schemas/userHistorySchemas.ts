@@ -1,18 +1,13 @@
-import { intersection, z } from "zod";
+import { z } from "zod";
 import { integer, integerNonNegative } from "./utils/numbers";
+import { SessionType, SessionTypeEnum } from "@/constants/clientSide/sessions/sessions";
+import { ServiceIdEnum, ServiceId } from "@/constants/clientSide/sessions/sessions";
 
 
 // TODO UI設計から逆算する形で設計を進める >> DDD(UIはビジネスロジックをそのまま反映したと言えるため)
 // 1. 単調な履歴データ
 // 2. サービスごとの履歴データ
 // 3.
-
-const SessionTypeEnum = z.enum(["goal", "service"]);
-type SessionType = z.infer<typeof SessionTypeEnum>;
-
-// TODO @/constants/...にcategoryIdなど階層化
-const ServiceIdEnum = z.enum(["basis", "writing", "multiple-choice"]);
-type SessionId = z.infer<typeof ServiceIdEnum>;
 
 // 要件メモ
 // /dashboard用 - /dashboardページの履歴セッション一覧にて閲覧できるセッション数:最大20個
@@ -45,7 +40,6 @@ const GoalSessionSchema = z.object({
   sessionId: z.string(),
   sessionType: z.literal("goal"),
   goalId: z.string(),
-  time: integerNonNegative().min(0, { message: " Time must be non-negative" }),
   problemCount: integerNonNegative().min(0, { message: "Problem count must be non-negative" }),
   correctAnswerRate: z
     .number()
@@ -53,6 +47,9 @@ const GoalSessionSchema = z.object({
     .max(100, { message: "Correct answer rate cannot exceed 100%" }),
   score: integerNonNegative().min(0, { message: "Score must be non-negative." }),
   maxScore: integerNonNegative().min(0, { message: "Max score must be non-negative." }),
+  spentTime: integerNonNegative().min(0, { message: " Time must be non-negative" }), // i.e. how long the user spent time to complete the session.
+  attemptedTime: integerNonNegative(),
+  completedAt: z.date(), // i.e. the time this session is completed at
   historyItems: z.array(GoalSessionHistoryItemSchema)
 });
 
@@ -60,7 +57,6 @@ export const ServiceSessionSchema = z.object({
   sessionId: z.string(),
   sessionType: z.literal("service"),
   serviceId: ServiceIdEnum,
-  time: integerNonNegative().min(0, { message: "Time must be non-negative." }),
   problemCount: integerNonNegative().min(0, { message: "Problem count must be non-negative." }),
   correctAnswerRate: z
     .number()
@@ -68,6 +64,9 @@ export const ServiceSessionSchema = z.object({
     .max(100, { message: "Correct answer rate cannot exceed 100%." }),
   score: integerNonNegative().min(0, { message: "Score must be non-negative." }),
   maxScore: integerNonNegative().min(0, { message: "Max score must be non-negative." }),
+  spentTime: integerNonNegative().min(0, { message: " Time must be non-negative" }), // i.e. how long the user spent time to complete the session.
+  attemptedTime: integerNonNegative(),
+  completedAt: z.date(),
   historyItems: z
     .array(ServiceSessionHistoryItemSchema)
 });

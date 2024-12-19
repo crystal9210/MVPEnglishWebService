@@ -65,7 +65,7 @@ export const GoalSchema = z.object({
     id: z.string(),
     termType: z.enum(["short", "medium", "long"]),
     criteria: CriteriaSchema,
-    targetQuestions: z.number().int().positive(), // TODO
+    targetProblems: z.number().int().positive(), // TODO
     currentProgress: z.number().int().nonnegative(),
     createdAt: z.date(),
     updatedAt: z.date(),
