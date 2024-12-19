@@ -14,8 +14,9 @@ type SessionType = z.infer<typeof SessionTypeEnum>;
 const ServiceIdEnum = z.enum(["basis", "writing", "multiple-choice"]);
 type SessionId = z.infer<typeof ServiceIdEnum>;
 
-// /dashboard用 - /dashboardページの履歴セッション一覧にて閲覧できるセッション数:最大100個
-// TODO セッションに関してあまりないと思うがセッション数が増えすぎてクエリなどのコストが増大することを回避するために月毎でidを付与してサブコレクション化
+// 要件メモ
+// /dashboard用 - /dashboardページの履歴セッション一覧にて閲覧できるセッション数:最大20個
+// /dashboard >> history >> historyItems: 取り組み日時でソート
 
 // フィールドにserviceIdを保持 >> /dashboardの履歴一覧にもデータ格納し、そこでデータ情報の識別として必要
 const ServiceSessionHistoryItemSchema = z.object({
@@ -23,7 +24,7 @@ const ServiceSessionHistoryItemSchema = z.object({
   categoryId: z.string().optional(),
   stepId: z.string().optional(),
   problemId: z.string(),
-  attempts: integerNonNegative().min(0, { message: "Attempts must be non-negative." }),
+  attempts: integerNonNegative().min(0, { message: "Attempts must be non-negative." }), // ユーザの苦手などを情報として取得するためのフィールド: セッション内で問題への挑戦回数(仕様として何回も取り組むことが可能とする - firestore側に保存される)
   lastResult: z.enum(["correct", "incorrect"]),
   historyDetailId: z.string(),
 });
@@ -98,7 +99,7 @@ export const ProblemHistorySchema = z.object({
   attemptCount: z.number().int().nonnegative(),
   correctRate: z.number().min(0).max(100),
   lastResult: z.enum(["correct", "incorrect"]),
-  everCorrect: z.boolean(), // : whether the user have answered the problem correctly in the past
+  everCorrect: z.boolean(), // i.e. whether the user have answered the problem correctly in the past
   isBookmarked: z.boolean(),
   historyDetailIds: z.array(z.string()),
   memos: z.array(z.string().max(200)).max(3).optional(),
@@ -113,7 +114,7 @@ export const DetailedHistorySchema = z.object({
   attemptedAt: z.date(),
   result: z.enum(["correct", "incorrect"]),
   timeSpent: z.number().int().nonnegative(),
-  feedback: z.string().max(50).optional(), // : comments on user's approach to the problem by the user
+  feedback: z.string().max(50).optional(), // i.e. comments on user's approach to the problem by the user
 });
 
 export const AttemptHistoryItemSchema = z.object({
