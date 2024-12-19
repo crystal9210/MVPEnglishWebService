@@ -17,50 +17,58 @@ type SessionId = z.infer<typeof ServiceIdEnum>;
 // /dashboard用 - /dashboardページの履歴セッション一覧にて閲覧できるセッション数:最大100個
 // TODO セッションに関してあまりないと思うがセッション数が増えすぎてクエリなどのコストが増大することを回避するために月毎でidを付与してサブコレクション化
 
+// フィールドにserviceIdを保持 >> /dashboardの履歴一覧にもデータ格納し、そこでデータ情報の識別として必要
+const ServiceSessionHistoryItemSchema = z.object({
+  serviceId: ServiceIdEnum,
+  categoryId: z.string().optional(),
+  stepId: z.string().optional(),
+  problemId: z.string(),
+  attempts: integerNonNegative().min(0, { message: "Attempts must be non-negative." }),
+  lastResult: z.enum(["correct", "incorrect"]),
+  historyDetailId: z.string(),
+});
+
+const GoalSessionHistoryItemSchema = z.object({
+  serviceId: ServiceIdEnum,
+  categoryId: z.string().optional(),
+  stepId: z.string().optional(),
+  problemId: z.string(),
+  attempts: z.number().int().nonnegative(),
+  lastResult: z.enum(["correct", "incorrect"]),
+  historyDetailId: z.string(),
+})
+
+// sessionId === activitySession's id
+// TODO id設計 : 一意性の担保: セッションは1ユーザに対して同時に1つを上限として設ける仕様 -> 取り組み日時をid化 (取り組み日時データの整合性はどうするか問題 - どこの日時を基準とするか - ユーザのプロフィールか何かに住んでいる場所を入力させてそこから日時を計算するように設計)
 const GoalSessionSchema = z.object({
-  sessionId: z.string(), // === activitySession's id / 一意性の担保: セッションは1ユーザに対して同時に1つを上限として設ける仕様 -> 取り組み日時をid化 (取り組み日時データの整合性はどうするか問題 - どこの日時を基準とするか - ユーザのプロフィールか何かに住んでいる場所を入力させてそこから日時を計算するように設計)
+  sessionId: z.string(),
   sessionType: z.literal("goal"),
   goalId: z.string(),
   time: integerNonNegative().min(0, { message: " Time must be non-negative" }),
   problemCount: integerNonNegative().min(0, { message: "Problem count must be non-negative" }),
-  correctAnswerRate: z.number().min(0, { message: "Problem count must be at least 0%" }).max(100, { message: "Correct answer rate cannot exceed 100%" }),
+  correctAnswerRate: z
+    .number()
+    .min(0, { message: "Problem count must be at least 0%" })
+    .max(100, { message: "Correct answer rate cannot exceed 100%" }),
   score: integerNonNegative().min(0, { message: "Score must be non-negative." }),
   maxScore: integerNonNegative().min(0, { message: "Max score must be non-negative." }),
-  historyItems: z.array(
-    z.object({
-      serviceId: ServiceIdEnum,
-      categoryId: z.string().optional(),
-      stepId: z.string().optional(),
-      problemId: z.string(),
-      attempts: z.number().int().nonnegative(),
-      lastResult: z.enum(["correct", "incorrect"]),
-      historyDetailId: z.string(),
-    })
-  )
+  historyItems: z.array(GoalSessionHistoryItemSchema)
 });
 
 export const ServiceSessionSchema = z.object({
-  sessionId: integerNonNegative().min(100000).max(999999, { message: "Session ID must be a 6-digit number." }),
-  sessionType: z.literal("service"), // 'service' 固定
+  sessionId: z.string(),
+  sessionType: z.literal("service"),
   serviceId: ServiceIdEnum,
   time: integerNonNegative().min(0, { message: "Time must be non-negative." }),
   problemCount: integerNonNegative().min(0, { message: "Problem count must be non-negative." }),
-  correctAnswerRate: z.number().min(0, { message: "Correct answer rate must be at least 0%." }).max(100, { message: "Correct answer rate cannot exceed 100%." }),
+  correctAnswerRate: z
+    .number()
+    .min(0, { message: "Correct answer rate must be at least 0%." })
+    .max(100, { message: "Correct answer rate cannot exceed 100%." }),
   score: integerNonNegative().min(0, { message: "Score must be non-negative." }),
   maxScore: integerNonNegative().min(0, { message: "Max score must be non-negative." }),
   historyItems: z
-    .array(
-      z.object({
-        serviceId: ServiceIdEnum,
-        categoryId: z.string().optional(),
-        stepId: z.string().optional(),
-        problemId: z.string(),
-        attempts: integerNonNegative().min(0, { message: "Attempts must be non-negative." }),
-        lastResult: z.enum(["correct", "incorrect"]),
-        historyDetailId: z.string(),
-      })
-    )
-    .max(100, { message: "Maximum of 100 history items allowed." }),
+    .array(ServiceSessionHistoryItemSchema)
 });
 
 export const UserHistoryItemSchema = z.discriminatedUnion("sessionType", [
@@ -77,20 +85,6 @@ export const UserHistoryItemSchema = z.discriminatedUnion("sessionType", [
 });
 
 export type UserHistoryItem = z.infer<typeof UserHistoryItemSchema>;
-
-
-// フィールドにserviceIdを保持 >> /dashboardの履歴一覧にもデータ格納し、そこでデータ情報の識別として必要
-export const ServiceSessionHistoryItemSchema = z.object({
-  serviceId: z.enum(["basis", "writing", "multiple-choice"]), // TODO @/constants/...からユニオン型を定義、実装しインポートするように@/schemas/...にて別ファイルモジュール化・インポート・適用
-  sessionId: z.string(), // common field with UserHistoryItemSchema
-  time: z.number().nonnegative(),
-  problemCount: z.number().nonnegative(),
-});
-
-
-export const GoalSessionHistoryItemSchema = z.object({
-
-})
 
 
 // /[serviceId]/dashboard用
