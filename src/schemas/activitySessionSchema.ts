@@ -3,7 +3,8 @@ import { integerNonNegative } from "@/schemas/utils/numbers";
 import { ServiceIdEnum } from "@/constants/serviceIds";
 import { ProblemResultTypeEnum } from "@/constants/problemResultType";
 import { GOAL_STATUS, GoalStatusEnum } from "@/constants/sessionConstants";
-import { PROGRESS_MODES, SESSION_TYPES } from "@/constants/clientSide/sessions/sessions";
+import { SESSION_TYPES } from "@/constants/clientSide/sessions/sessions";
+import { ProgressDetailSchema } from "./progressDetailSchema";
 
 const UserInputSchema = z.object({
     inputs: z.array(
@@ -20,7 +21,7 @@ const ProblemHistorySchema = z.object({
     categoryId: z.string().default("x"), // なんか "none" だと変な感じするので optional で値が存在しないときは特殊な値としてxを適用
     stepId: z.string().default("x"), // this property is optional && default value is "x"; means null here.
     problemId: z.string(),
-    correctAttempts: integerNonNegative().default(0),
+    correctAttempts: integerNonNegative().default(0), // セッション中にユーザは何回も同じ問題に正解するまで取り組んでいい、また、正解していても取り組める、最後の正誤判定結果が上書きされるようになっているのでそこは注意
     incorrectAttempts: integerNonNegative().default(0),
     problemAttempts: z.array(UserInputSchema).default([]),
     lastResult: ProblemResultTypeEnum,
@@ -34,34 +35,9 @@ const SessionAttemptSchema = z.object({
     problems: z.array(ProblemHistorySchema),
 });
 
-
-// 進捗データスキーマ: criteria のモードに応じて進捗管理
-const ProgressDetailSchema = z.union([
-    z.object({
-        mode: z.literal(PROGRESS_MODES.ITERATION),
-        completedIterations: integerNonNegative(), // 完了した繰り返し回数
-        totalIterations: integerNonNegative(), // 必要な繰り返し回数
-    }),
-    z.object({
-        mode: z.literal(PROGRESS_MODES.SCORE),
-        currentScore: integerNonNegative(), // 現在のスコア
-        requiredScore: integerNonNegative(), // 必要なスコア
-    }),
-    z.object({
-        mode: z.literal(PROGRESS_MODES.COUNT),
-        completedCount: integerNonNegative(), // 完了した問題数
-        requiredCount: integerNonNegative(), // 必要な問題数
-    }),
-    z.object({
-        mode: z.literal(PROGRESS_MODES.TIME),
-        elapsedTime: integerNonNegative(), // 経過時間（秒）
-        requiredTime: integerNonNegative(), // 必要な時間（秒）
-    }),
-]);
-
+// ただ見かけて試しただけのコード:
 // export const exschema = ProblemHistorySchema.keyof().Values;
 
-// GoalActivitySessionSchema の拡張
 const GoalActivitySessionSchema = z.object({
     sessionId: z.string(),
     sessionType: z.literal(SESSION_TYPES.GOAL),
