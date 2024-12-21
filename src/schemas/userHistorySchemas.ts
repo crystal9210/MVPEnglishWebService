@@ -13,24 +13,22 @@ import { ServiceIdEnum, ServiceId, NA_PATH_ID } from "@/constants/serviceIds";
 // /dashboard用 - /dashboardページの履歴セッション一覧にて閲覧できるセッション数:最大20個
 // /dashboard >> history >> historyItems: 取り組み日時でソート
 
-// フィールドにserviceIdを保持 >> /dashboardの履歴一覧にもデータ格納し、そこでデータ情報の識別として必要
-const ServiceSessionHistoryItemSchema = z.object({
+const baseSessionItemSchema = z.object({
   categoryId: z.string().default(NA_PATH_ID),
   stepId: z.string().default(NA_PATH_ID),
   problemId: z.string().default(NA_PATH_ID),
   attempts: integerNonNegative().min(0, { message: "Attempts must be non-negative." }), // ユーザの苦手などを情報として取得するためのフィールド: セッション内で問題への挑戦回数(仕様として何回も取り組むことが可能とする - firestore側に保存される)
   lastResult: z.enum(["correct", "incorrect"]),
   historyDetailId: z.string(),
+})
+// フィールドにserviceIdを保持 >> /dashboardの履歴一覧にもデータ格納し、そこでデータ情報の識別として必要
+const ServiceSessionHistoryItemSchema = z.object({
+  ...baseSessionItemSchema.shape,
 });
 
 const GoalSessionHistoryItemSchema = z.object({
   serviceId: ServiceIdEnum,
-  categoryId: z.string().default(NA_PATH_ID),
-  stepId: z.string().optional(),
-  problemId: z.string(),
-  attempts: z.number().int().nonnegative(),
-  lastResult: z.enum(["correct", "incorrect"]),
-  historyDetailId: z.string(),
+  ...baseSessionItemSchema.shape,
 });
 
 // sessionId === activitySession's id
