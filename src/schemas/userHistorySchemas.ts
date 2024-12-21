@@ -60,8 +60,7 @@ export const GoalSessionSchema = z.object({
 export const ServiceSessionSchema = z.object({
   ...createSessionSchema(SESSION_TYPES.SERVICE).shape,
   serviceId: ServiceIdEnum.default(NA_PATH_ID),
-  historyItems: z
-    .array(ServiceSessionHistoryItemSchema)
+  historyItems: z.array(ServiceSessionHistoryItemSchema)
 });
 
 export const UserHistoryItemSchema = z.discriminatedUnion("sessionType", [
@@ -90,8 +89,8 @@ export type UserHistoryItem = z.infer<typeof UserHistoryItemSchema>;
 
 export const ProblemHistorySchema = z.object({
   serviceId: ServiceIdEnum.default(NA_PATH_ID),
-  categoryId: z.string().default(NA_PATH_ID), // optional i.e. default value: "none"
-  stepId: z.string().default(NA_PATH_ID), // optional i.e. default value: "none"
+  categoryId: z.string().default(NA_PATH_ID),
+  stepId: z.string().default(NA_PATH_ID),
   problemId: z.string().default(NA_PATH_ID),
   latestAttemptAt: z.date(),
   attemptCount: z.number().int().nonnegative(),
@@ -106,9 +105,9 @@ export const ProblemHistorySchema = z.object({
 export const DetailedHistorySchema = z.object({
   sessionId: z.string(),
   serviceId: ServiceIdEnum.default(NA_PATH_ID),
-  categoryId: z.string(), // optional i.e. default value: "none"
-  stepId: z.string(), // optional i.e. default value: "none"
-  problemId: z.string(),
+  categoryId: z.string().default(NA_PATH_ID),
+  stepId: z.string().default(NA_PATH_ID),
+  problemId: z.string().default(NA_PATH_ID),
   attemptedAt: z.date(),
   result: z.enum(["correct", "incorrect"]),
   timeSpent: z.number().int().nonnegative(),
@@ -128,9 +127,9 @@ export type AttemptHistoryItem = z.infer<typeof AttemptHistoryItemSchema>;
 export const ProblemResultSchema = z.object({
   uid: z.string().uuid("Invalid UID format"),
   serviceId: ServiceIdEnum.default(NA_PATH_ID),
-  categoryId: z.string(), // optional i.e. default value: "none"
-  stepId: z.string(), // optional i.e. default value: "none"
-  problemId: z.string(),
+  categoryId: z.string().default(NA_PATH_ID),
+  stepId: z.string().default(NA_PATH_ID),
+  problemId: z.string().default(NA_PATH_ID),
   latestAttemptAt: z.date(),
   timeSpent: z.number().gt(0, "Time spent must be a positive number."),
   result: z.enum(["correct", "incorrect"]),

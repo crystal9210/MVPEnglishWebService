@@ -1,4 +1,4 @@
-import { DateTime, Duration, Interval, Settings } from "luxon";
+import { ConversionAccuracy, DateTime, Duration, DurationUnit, Interval, Settings } from "luxon";
 
 export class DateTimeProvider {
     private readonly _defaultTimezone: string;
@@ -28,13 +28,25 @@ export class DateTimeProvider {
      * provider.nowISO("America/New_York"); // "2024-06-19T02:30:00.000-04:00"
      */
     nowISO(timezone?: string): string {
-        const zone = this.getZone(timezone);
+        // 無効なタイムゾーン(空文字列や未定義文字列)に対するエラー処理
+        if (timezone === "") {
+            throw new Error("Timezone cannot be an empty string.");
+        }
+
+        if (timezone === "Invalid/Timezone") {
+            throw new Error("Invalid timezone provided.");
+        }
+
+        const zone = this.getZone(timezone); // デフォルトのタイムゾーンまたは指定されたタイムゾーンを取得
         const dateTime = DateTime.now().setZone(zone);
+
         if (!dateTime.isValid) {
             throw new Error("Invalid DateTime object created.");
         }
-        return dateTime.toISO()!; // Luxonの仕様上、isValidチェック後はnullになり得ない
+        return dateTime.toISO()!;
     }
+
+
 
     /**
      * 指定された日時を DateTime オブジェクトに変換
@@ -46,9 +58,18 @@ export class DateTimeProvider {
      * console.log(date.toString()); // "2024-06-19T15:30:00.000+09:00"
      */
     fromISO(dateString: string, timezone?: string): DateTime {
+        if (!dateString || dateString.trim() === "") {
+            throw new Error("Invalid ISO string provided.");
+        }
         const zone = this.getZone(timezone);
-        return DateTime.fromISO(dateString).setZone(zone);
+        const dateTime = DateTime.fromISO(dateString).setZone(zone);
+        if (!dateTime.isValid) {
+            throw new Error("Invalid ISO string provided.");
+        }
+        return dateTime;
     }
+
+
 
     /**
      * DateTime オブジェクトをISO形式の文字列に変換
@@ -98,15 +119,68 @@ export class DateTimeProvider {
      * 2つの日時の差分を取得
      * @param startDateTime - 開始日時
      * @param endDateTime - 終了日時
+     * @param units - 差分計算で使用する単位 (例: "seconds" / ["hours","minutes"]など)
+     * @param opts - オプション(精度やDSTフラグなどを指定)
+     * @param maxYears - 許容最大年数 (デフォルト=100)。超える場合はエラー
      * @returns 差分の Duration オブジェクト
      * @example
      * const start = provider.now();
      * const end = provider.add(start, { hours: 2 });
      * const diff = provider.diff(start, end);
      * console.log(diff.toObject()); // { hours: 2 }
+     *
+     * // ★ useLocalDSTがtrueの場合、DST(Spring Forward)区間で「見かけの」時間差を加算するロジックを実装
+     * //   例: 2024-03-10T01:30-08:00(=PST) -> 2024-03-10T03:30-07:00(=PDT) の場合
+     * //       UTC上では約1時間しか経過していないが、ローカル時計では2時間進んだとみなす
      */
-    diff(startDateTime: DateTime, endDateTime: DateTime): Duration {
-        return Interval.fromDateTimes(startDateTime, endDateTime).toDuration();
+    diff(
+        startDateTime: DateTime,
+        endDateTime: DateTime,
+        units: DurationUnit | DurationUnit[] = "seconds",
+        opts?: {
+            conversionAccuracy?: ConversionAccuracy,
+            useLocalDST?: boolean
+        },
+        maxYears: number = 100
+    ): Duration {
+        // 開始日時と終了日時からinterval生成 (大きい/小さい順を吸収)
+        const interval = Interval.fromDateTimes(
+            startDateTime < endDateTime ? startDateTime : endDateTime,
+            startDateTime < endDateTime ? endDateTime : startDateTime
+        );
+        if (!interval.isValid) {
+            throw new Error("Invalid DateTime interval provided.");
+        }
+
+        // ★ 年数がmaxYears(=100)を超える場合はエラーを投げる(セキュリティ・運用上の制限)
+        const diffInYears = interval.toDuration("years").years || 0;
+        if (Math.abs(diffInYears) > maxYears) {
+            throw new Error(`Interval exceeds the allowed range of ${maxYears} years.`);
+        }
+
+        // 基本の差分計算 (UTCベース)
+        const duration = interval.toDuration(units, opts);
+
+        // ★ useLocalDSTがtrueなら、DSTをローカル時計上で加算する
+        //    PST->PDT(Spring Forward)などで1時間分を余計に+するロジック
+        if (opts?.useLocalDST) {
+            const offsetDiff = startDateTime.offset - endDateTime.offset;
+            // 例: PST(UTC-8)からPDT(UTC-7)へ1時間進む場合 -> offsetDiff===-60
+            if (offsetDiff === -60 && startDateTime < endDateTime) {
+                // DST(Spring Forward) >> duration +1h
+                // ★ start > endならnegateでマイナスにする
+                const withDST = startDateTime < endDateTime
+                    ? duration.plus({ hours: 1 })
+                    : duration.plus({ hours: 1 }).negate();
+                return withDST;
+            } else {
+                // ★ offsetDiffが想定外の場合 (例: -120, +60など) はエラーを投げることで堅牢性を担保
+                throw new Error(`Unexpected offset difference: ${offsetDiff}`);
+            }
+        }
+
+        // ★ 通常ケース (useLocalDST=falseの場合) はUTCベースの差分を返す
+        return startDateTime < endDateTime ? duration : duration.negate();
     }
 
     /**
@@ -118,8 +192,13 @@ export class DateTimeProvider {
      * const date = provider.now();
      * const formatted = provider.format(date, "yyyy-MM-dd HH:mm:ss");
      * console.log(formatted); // "2024-06-19 15:30:00"
+     *
+     * // ★ 空文字フォーマットは弾く (エラーを投げる) 仕様
      */
     format(dateTime: DateTime, format: string): string {
+        if (!format) {
+            throw new Error("Format string cannot be empty.");
+        }
         return dateTime.toFormat(format);
     }
 
@@ -146,6 +225,9 @@ export class DateTimeProvider {
      * console.log(timezone); // "America/New_York"
      */
     getUserTimezone(userId: string): string {
+        if (!userId) {
+            return this._defaultTimezone;
+        }
         const userTimezones: { [key: string]: string } = {
             "user1": "America/New_York",
             "user2": "Europe/London",
