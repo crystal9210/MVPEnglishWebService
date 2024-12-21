@@ -3,6 +3,9 @@
 // 責任分離モデル
 // indexedDBManager: 低レベルのデータアクセス、MemoRepository:indexedDBManagerを利用しドメイン固有のデータ操作、MemoService: リポジトリを利用しビジネスロジック実装
 // 抽象化強化: リポジトリを介してデータアクセスをすることで将来的なデータストア変更時、リポジトリの実装変更だけで済む
+// TODO オブジェクト名に応じてオブジェクトストアに格納するデータバリューの型情報が正確に取得してアクセスできる
+// TODO オブジェクト名に応じてキー(プライマリキー;主キー)が正確に取得でき、それによりアクセスパスを取得し、かつidとなる情報からデータの整合性等を保証できる
+// >> 上記の要件を満たすことで正確にデータアクセス(CRUD)が可能
 
 import { openDB, IDBPDatabase, IDBPTransaction } from "idb";
 import { MyIDB } from "@/interfaces/clientSide/memo/idb";

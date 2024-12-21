@@ -1,3 +1,9 @@
+// 本ファイルモジュール要求定義
+// MyIDBが欲しい >> MyIDBの要件
+// MyIDBの要件:
+// ok: IDBにアクセスするための基本スキーマを拡張(依存スキーマに持つ) >> 依存スキーマのメソッドなど構造的な特徴を継承することでIDBの処理との互換性を維持
+// TODO オブジェクトストアの型を規定ファイルモジュール(@/constants/clientSide/idb/objectStores.ts)ファイルのIDB_OBJECT_STORESから動的に取得してそこの変更による影響を0に担保する
+// >> そのための中間処理がチラチラと書いてある
 import { DBSchema } from "idb";
 import { Memo } from "@/schemas/app/_contexts/memoSchemas";
 import { ClientActivitySession } from "@/domain/entities/clientSide/clientActivitySession";

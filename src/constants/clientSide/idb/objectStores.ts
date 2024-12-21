@@ -1,9 +1,13 @@
+// IDBの基底ファイルモジュール
+
+// 本ファイルモジュール要求定義
+//
 import { Memo } from "@/schemas/app/_contexts/memoSchemas";
 import { ClientActivitySession } from "@/domain/entities/clientSide/clientActivitySession";
 import { IActivitySessionHistoryItem } from "@/schemas/activity/serverSide/activitySessionHistoryItemSchema";
 import { ClientActivitySessionHistoryItem } from "@/domain/entities/clientSide/activitySessionHistoryItem";
 
-// オブジェクトストア命名
+// List of the idb object store literals.
 export const IDB_OBJECT_STORES = {
     MEMO_LIST: "memoList",
     TRASHED_MEMO_LIST: "trashedMemoList",
@@ -11,8 +15,9 @@ export const IDB_OBJECT_STORES = {
     HISTORY: "history",
 } as const;
 
-
+// union type of the list; IDB_OBJECT_STORES
 export type IdbObjectStoreName = typeof IDB_OBJECT_STORES[keyof typeof IDB_OBJECT_STORES];
+
 
 export interface IndexConfig<
     Value,

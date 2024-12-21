@@ -1,8 +1,14 @@
 // TODO インターフェース @/interfaces/clientSide/memo/idbが依存するようにリファクタ、ここはzodスキーマを定義する場所
+import { z } from "zod";
 import { DBSchema } from "idb";
 import { Memo } from "./app/_contexts/memoSchemas";
 import { ClientActivitySession } from "@/domain/entities/clientSide/clientActivitySession";
 import { IActivitySessionHistoryItem } from "./activity/clientSide/activitySessionHistoryItemSchema";
+
+const MemoSchema = z.object({
+    id: z.string(),
+    createdAt: z.date().default().
+})
 
 export interface MyIDB extends DBSchema {
     memoList: {
