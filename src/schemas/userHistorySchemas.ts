@@ -1,7 +1,7 @@
-import { z, ZodObject, ZodRawShape } from "zod";
-import { integer, integerNonNegative } from "./utils/numbers";
-import { SESSION_TYPES, SessionType, SessionTypeEnum } from "@/constants/clientSide/sessions/sessions";
-import { ServiceIdEnum, ServiceId } from "@/constants/clientSide/sessions/sessions";
+import { z } from "zod";
+import { integerNonNegative } from "./utils/numbers";
+import { SESSION_TYPES, SessionType } from "@/constants/clientSide/sessions/sessions";
+import { ServiceIdEnum, ServiceId, NA_PATH_ID } from "@/constants/serviceIds";
 
 
 // TODO UI設計から逆算する形で設計を進める >> DDD(UIはビジネスロジックをそのまま反映したと言えるため)
@@ -15,10 +15,9 @@ import { ServiceIdEnum, ServiceId } from "@/constants/clientSide/sessions/sessio
 
 // フィールドにserviceIdを保持 >> /dashboardの履歴一覧にもデータ格納し、そこでデータ情報の識別として必要
 const ServiceSessionHistoryItemSchema = z.object({
-  serviceId: ServiceIdEnum,
-  categoryId: z.string().optional(),
-  stepId: z.string().optional(),
-  problemId: z.string(),
+  categoryId: z.string().default(NA_PATH_ID),
+  stepId: z.string().default(NA_PATH_ID),
+  problemId: z.string().default(NA_PATH_ID),
   attempts: integerNonNegative().min(0, { message: "Attempts must be non-negative." }), // ユーザの苦手などを情報として取得するためのフィールド: セッション内で問題への挑戦回数(仕様として何回も取り組むことが可能とする - firestore側に保存される)
   lastResult: z.enum(["correct", "incorrect"]),
   historyDetailId: z.string(),
@@ -26,7 +25,7 @@ const ServiceSessionHistoryItemSchema = z.object({
 
 const GoalSessionHistoryItemSchema = z.object({
   serviceId: ServiceIdEnum,
-  categoryId: z.string().optional(),
+  categoryId: z.string().default(NA_PATH_ID),
   stepId: z.string().optional(),
   problemId: z.string(),
   attempts: z.number().int().nonnegative(),
@@ -54,24 +53,6 @@ const createSessionSchema = <T extends SessionType>(sessionType: T) => {
   });
 };
 
-// const SessionBaseSchema = {
-//   sessionId: z.string(),
-//   sessionType: SessionTypeEnum.refine(
-//     (value) => Object.values(SESSION_TYPES).includes(value),
-//     { message: "Invalid session type." }
-//   ), // discriminator of session types
-//   problemCount: integerNonNegative().min(0, { message: "Problem count must be non-negative." }),
-//   correctAnswerRate: z
-//     .number()
-//     .min(0, { message: "Correct answer rate must be at least 0%." })
-//     .max(100, { message: "Correct answer rate cannot exceed 100%." }),
-//   score: integerNonNegative().min(0, { message: "Score must be non-negative." }),
-//   maxScore: integerNonNegative().min(0, { message: "Max score must be non-negative." }),
-//   spentTime: integerNonNegative().min(0, { message: " Time must be non-negative" }), // i.e. how long the user spent time to complete the session.
-//   attemptedTime: integerNonNegative(),
-//   completedAt: z.date(),
-// };
-
 export const GoalSessionSchema = z.object({
   ...createSessionSchema(SESSION_TYPES.GOAL).shape,
   goalId: z.string(),
@@ -87,16 +68,22 @@ export const ServiceSessionSchema = z.object({
 
 export const UserHistoryItemSchema = z.discriminatedUnion("sessionType", [
   GoalSessionSchema,
-  // ServiceSessionSchema
-]).superRefine((data, ctx) => {
-  if (data.score > data.maxScore) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "Score must be less than or equal to maxScore.",
-      path: ["score"],
-    });
-  }
-});
+  ServiceSessionSchema
+]);
+
+// TODO 下記元実装のsuperRefine部分のロジックは別層に責任分離するのがモデル的にいい
+// export const UserHistoryItemSchema = z.discriminatedUnion("sessionType", [
+//   GoalSessionSchema,
+//   // ServiceSessionSchema
+// ]).superRefine((data, ctx) => {
+//   if (data.score > data.maxScore) {
+//     ctx.addIssue({
+//       code: z.ZodIssueCode.custom,
+//       message: "Score must be less than or equal to maxScore.",
+//       path: ["score"],
+//     });
+//   }
+// });
 
 export type UserHistoryItem = z.infer<typeof UserHistoryItemSchema>;
 
