@@ -1,14 +1,76 @@
 // TODO インターフェース @/interfaces/clientSide/memo/idbが依存するようにリファクタ、ここはzodスキーマを定義する場所
-import { z } from "zod";
+import { Schema, z } from "zod";
 import { DBSchema } from "idb";
 import { Memo } from "./app/_contexts/memoSchemas";
 import { ClientActivitySession } from "@/domain/entities/clientSide/clientActivitySession";
 import { IActivitySessionHistoryItem } from "./activity/clientSide/activitySessionHistoryItemSchema";
+import { BaseValue } from "@/constants/clientSide/idb/objectStores";
+import { IdbObjectStoreName, IDB_OBJECT_STORES } from "@/constants/clientSide/idb/objectStores";
+import { scheduler } from "timers/promises";
 
-const MemoSchema = z.object({
-    id: z.string(),
-    createdAt: z.date().default().
-})
+// interface IndexConfig<Value> {
+//     name: string;
+//     keyPath: keyof Value | (keyof Value)[];
+//     options?: IDBIndexParameters;
+// };
+
+// interface IdbObjectStoreConfig<
+//     StoreName extends IdbObjectStoreName,
+//     ValueType extends BaseValue,
+//     Schema extends z.ZodType<ValueType>,
+//     KeyType extends keyof ValueType | (keyof ValueType)[]
+// > {
+//     name: StoreName;
+//     schema: Schema;
+//     options: {
+//         keyPath: KeyType;
+//         autoIncrement?: boolean;
+//     } & IDBObjectStoreParameters;
+//     indexes?: IndexConfig<ValueType>[]; // the index can be multiple. (union?)
+//     getKey: KeyType extends (keyof ValueType) // TODO これなんのための機能だっけ
+//         ? (value: ValueType) => ValueType[KeyType]
+//         : KeyType extends (keyof ValueType)[]
+//         ?(value: ValueType) => (ValueType[KeyType[number]])[]
+//         : never;
+// };
+// --- sample code of implementation using IdbObjectStoreConfig.getKey ---
+// interface User {
+//   firstName: string;
+//   lastName: string;
+//   age: number;
+// }
+
+// const UserConfig: IdbObjectStoreConfig<"users", User, ["firstName", "lastName"]> = {
+//   name: "users",
+//   schema: z.object({ /* ... */ }),
+//   options: { keyPath: ["firstName", "lastName"] },
+//   indexes: [],
+//   getKey: (value) => [value.firstName, value.lastName],
+// };
+
+// const MemoListConfig: IdbObjectStoreConfig<"memoList", Memo, "id"> = {
+//     name: IDB_OBJECT_STORES.MEMO_LIST,
+//     schema: Schema,
+//     options: { keyPath: "id" },
+//     indexes: [
+//         { name: "by-createdAt", keyPath: "createdAt" },
+//         { name: "by-tags", keyPath: "tags", options: { multiEntry: true } },
+//         { name: "by-deletedAt", keyPath: "deletedAt" },
+//     ],
+//     getKey: (value) => value.id,
+// };
+
+
+
+// const MemoSchema = z.object({
+//     id: z.string(),
+//     createdAt: DateSchema,
+//     lastUpdatedAt: DateSchema,
+//     deleted: z.boolean().default(false),
+//     tags: z.array(z.string()), // TODO tagの仕様・設計まだできてない
+//     deletedAt: OptionalDateSchema, // TrashedMemoSchemaを統合して管理した方が色々都合が良さそうなので
+// });
+
 
 export interface MyIDB extends DBSchema {
     memoList: {

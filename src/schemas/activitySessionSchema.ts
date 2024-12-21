@@ -66,10 +66,23 @@ const ServiceActivitySessionSchema = z.object({
     lastUpdatedAt: z.date(),
 });
 
-// Goal と Service を統合
+// GoalとServiceを統合 >> idbのオブジェクトストア: 統一的に管理・効率化
 export const ActivitySessionSchema = z.discriminatedUnion("sessionType", [
     GoalActivitySessionSchema,
     ServiceActivitySessionSchema,
 ]);
+
+// --- sample code(usage) ---
+// function processActivitySessions(sessions: ActivitySession[]) {
+//     sessions.forEach(session => {
+//         if (session.sessionType === SESSION_TYPES.GOAL) {
+//             // session は GoalActivitySession 型として扱える
+//             console.log(session.goalId); // GoalActivitySession のプロパティに安全にアクセス
+//         } else if (session.sessionType === SESSION_TYPES.SERVICE) {
+//             // session は ServiceActivitySession 型として扱える
+//             console.log(session.serviceId); // ServiceActivitySession のプロパティに安全にアクセス
+//         }
+//     });
+// }
 
 export type ActivitySession = z.infer<typeof ActivitySessionSchema>;

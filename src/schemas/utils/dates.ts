@@ -22,4 +22,4 @@ export const DateSchema = z.date().default(NOW);
  * optionalDateSchema.parse(new Date()); // OK
  * ```
  */
-export const OptionalDateSchema = z.date().optional().default(EPOCH_START);
+export const OptionalDateSchema = z.date().default(EPOCH_START);
