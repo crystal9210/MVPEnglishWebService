@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { integerNonNegative } from "@/schemas/utils/numbers";
-import { ServiceIdEnum } from "@/constants/serviceIds";
+import { NA_PATH_ID, ServiceIdEnum } from "@/constants/serviceIds";
 import { ProblemResultTypeEnum } from "@/constants/problemResultType";
 import { GOAL_STATUS, GoalStatusEnum } from "@/constants/sessionConstants";
 import { SESSION_TYPES } from "@/constants/clientSide/sessions/sessions";
@@ -17,9 +17,9 @@ const UserInputSchema = z.object({
 });
 
 const ProblemHistorySchema = z.object({
-    serviceId: ServiceIdEnum,
-    categoryId: z.string().default("x"), // なんか "none" だと変な感じするので optional で値が存在しないときは特殊な値としてxを適用
-    stepId: z.string().default("x"), // this property is optional && default value is "x"; means null here.
+    serviceId: ServiceIdEnum.default(NA_PATH_ID),
+    categoryId: z.string().default(NA_PATH_ID), // なんか "none" だと変な感じするので optional で値が存在しないときは特殊な値としてxを適用
+    stepId: z.string().default(NA_PATH_ID), // this property is optional && default value is NA_PATH_ID; means null here.
     problemId: z.string(),
     correctAttempts: integerNonNegative().default(0), // セッション中にユーザは何回も同じ問題に正解するまで取り組んでいい、また、正解していても取り組める、最後の正誤判定結果が上書きされるようになっているのでそこは注意
     incorrectAttempts: integerNonNegative().default(0),
@@ -42,8 +42,8 @@ const GoalActivitySessionSchema = z.object({
     sessionId: z.string(),
     sessionType: z.literal(SESSION_TYPES.GOAL),
     goalId: z.string(), // goalセッションに必須
-    categoryId: z.string().default("x"), // this property is optional && default value is "x"; means null here.
-    stepId: z.string().default("x"), // this property is optional && default value is "x"; means null here.
+    categoryId: z.string().default(NA_PATH_ID), // this property is optional && default value is NA_PATH_ID; means null here.
+    stepId: z.string().default(NA_PATH_ID), // this property is optional && default value is NA_PATH_ID; means null here.
     progressDetails: ProgressDetailSchema, // 進捗データ
     attempts: z.array(SessionAttemptSchema).default([]),
     startTime: z.date(), // セッション開始時刻
@@ -56,8 +56,8 @@ const ServiceActivitySessionSchema = z.object({
     sessionId: z.string(),
     sessionType: z.literal(SESSION_TYPES.SERVICE),
     serviceId: z.string(),
-    categoryId: z.string().default("x"),
-    stepId: z.string().default("x"),
+    categoryId: z.string().default(NA_PATH_ID),
+    stepId: z.string().default(NA_PATH_ID),
     progressCount: integerNonNegative(),
     totalTargetCount: integerNonNegative(),
     correctAnswerRate: z.number().min(0).max(100),

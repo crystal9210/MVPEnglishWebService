@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { integerNonNegative } from "@/schemas/utils/numbers";
-import { SERVICE_IDS, ServiceIdEnum } from "@/constants/serviceIds";
+import { NA_PATH_ID, ServiceIdEnum } from "@/constants/serviceIds";
 import { PROGRESS_MODES, ProgressMode } from "@/constants/clientSide/sessions/sessions";
 import { CustomProblemSetSchema } from "@/schemas/customProblemSetSchema";
 
@@ -30,7 +30,7 @@ const ScoreProgressDetailSchema = z.object({
     ...createProgressDetailSchema(PROGRESS_MODES.SCORE).shape,
     completedAchievements: integerNonNegative(), // 完了した実績数
     totalAchievements: integerNonNegative(), // 必要な実績数
-    targetServiceId: ServiceIdEnum.default(SERVICE_IDS.NA), // 対象のサービスID
+    targetServiceId: ServiceIdEnum.default(NA_PATH_ID), // 対象のサービスID
     targetCategoryStepPairs: z.array(CategoryStepPairSchema).optional(), // 対象のカテゴリIDとステップIDのペア配列
     requiredScore: integerNonNegative(), // 必要なスコア
     currentStore: integerNonNegative(), // 現在のスコア
@@ -41,7 +41,7 @@ const CountProgressDetailSchema = z.object({
     ...createProgressDetailSchema(PROGRESS_MODES.COUNT).shape,
     completedAchievements: integerNonNegative(), // 完了した実績数
     totalAchievements: integerNonNegative(), // 必要な実績数
-    targetServiceId: ServiceIdEnum.default(SERVICE_IDS.NA), // 対象のサービスID
+    targetServiceId: ServiceIdEnum.default(NA_PATH_ID), // 対象のサービスID
     targetCategoryStepPairs: z.array(CategoryStepPairSchema).optional(),
     requiredCount: integerNonNegative(), // 目標達成に必要な正解数
     currentCorrectCount: integerNonNegative().default(0),
