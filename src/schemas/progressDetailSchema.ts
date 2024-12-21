@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { integerNonNegative } from "@/schemas/utils/numbers";
-import { ServiceIdEnum } from "@/constants/serviceIds";
-import { PROGRESS_MODES } from "@/constants/clientSide/sessions/sessions";
+import { SERVICE_IDS, ServiceIdEnum } from "@/constants/serviceIds";
+import { PROGRESS_MODES, ProgressMode } from "@/constants/clientSide/sessions/sessions";
 import { CustomProblemSetSchema } from "@/schemas/customProblemSetSchema";
 
 // カテゴリID・ステップIDペアスキーマ - 複数のカテゴリ指定可能
@@ -10,37 +10,38 @@ const CategoryStepPairSchema = z.object({
     stepIds: z.array(z.string()).optional(), // 各カテゴリに属するステップIDの配列
 });
 
-// 共通部分をまとめた型
-const BaseProgressDetailSchema = z.object({
-    mode: z.literal(PROGRESS_MODES.ITERATION),
-});
+const createProgressDetailSchema = <T extends ProgressMode>(progressMode: T) => {
+    return z.object({
+        mode: z.literal(progressMode),
+    });
+}
 
 // ユースケース1: 問題セットベースの繰り返し
-const IterationProgressDetailSchema = BaseProgressDetailSchema.extend({
-    mode: z.literal(PROGRESS_MODES.ITERATION),
+const IterationProgressDetailSchema = z.object({
+    ...createProgressDetailSchema(PROGRESS_MODES.ITERATION).shape,
     completedIterations: integerNonNegative(), // 完了した繰り返し回数
     totalIterations: integerNonNegative(), // 必要な繰り返し回数
     // CustomProblemSetSchemaのshapeオブジェクトのproblemSetIdプロパティにアクセスしそのまま値として格納
-    problemSetId: CustomProblemSetSchema.shape.problemSetId, // TODO 参照先との連携 / 事前に作成された問題セットのID
+    problemSetId: CustomProblemSetSchema.shape.problemSetId, // TODO 参照先との連携 (NOTE:上位層実装)
 });
 
 // ユースケース2: スコアベース
-const ScoreProgressDetailSchema = BaseProgressDetailSchema.extend({
-    mode: z.literal(PROGRESS_MODES.SCORE),
+const ScoreProgressDetailSchema = z.object({
+    ...createProgressDetailSchema(PROGRESS_MODES.SCORE).shape,
     completedAchievements: integerNonNegative(), // 完了した実績数
     totalAchievements: integerNonNegative(), // 必要な実績数
-    targetServiceId: ServiceIdEnum.optional(), // 対象のサービスID
+    targetServiceId: ServiceIdEnum.default(SERVICE_IDS.NA), // 対象のサービスID
     targetCategoryStepPairs: z.array(CategoryStepPairSchema).optional(), // 対象のカテゴリIDとステップIDのペア配列
     requiredScore: integerNonNegative(), // 必要なスコア
     currentStore: integerNonNegative(), // 現在のスコア
 });
 
 // ユースケース3: 正解数ベース
-const CountProgressDetailSchema = BaseProgressDetailSchema.extend({
-    mode: z.literal(PROGRESS_MODES.COUNT),
+const CountProgressDetailSchema = z.object({
+    ...createProgressDetailSchema(PROGRESS_MODES.COUNT).shape,
     completedAchievements: integerNonNegative(), // 完了した実績数
     totalAchievements: integerNonNegative(), // 必要な実績数
-    targetServiceId: ServiceIdEnum.optional(), // 対象のサービスID
+    targetServiceId: ServiceIdEnum.default(SERVICE_IDS.NA), // 対象のサービスID
     targetCategoryStepPairs: z.array(CategoryStepPairSchema).optional(),
     requiredCount: integerNonNegative(), // 目標達成に必要な正解数
     currentCorrectCount: integerNonNegative().default(0),

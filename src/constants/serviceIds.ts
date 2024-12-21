@@ -7,6 +7,7 @@ export const SERVICE_IDS = {
     BASIS: "basis",
     WRITING: "writing",
     MULTIPLE_CHOICE: " multiple-choice",
+    NA: "N/A",
 } as const;
 
 /**

@@ -13,6 +13,7 @@ export function strictObject<T extends z.ZodRawShape>(schema: T): z.ZodObject<T>
  * Defines which fields in a schema should be treated as strictly required.
  * Fields marked as true are required, others are optional.
  */
+/* eslint-disable no-unused-vars */
 type StrictFields<T extends z.ZodRawShape> = {
     [K in keyof T]?: true; // Fields with `true` are strict; others are flexible.
 };
