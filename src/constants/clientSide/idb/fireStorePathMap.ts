@@ -9,7 +9,7 @@ type GenerateFirestorePathType<
 
 export type FirestorePathMap = GenerateFirestorePathType<typeof IDB_OBJECT_STORE_CONFIGS>;
 
-type GetFirestorePath<Name extends keyof FirestorePathMap> = FirestorePathMap[Name];
+export type GetFirestorePath<Name extends keyof FirestorePathMap> = FirestorePathMap[Name];
 
 export const FIRESTORE_PATHS = Object.fromEntries(
     IDB_OBJECT_STORE_CONFIGS.map(config => [config.name, config.firestorePath])
