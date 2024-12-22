@@ -109,11 +109,9 @@ type HistoryKeyType = GetKeyType<typeof IDB_OBJECT_STORE_CONFIGS, "history">; //
 type ActivitySessionsKeyType = GetKeyType<typeof IDB_OBJECT_STORE_CONFIGS, "activitySessions">; // 推論: "sessionId"
 
 type GetKeyType<
-    Configs extends readonly { name: IdbObjectStoreName; schema: z.ZodTypeAny; options: { keyPath: string | string[] }; firestorePath: string }[],
+    Configs extends readonly { name: IdbObjectStoreName; options: { keyPath: string | string[] } }[],
     Name extends IdbObjectStoreName
-> = Extract<Configs[number], { name: Name }> extends { options: { keyPath: infer KeyPath } }
-    ? ExtractKeyPathType<KeyPath>
-    : never;
+> = Extract<Configs[number], { name: Name }>["options"]["keyPath"];
 
 type MemoKeyType = GetKeyType<typeof IDB_OBJECT_STORE_CONFIGS, "memoList">; // 推論: "id"
 type HistoryKeyType = GetKeyType<typeof IDB_OBJECT_STORE_CONFIGS, "history">; // 推論: "id"
