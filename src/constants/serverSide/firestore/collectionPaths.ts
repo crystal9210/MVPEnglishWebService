@@ -1,16 +1,24 @@
 // TODO ドキュメントの設計内容を全て落とし込む
 // TODO RBAC: firebase authenticationのセキュリティルール側でも保証しているが専用の機構を内部的に用意する >> モノシリックなため不正アクセス + 暗号化された内容を解読できる攻撃者に対する防御には足りないが内部制御の専用モジュール開発・導入 >> 本来ならコードベースの暗号化についても危殆化対策として定期的にリフレッシュする専用の機構を用意するべき >> 異なるロジックの暗号による複数回の暗号化により事実上解読不可能にはなるはず
 export const COLLECTION_PATHS = {
+    AUDIT_LOGS: "auditLogs", // システム全体の重要なイベント・アクションを記録 >> 不正アクセス・障害時のトラブルシューティング実施時;セキュリティ監査利用
     ACCOUNTS: "accounts",
+    SUBSCRIPTION: (userId: string) => `subscription/${userId}`, // TODO readonly from the user. >> implements the manager.
     USERS: "users",
     PROFILES: (userId: string) => `users/${userId}/profiles`,
     BOOKMARKS: (userId: string) => `users/${userId}/bookmarks`,
-    SESSION_HISTORIES: (userId: string, yearMonth: string) =>
-        `users/${userId}/sessionHistories/${yearMonth}`,
+    CUSTOM_PROBLEM_SETS: (userId: string) => `users/${userId}/customProblemSets`,
+    SESSION_HISTORIES: (userId: string) =>
+        `users/${userId}/sessionHistories`,
+    SESSION_HISTORY: (userId: string, sessionId: string) => `users/${userId}/sessionHistories/${sessionId}`,
     SESSION_DEFAULTS: (userId: string, yearMonth: string, sessionId: string) =>
-        `users/${userId}/sessionHistories/${yearMonth}/${sessionId}`,
+        `users/${userId}/sessionHistories/${yearMonth}/${sessionId}`, // TODO
     NOTES: (userId: string, yearMonth: string, sessionId: string) =>
         `users/${userId}/sessionHistories/${yearMonth}/${sessionId}/notes`,
+    GOALS: (userId: string) => `users/${userId}/goals`,
+    STATISTICS: (userId: string, period: string) => `users/${userId}/statistics/${period}`,
+    REPORTS: (userId: string) => `users/${userId}/reports`, // 一定期間の学習成果をまとめたレポート生成機能、PDFなどにエクスポートするための基盤設計
+    REPORT: (userId: string, reportId: string) => `users/${userId}/reports/${reportId}`,
 };
 
 
