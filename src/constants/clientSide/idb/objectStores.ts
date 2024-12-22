@@ -8,13 +8,14 @@ import { ClientActivitySession } from "@/domain/entities/clientSide/clientActivi
 import { IActivitySessionHistoryItem, ActivitySessionHistoryItemSchema } from "@/schemas/activity/serverSide/activitySessionHistoryItemSchema";
 import { z } from "zod";
 import { ClientActivitySessionSchema } from "@/schemas/activity/clientSide/clientActivitySessionSchema";
+import { DBSchema } from "idb";
 
 // List of the idb object store literals.
 export const IDB_OBJECT_STORES = {
-    MEMO_LIST: "memoList",
-    TRASHED_MEMO_LIST: "trashedMemoList",
-    ACTIVITY_SESSIONS: "activitySessions",
-    HISTORY: "history",
+    MEMO_LIST: "memoList" as const,
+    TRASHED_MEMO_LIST: "trashedMemoList" as const,
+    ACTIVITY_SESSIONS: "activitySessions" as const,
+    HISTORY: "history" as const,
 } as const;
 
 // union type of the list; IDB_OBJECT_STORES
@@ -34,25 +35,25 @@ export type ObjectStoreConfig<
 
 export const IDB_OBJECT_STORE_CONFIGS = [
     {
-        name: "memoList",
+        name: "memoList" as const,
         firestorePath: "memos", // 例: Firestore のパス
         schema: MemoSchema,
         options: { keyPath: "id" }
     } satisfies ObjectStoreConfig<"memoList", typeof MemoSchema, "memos", "id">, // TODO "id"などのキーを@/constants/..に配置・統合管理
     {
-        name: "trashedMemoList",
+        name: "trashedMemoList" as const,
         firestorePath: "trashedMemos",
         schema: MemoSchema,
         options: { keyPath: "id" }
     } satisfies ObjectStoreConfig<"trashedMemoList", typeof MemoSchema, "trashedMemos", "id">,
     {
-        name: "activitySessions",
+        name: "activitySessions" as const,
         firestorePath: "activity_sessions",
         schema: ClientActivitySessionSchema,
         options: { keyPath: "sessionId" }
     } satisfies ObjectStoreConfig<"activitySessions", typeof ClientActivitySessionSchema, "activity_sessions", "sessionId">,
     {
-        name: "history",
+        name: "history" as const,
         firestorePath: "history_items",
         schema: z.object({ // インラインでスキーマを定義することも可能
             id: z.number().optional(),
@@ -76,10 +77,99 @@ export type IdbObjectStoreConfigs = typeof IDB_OBJECT_STORE_CONFIGS;
 //     console.log(memoListConfig.schema); // >> "memos" (?)
 //     console.log(memoListConfig.schema);
 // }
+// 型ユーティリティ
+type ExtractKeyPathType<KeyPath> =
+    KeyPath extends string
+        ? string
+        : KeyPath extends (infer P)[]
+        ? P
+        : never;
+
+// type GetKeyType<
+//     Configs extends readonly IdbObjectStoreConfigs[],
+//     Name extends IdbObjectStoreName
+// > = Extract<Configs[number], { name: Name }> extends { options: { keyPath: infer KeyPath } }
+//     ? ExtractKeyPathType<KeyPath>
+//     : never;
+
+type GenerateKeyPathType<
+    Configs extends readonly {
+        name: string | number | symbol;
+        options: { keyPath: string | string[] }
+    }[]
+> = {
+    [K in Configs[number] as K["name"]]: K["options"]["keyPath"];
+};
+
+type KeyPathMap = GenerateKeyPathType<typeof IDB_OBJECT_STORE_CONFIGS>;
+
+// テスト: GetKeyTypeで正しい型が推論されるか確認
+type MemoKeyType = GetKeyType<typeof IDB_OBJECT_STORE_CONFIGS, "memoList">; // 推論: "id"
+type HistoryKeyType = GetKeyType<typeof IDB_OBJECT_STORE_CONFIGS, "history">; // 推論: "id"
+type ActivitySessionsKeyType = GetKeyType<typeof IDB_OBJECT_STORE_CONFIGS, "activitySessions">; // 推論: "sessionId"
+
+type GetKeyType<
+    Configs extends readonly { name: IdbObjectStoreName; schema: z.ZodTypeAny; options: { keyPath: string | string[] }; firestorePath: string }[],
+    Name extends IdbObjectStoreName
+> = Extract<Configs[number], { name: Name }> extends { options: { keyPath: infer KeyPath } }
+    ? ExtractKeyPathType<KeyPath>
+    : never;
+
+type MemoKeyType = GetKeyType<typeof IDB_OBJECT_STORE_CONFIGS, "memoList">; // 推論: "id"
+type HistoryKeyType = GetKeyType<typeof IDB_OBJECT_STORE_CONFIGS, "history">; // 推論: "id"
+
+
+type GenerateStoreValueMap<T extends readonly { name: string; schema: z.ZodTypeAny }[]> = {
+    [K in T[number]["name"]]: Extract<T[number], { name: K }>["schema"] extends z.ZodTypeAny
+        ? z.infer<Extract<T[number], { name: K }>["schema"]>
+        : never;
+};
+
+// 各オブジェクトストアの型定義を動的生成
+type StoreValueMap = GenerateStoreValueMap<typeof IDB_OBJECT_STORE_CONFIGS>;
+
+type MemoListValueType = StoreValueMap["memoList"]; // 推論される型が z.infer<typeof MemoSchema>
+type TrashedMemoListValueType = StoreValueMap["trashedMemoList"]; // 同上
+type ActivitySessionsValueType = StoreValueMap["activitySessions"]; // z.infer<typeof ClientActivitySessionSchema>
+type HistoryValueType = StoreValueMap["history"]; // 推論される型が z.object で記述した型
+
+
+// 動的型定義の最終構造
+export type DynamicObjectStoreTypes<
+    Configs extends readonly {
+        name: IdbObjectStoreName;
+        schema: z.ZodTypeAny;
+        options: { keyPath: string | string[] };
+        firestorePath: string;
+    }[]
+> = {
+    [K in Configs[number]["name"]]: {
+        key: GetKeyType<Configs, Extract<K, IdbObjectStoreName>>;
+        value: StoreValueMap[Extract<K, IdbObjectStoreName>];
+    }
+};
+
+// オブジェクトストア型定義
+export type MyIDB = DBSchema & DynamicObjectStoreTypes<typeof IDB_OBJECT_STORE_CONFIGS>;
+
+type MemoKey = MyIDB["memoList"]["key"]; // 推論: "id"
+type MemoValue = MyIDB["memoList"]["value"]; // 推論: z.infer<typeof MemoSchema>
+
+// オブジェクトストア設定取得関数
 export function getObjectStoreConfig<T extends IdbObjectStoreName>(
     storeName: T
-): Extract<ObjectStoreConfig<T, any, any>, { name: T }> | undefined {
-    return IDB_OBJECT_STORE_CONFIGS.find((config) => config.name === storeName) as Extract<ObjectStoreConfig<T, any, any>, { name: T }> | undefined;
+): Extract<ObjectStoreConfig<T, any, any, any>, { name: T }> | undefined {
+    return IDB_OBJECT_STORE_CONFIGS.find(config => config.name === storeName) as
+        | Extract<ObjectStoreConfig<T, any, any, any>, { name: T }>
+        | undefined;
+}
+
+// --- 利用例 ---
+// MEMO_LISTの設定を取得する
+const memoListConfig = getObjectStoreConfig("memoList");
+if (memoListConfig) {
+    console.log(memoListConfig.schema); // MemoSchema
+    console.log(memoListConfig.options.keyPath); // "id"
 }
 
 
