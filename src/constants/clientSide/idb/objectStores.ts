@@ -3,12 +3,10 @@
 // 本ファイルモジュール要求定義
 // TODO オブジェクト名に応じてオブジェクトストアに格納するデータバリューの型情報が正確に取得してアクセスできる
 // TODO オブジェクト名に応じてキー(プライマリキー;主キー)が正確に取得でき、それによりアクセスパスを取得し、かつidとなる情報からデータの整合性等を保証できる
-import { Memo, MemoSchema } from "@/schemas/app/_contexts/memoSchemas";
-import { ClientActivitySession } from "@/domain/entities/clientSide/clientActivitySession";
-import { IActivitySessionHistoryItem, ActivitySessionHistoryItemSchema } from "@/schemas/activity/serverSide/activitySessionHistoryItemSchema";
+import { MemoSchema } from "@/schemas/app/_contexts/memoSchemas";
+import { ActivitySessionHistoryItemSchema } from "@/schemas/activity/serverSide/activitySessionHistoryItemSchema";
 import { z } from "zod";
 import { ClientActivitySessionSchema } from "@/schemas/activity/clientSide/clientActivitySessionSchema";
-import { DBSchema } from "idb";
 
 // List of the idb object store literals.
 export const IDB_OBJECT_STORES = {
@@ -70,20 +68,8 @@ export const IDB_OBJECT_STORE_CONFIGS = [
 
 export type IdbObjectStoreConfigs = typeof IDB_OBJECT_STORE_CONFIGS;
 
-// --- use case sample of "getObjectStoreConfig" func---
-// const memoListConfig = getObjectStoreConfig(IDB_OBJECT_STORES.MEMO_LIST);
-// if (memoListConfig) {
-//     console.log(memoListConfig.name); // >> "memoList"
-//     console.log(memoListConfig.schema); // >> "memos" (?)
-//     console.log(memoListConfig.schema);
-// }
-// 型ユーティリティ
-type ExtractKeyPathType<KeyPath> =
-    KeyPath extends string
-        ? string
-        : KeyPath extends (infer P)[]
-        ? P
-        : never;
+
+
 
 // type GetKeyType<
 //     Configs extends readonly IdbObjectStoreConfigs[],
@@ -91,85 +77,6 @@ type ExtractKeyPathType<KeyPath> =
 // > = Extract<Configs[number], { name: Name }> extends { options: { keyPath: infer KeyPath } }
 //     ? ExtractKeyPathType<KeyPath>
 //     : never;
-
-type GenerateKeyPathType<
-    Configs extends readonly {
-        name: string | number | symbol;
-        options: { keyPath: string | string[] }
-    }[]
-> = {
-    [K in Configs[number] as K["name"]]: K["options"]["keyPath"];
-};
-
-type KeyPathMap = GenerateKeyPathType<typeof IDB_OBJECT_STORE_CONFIGS>;
-
-// テスト: GetKeyTypeで正しい型が推論されるか確認
-type MemoKeyType = GetKeyType<typeof IDB_OBJECT_STORE_CONFIGS, "memoList">; // 推論: "id"
-type HistoryKeyType = GetKeyType<typeof IDB_OBJECT_STORE_CONFIGS, "history">; // 推論: "id"
-type ActivitySessionsKeyType = GetKeyType<typeof IDB_OBJECT_STORE_CONFIGS, "activitySessions">; // 推論: "sessionId"
-
-type GetKeyType<
-    Configs extends readonly { name: IdbObjectStoreName; options: { keyPath: string | string[] } }[],
-    Name extends IdbObjectStoreName
-> = Extract<Configs[number], { name: Name }>["options"]["keyPath"];
-
-type MemoKeyType = GetKeyType<typeof IDB_OBJECT_STORE_CONFIGS, "memoList">; // 推論: "id"
-type HistoryKeyType = GetKeyType<typeof IDB_OBJECT_STORE_CONFIGS, "history">; // 推論: "id"
-
-
-type GenerateStoreValueMap<T extends readonly { name: string; schema: z.ZodTypeAny }[]> = {
-    [K in T[number]["name"]]: Extract<T[number], { name: K }>["schema"] extends z.ZodTypeAny
-        ? z.infer<Extract<T[number], { name: K }>["schema"]>
-        : never;
-};
-
-// 各オブジェクトストアの型定義を動的生成
-type StoreValueMap = GenerateStoreValueMap<typeof IDB_OBJECT_STORE_CONFIGS>;
-
-type MemoListValueType = StoreValueMap["memoList"]; // 推論される型が z.infer<typeof MemoSchema>
-type TrashedMemoListValueType = StoreValueMap["trashedMemoList"]; // 同上
-type ActivitySessionsValueType = StoreValueMap["activitySessions"]; // z.infer<typeof ClientActivitySessionSchema>
-type HistoryValueType = StoreValueMap["history"]; // 推論される型が z.object で記述した型
-
-
-// 動的型定義の最終構造
-export type DynamicObjectStoreTypes<
-    Configs extends readonly {
-        name: IdbObjectStoreName;
-        schema: z.ZodTypeAny;
-        options: { keyPath: string | string[] };
-        firestorePath: string;
-    }[]
-> = {
-    [K in Configs[number]["name"]]: {
-        key: GetKeyType<Configs, Extract<K, IdbObjectStoreName>>;
-        value: StoreValueMap[Extract<K, IdbObjectStoreName>];
-    }
-};
-
-// オブジェクトストア型定義
-export type MyIDB = DBSchema & DynamicObjectStoreTypes<typeof IDB_OBJECT_STORE_CONFIGS>;
-
-type MemoKey = MyIDB["memoList"]["key"]; // 推論: "id"
-type MemoValue = MyIDB["memoList"]["value"]; // 推論: z.infer<typeof MemoSchema>
-
-// オブジェクトストア設定取得関数
-export function getObjectStoreConfig<T extends IdbObjectStoreName>(
-    storeName: T
-): Extract<ObjectStoreConfig<T, any, any, any>, { name: T }> | undefined {
-    return IDB_OBJECT_STORE_CONFIGS.find(config => config.name === storeName) as
-        | Extract<ObjectStoreConfig<T, any, any, any>, { name: T }>
-        | undefined;
-}
-
-// --- 利用例 ---
-// MEMO_LISTの設定を取得する
-const memoListConfig = getObjectStoreConfig("memoList");
-if (memoListConfig) {
-    console.log(memoListConfig.schema); // MemoSchema
-    console.log(memoListConfig.options.keyPath); // "id"
-}
-
 
 // export const IDB_OBJECT_STORE_CONFIGS: IdbObjectStoreConfigs = [
 //     MemoListConfig,
