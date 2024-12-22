@@ -8,10 +8,11 @@
 // >> 上記の要件を満たすことで正確にデータアクセス(CRUD)が可能
 
 import { openDB, IDBPDatabase, IDBPTransaction } from "idb";
-import { MyIDB } from "@/interfaces/clientSide/memo/idb";
-import { IDB_OBJECT_STORE_CONFIGS, IdbObjectStoreName } from "@/constants/clientSide/idb/objectStores";
+import { MyIDB } from "@/constants/clientSide/idb/idbGenerator";
+import { IDB_OBJECT_STORE_CONFIGS, IdbObjectStoreName, IndexConfig } from "@/constants/clientSide/idb/objectStores";
 import { DB_NAME, DB_VERSION } from "@/constants/clientSide/idb/dbConfig";
 import { IIndexedDBManager } from "@/interfaces/clientSide/repositories/managers/IIndexedDBManager";
+import { z } from "zod";
 
 // 各オブジェクトストアのデータを型安全に保持
 type BackupData = {
@@ -46,8 +47,19 @@ export class IndexedDBManager implements IIndexedDBManager {
                         IDB_OBJECT_STORE_CONFIGS.forEach((storeConfig) => {
                             if (!idb.objectStoreNames.contains(storeConfig.name)) {
                                 const store = idb.createObjectStore(storeConfig.name, storeConfig.options);
+                                // storeConfig.indexes?.forEach((index: IndexConfig<storeConfig.schema>) => {
+                                //     store.createIndex(index.name, index.keyPath, index.options);
+                                // });
                                 storeConfig.indexes?.forEach((index) => {
-                                    store.createIndex(index.name, index.keyPath, index.options);
+                                    // ジェネリクスにストアの値の型を渡すための型アサーション (仮)
+                                    // ここでは storeConfig.schema を基にした型推論が必要
+                                    // しかし、TypeScript の制約上、直接的な型推論が難しいため、
+                                    // ストアの値の型を明示的に指定する必要がある
+                                    // ストアの値の型を取得
+                                    type StoreValue = z.infer<typeof storeConfig.schema>;
+                                    // 型アサーションを使用
+                                    const typedIndex = index as IndexConfig<StoreValue>;
+                                    store.createIndex(typedIndex.name, typedIndex.keyPath, typedIndex.options);
                                 });
                             }
                         });

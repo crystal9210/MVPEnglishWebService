@@ -1,7 +1,7 @@
 import { GenericRepository } from "@/domain/repositories/clientSide/genericRepository";
 import { IIndexedDBManager } from "@/interfaces/clientSide/repositories/managers/IIndexedDBManager";
 import { Memo } from "@/schemas/app/_contexts/memoSchemas";
-import { MyIDB } from "@/interfaces/clientSide/memo/idb";
+import { MyIDB } from "@/constants/clientSide/idb/idbGenerator";
 
 export class MemoRepository extends GenericRepository<"memoList"> {
     constructor(idbManager: IIndexedDBManager) {
@@ -50,7 +50,7 @@ export class MemoRepository extends GenericRepository<"memoList"> {
                 if (!existingMemo) {
                     throw new Error(`Memo with ID ${memo.id} does not exist.`);
                 }
-                await super.update(memo, memo.id);
+                await super.update(memo, memo.id as MyIDB["memoList"]["key"]);
             }
         });
     }

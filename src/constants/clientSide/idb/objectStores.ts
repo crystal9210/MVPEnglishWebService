@@ -1,8 +1,8 @@
 // IDBの基底ファイルモジュール
 
 // 本ファイルモジュール要求定義
-// TODO オブジェクト名に応じてオブジェクトストアに格納するデータバリューの型情報が正確に取得してアクセスできる
-// TODO オブジェクト名に応じてキー(プライマリキー;主キー)が正確に取得でき、それによりアクセスパスを取得し、かつidとなる情報からデータの整合性等を保証できる
+// ok オブジェクト名に応じてオブジェクトストアに格納するデータバリューの型情報が正確に取得してアクセスできる
+// ok オブジェクト名に応じてキー(プライマリキー;主キー)が正確に取得でき、それによりアクセスパスを取得し、かつidとなる情報からデータの整合性等を保証できる
 import { MemoSchema } from "@/schemas/app/_contexts/memoSchemas";
 import { ActivitySessionHistoryItemSchema } from "@/schemas/activity/serverSide/activitySessionHistoryItemSchema";
 import { z } from "zod";
@@ -19,36 +19,75 @@ export const IDB_OBJECT_STORES = {
 // union type of the list; IDB_OBJECT_STORES
 export type IdbObjectStoreName = typeof IDB_OBJECT_STORES[keyof typeof IDB_OBJECT_STORES];
 
+// TODO
+export interface IndexConfig<
+    Value,
+    Index extends PropertyKey = keyof Value,
+> {
+    name: `by-${string & Index}`;
+    keyPath: Index;
+    options?: IDBIndexParameters;
+}
+
 export type ObjectStoreConfig<
     StoreName extends IdbObjectStoreName,
     ItemSchema extends z.ZodTypeAny,
-    FirestorePath extends string, // TODO 適当にセットを取ってくる
+    FirestorePath extends string, // TODO 適当にセット取ってくる
     KeyType extends string | string[], // TODO 厳密化
+    Index extends Record<string, ItemSchema> = Record<string, ItemSchema>,
+    Indexes extends IndexConfig<ItemSchema, keyof Index>[] = IndexConfig<ItemSchema, keyof Index>[]
 > = {
     name: StoreName;
     schema: ItemSchema
     firestorePath: FirestorePath;
     options: IDBObjectStoreParameters & { keyPath: KeyType } // options includes "keyPath" field.
+    indexes: Indexes;
 };
 
+//
 export const IDB_OBJECT_STORE_CONFIGS = [
     {
         name: "memoList" as const,
         firestorePath: "memos", // 例: Firestore のパス
         schema: MemoSchema,
-        options: { keyPath: "id" }
+        options: { keyPath: "id" },
+        indexes: [
+            {
+                name: "by-createdAt",
+                keyPath: "createdAt"
+            },
+            {
+                name: "by-lastUpdatedAt", // メモを最終更新日時でソート・フィルタリングすることを想定
+                keyPath: "lastUpdatedAt"
+            },
+            {
+                name: "by-tags",
+                keyPath: "tags",
+                options: { multiEntry: true }
+            }
+        ]
     } satisfies ObjectStoreConfig<"memoList", typeof MemoSchema, "memos", "id">, // TODO "id"などのキーを@/constants/..に配置・統合管理
     {
         name: "trashedMemoList" as const,
         firestorePath: "trashedMemos",
         schema: MemoSchema,
-        options: { keyPath: "id" }
+        options: { keyPath: "id" },
+        indexes: [
+            {
+                name: "by-deletedAt",
+                keyPath: "deletedAt"
+            }
+        ]
     } satisfies ObjectStoreConfig<"trashedMemoList", typeof MemoSchema, "trashedMemos", "id">,
     {
         name: "activitySessions" as const,
         firestorePath: "activity_sessions",
         schema: ClientActivitySessionSchema,
-        options: { keyPath: "sessionId" }
+        options: { keyPath: "sessionId" },
+        indexes: [
+            { name: "by-startedAt", keyPath: "startedAt", options: { unique: false } },
+            { name: "by-endedAt", keyPath: "endedAt", options: { unique: false } },
+        ],
     } satisfies ObjectStoreConfig<"activitySessions", typeof ClientActivitySessionSchema, "activity_sessions", "sessionId">,
     {
         name: "history" as const,
@@ -58,7 +97,10 @@ export const IDB_OBJECT_STORE_CONFIGS = [
             sessionId: z.string(),
             historyItem: ActivitySessionHistoryItemSchema,
         }),
-        options: { keyPath: "id" }
+        options: { keyPath: "id" },
+        indexes: [
+            { name: "by-sessionId", keyPath: "sessionId" }, // セッションIDで検索・フィルタリングすることを想定
+        ],
     } satisfies ObjectStoreConfig<"history", z.ZodObject<{
         id: z.ZodOptional<z.ZodNumber>;
         sessionId: z.ZodString;
