@@ -23,11 +23,13 @@ export type IdbObjectStoreName = typeof IDB_OBJECT_STORES[keyof typeof IDB_OBJEC
 export type ObjectStoreConfig<
     StoreName extends IdbObjectStoreName,
     ItemSchema extends z.ZodTypeAny,
-    FirestorePath extends string // TODO 適当にセットを取ってくる
+    FirestorePath extends string, // TODO 適当にセットを取ってくる
+    KeyType extends string | string[], // TODO 厳密化
 > = {
     name: StoreName;
     schema: ItemSchema
     firestorePath: FirestorePath;
+    options: IDBObjectStoreParameters & { keyPath: KeyType } // options includes "keyPath" field.
 };
 
 export const IDB_OBJECT_STORE_CONFIGS = [
@@ -35,17 +37,20 @@ export const IDB_OBJECT_STORE_CONFIGS = [
         name: "memoList",
         firestorePath: "memos", // 例: Firestore のパス
         schema: MemoSchema,
-    } satisfies ObjectStoreConfig<"memoList", typeof MemoSchema, "memos">,
+        options: { keyPath: "id" }
+    } satisfies ObjectStoreConfig<"memoList", typeof MemoSchema, "memos", "id">, // TODO "id"などのキーを@/constants/..に配置・統合管理
     {
         name: "trashedMemoList",
         firestorePath: "trashedMemos",
         schema: MemoSchema,
-    } satisfies ObjectStoreConfig<"trashedMemoList", typeof MemoSchema, "trashedMemos">,
+        options: { keyPath: "id" }
+    } satisfies ObjectStoreConfig<"trashedMemoList", typeof MemoSchema, "trashedMemos", "id">,
     {
         name: "activitySessions",
         firestorePath: "activity_sessions",
         schema: ClientActivitySessionSchema,
-    } satisfies ObjectStoreConfig<"activitySessions", typeof ClientActivitySessionSchema, "activity_sessions">,
+        options: { keyPath: "sessionId" }
+    } satisfies ObjectStoreConfig<"activitySessions", typeof ClientActivitySessionSchema, "activity_sessions", "sessionId">,
     {
         name: "history",
         firestorePath: "history_items",
@@ -54,14 +59,28 @@ export const IDB_OBJECT_STORE_CONFIGS = [
             sessionId: z.string(),
             historyItem: ActivitySessionHistoryItemSchema,
         }),
+        options: { keyPath: "id" }
     } satisfies ObjectStoreConfig<"history", z.ZodObject<{
         id: z.ZodOptional<z.ZodNumber>;
         sessionId: z.ZodString;
         historyItem: typeof ActivitySessionHistoryItemSchema;
-    }>, "history_items">,
+    }>, "history_items", "id">,
 ] as const;
 
-export type IDBObjectStoreConfigs = typeof IDB_OBJECT_STORE_CONFIGS;
+export type IdbObjectStoreConfigs = typeof IDB_OBJECT_STORE_CONFIGS;
+
+// --- use case sample of "getObjectStoreConfig" func---
+// const memoListConfig = getObjectStoreConfig(IDB_OBJECT_STORES.MEMO_LIST);
+// if (memoListConfig) {
+//     console.log(memoListConfig.name); // >> "memoList"
+//     console.log(memoListConfig.schema); // >> "memos" (?)
+//     console.log(memoListConfig.schema);
+// }
+export function getObjectStoreConfig<T extends IdbObjectStoreName>(
+    storeName: T
+): Extract<ObjectStoreConfig<T, any, any>, { name: T }> | undefined {
+    return IDB_OBJECT_STORE_CONFIGS.find((config) => config.name === storeName) as Extract<ObjectStoreConfig<T, any, any>, { name: T }> | undefined;
+}
 
 
 // export const IDB_OBJECT_STORE_CONFIGS: IdbObjectStoreConfigs = [
