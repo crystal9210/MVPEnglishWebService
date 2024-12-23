@@ -7,9 +7,9 @@
 // TODO オブジェクト名に応じてキー(プライマリキー;主キー)が正確に取得でき、それによりアクセスパスを取得し、かつidとなる情報からデータの整合性等を保証できる
 // >> 上記の要件を満たすことで正確にデータアクセス(CRUD)が可能
 
-import { openDB, IDBPDatabase, IDBPTransaction, StoreValue } from "idb";
+import { openDB, IDBPDatabase, IDBPTransaction } from "idb";
 import { MyIDB } from "@/constants/clientSide/idb/idbGenerator";
-import { IDB_OBJECT_STORE_CONFIGS, IdbObjectStoreConfigs, IdbObjectStoreName, IndexConfig } from "@/constants/clientSide/idb/objectStores";
+import { IDB_OBJECT_STORE_CONFIGS, IdbObjectStoreName, IndexConfig } from "@/constants/clientSide/idb/objectStores";
 import { DB_NAME, DB_VERSION } from "@/constants/clientSide/idb/dbConfig";
 import { IIndexedDBManager } from "@/interfaces/clientSide/repositories/managers/IIndexedDBManager";
 import { z } from "zod";
@@ -22,8 +22,7 @@ type BackupData = {
     [K in keyof MyIDB]?: StoreSchema<K>[];
 };
 
-type StoreIndexes<K extends keyof MyIDB> = keyof MyIDB[K]["indexes"];
-
+// type StoreIndexes<K extends keyof MyIDB> = keyof MyIDB[K]["indexes"];
 
 export class IndexedDBManager implements IIndexedDBManager {
     private static instance: IndexedDBManager;
@@ -65,6 +64,8 @@ export class IndexedDBManager implements IIndexedDBManager {
                                     type StoreValue = z.infer<typeof storeConfig.schema>;
                                     // 型アサーションを使用
                                     const typedIndex = index as IndexConfig<StoreValue>;
+                                    // const indexName = typedIndex.name.replace(/^by/, "") as IDBValidKey;
+                                    // TODO
                                     store.createIndex(typedIndex.name, typedIndex.keyPath, typedIndex.options);
                                 });
                             }
@@ -205,15 +206,25 @@ export class IndexedDBManager implements IIndexedDBManager {
         await idb.clear(storeName);
     }
 
-    public async getAllFromIndex<K extends IdbObjectStoreName, I extends StoreIndexes<K>>(
-        storeName: K,
-        indexName: I,
-        query: IDBKeyRange | IDBValidKey | null | undefined
-    ): Promise<MyIDB[K]["value"][]> {
-        const idb = await this.getDB();
-        const typedIndexName = indexName as keyof MyIDB[K][""]
-        return idb.getAllFromIndex(storeName, indexName as string, query);
-    }
+    // TODO
+    // public async getAllFromIndex<K extends IdbObjectStoreName & string>(
+    //     storeName: K,
+    //     indexName: MyIDB[K]["indexes"][number]["name"],
+    //     query?: IDBKeyRange | string | MyIDB[K]["key"] | null,
+    //     count?: number
+    // ): Promise<MyIDB[K]["value"][]> {
+    //     const idb = await this.getDB();
+
+    //     const storeIndexes = IDB_OBJECT_STORE_CONFIGS.find(
+    //         (storeConfig) => storeConfig.name === storeName
+    //     )?.indexes;
+    //     if (!storeIndexes) {
+    //         throw new Error(`Indexes not found for store: ${storeName}`);
+    //     }
+
+    //     return idb.getAllFromIndex(storeName, indexName, query, count);
+    // }
+
 
     public async getMultiple<K extends IdbObjectStoreName>(
         storeName: K,

@@ -19,12 +19,13 @@ export const IDB_OBJECT_STORES = {
 // union type of the list; IDB_OBJECT_STORES
 export type IdbObjectStoreName = typeof IDB_OBJECT_STORES[keyof typeof IDB_OBJECT_STORES];
 
+export type IndexName<T> = T extends string ? `by-${T}`: never;
 // TODO
 export interface IndexConfig<
     Value,
     Index extends keyof Value | string = keyof Value | string,
 > {
-    name: `by-${string & Index}`;
+    name: IndexName<Index & string>;
     keyPath: Index;
     options?: IDBIndexParameters;
 }
