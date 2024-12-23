@@ -14,10 +14,11 @@ import { DB_NAME, DB_VERSION } from "@/constants/clientSide/idb/dbConfig";
 import { IIndexedDBManager } from "@/interfaces/clientSide/repositories/managers/IIndexedDBManager";
 // import { BackUpData } from "@/constants/clientSide/idb/idbGenerator";
 
-// ヘルパータイプ: ストアごとのインデックス設定
+// TODO 責任分離モデル設計・適切に配置
+// ブロックが長くて探すのめんどかったのでいったん外に出した
 function createIndexes<K extends IdbObjectStoreName>(
     store: IDBPObjectStore<MyIDB, readonly [K], K, "versionchange">,
-    indexes: IndexConfig<MyIDB[K]["value"]>[] // 修正
+    indexes: IndexConfig<MyIDB[K]["value"]>[]
 ) {
     indexes.forEach((index) => {
         const keyPath = index.keyPath as string | string[];

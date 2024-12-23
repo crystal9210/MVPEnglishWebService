@@ -27,7 +27,7 @@ type GenerateStoreValueMap<T extends readonly { name: string; schema: z.ZodTypeA
 // 各オブジェクトストアの型定義を動的生成
 type StoreValueMap = GenerateStoreValueMap<typeof IDB_OBJECT_STORE_CONFIGS>;
 
-type IndexesToObject<Indexes extends readonly IndexConfig<any>[]> = {
+type IndexesToObject<Value, Indexes extends readonly IndexConfig<Value>[]> = {
     [I in Indexes[number]["name"]]: {
         keyPath: Extract<Indexes[number], { name: I }>["keyPath"];
         options?: Extract<Indexes[number], { name: I }>["options"];
@@ -49,11 +49,10 @@ export type DynamicObjectStoreTypes<
         key: GetKeyType<Configs, K>;
         value: StoreValueMap[K];
         // idbの仕様からkeyPathのみの構成とする >> idbの公式の方インターフェースファイルモジュール情報参照
-        indexes: IndexesToObject<Extract<Configs[number], { name: K }>["indexes"]>;
+        indexes: IndexesToObject<StoreValueMap[K] ,Extract<Configs[number], { name: K }>["indexes"]>;
     }
 };
 
-// オブジェクトストア型定義
 export type MyIDB = DynamicObjectStoreTypes<typeof IDB_OBJECT_STORE_CONFIGS>;
 
 type MemoIndexes = MyIDB["memoList"]["indexes"];
