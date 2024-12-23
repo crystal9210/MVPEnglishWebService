@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { DBSchema } from "idb";
-import { IDB_OBJECT_STORE_CONFIGS, IdbObjectStoreName } from "./objectStores";
+import { IDB_OBJECT_STORE_CONFIGS, IdbObjectStoreName, IndexConfig } from "./objectStores";
 
 
 type GetKeyType<
@@ -26,21 +26,24 @@ export type DynamicObjectStoreTypes<
         schema: z.ZodTypeAny;
         options: { keyPath: string | string[] };
         firestorePath: string;
+        indexes: IndexConfig<z.infer<Configs[number]["schema"]>>[];
     }[]
 > = {
     [K in Configs[number]["name"]]: {
-        key: GetKeyType<Configs, Extract<K, IdbObjectStoreName>>;
-        value: StoreValueMap[Extract<K, IdbObjectStoreName>];
+        key: GetKeyType<Configs, K>;
+        value: StoreValueMap[K];
+        indexes: Extract<Configs[number], { name: K }>["indexes"];
     }
 };
 
 // オブジェクトストア型定義
 export type MyIDB = DBSchema & DynamicObjectStoreTypes<typeof IDB_OBJECT_STORE_CONFIGS>;
 
+type TestIndexes = MyIDB["memoList"]["indexes"];
 
 
-// type MemoKey = MyIDB["memoList"]["key"]; // 推論: "id"
-// type MemoValue = MyIDB["memoList"]["value"]; // 推論: z.infer<typeof MemoSchema>
+type MemoKey = MyIDB["memoList"]["key"]; // 推論: "id"
+type MemoValue = MyIDB["memoList"]["value"]; // 推論: z.infer<typeof MemoSchema>
 
 
 // // テスト: GetKeyTypeで正しい型が推論されるか確認

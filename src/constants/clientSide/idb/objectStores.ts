@@ -22,7 +22,7 @@ export type IdbObjectStoreName = typeof IDB_OBJECT_STORES[keyof typeof IDB_OBJEC
 // TODO
 export interface IndexConfig<
     Value,
-    Index extends PropertyKey = keyof Value,
+    Index extends keyof Value | string = keyof Value | string,
 > {
     name: `by-${string & Index}`;
     keyPath: Index;
@@ -34,8 +34,7 @@ export type ObjectStoreConfig<
     ItemSchema extends z.ZodTypeAny,
     FirestorePath extends string, // TODO 適当にセット取ってくる
     KeyType extends string | string[], // TODO 厳密化
-    Index extends Record<string, ItemSchema> = Record<string, ItemSchema>,
-    Indexes extends IndexConfig<ItemSchema, keyof Index>[] = IndexConfig<ItemSchema, keyof Index>[]
+    Indexes extends IndexConfig<z.infer<ItemSchema>>[] = IndexConfig<z.infer<ItemSchema>>[]
 > = {
     name: StoreName;
     schema: ItemSchema
@@ -54,11 +53,11 @@ export const IDB_OBJECT_STORE_CONFIGS = [
         indexes: [
             {
                 name: "by-createdAt",
-                keyPath: "createdAt"
+                keyPath: "createdAt",
             },
             {
                 name: "by-lastUpdatedAt", // メモを最終更新日時でソート・フィルタリングすることを想定
-                keyPath: "lastUpdatedAt"
+                keyPath: "lastUpdatedAt",
             },
             {
                 name: "by-tags",
@@ -75,7 +74,7 @@ export const IDB_OBJECT_STORE_CONFIGS = [
         indexes: [
             {
                 name: "by-deletedAt",
-                keyPath: "deletedAt"
+                keyPath: "deletedAt",
             }
         ]
     } satisfies ObjectStoreConfig<"trashedMemoList", typeof MemoSchema, "trashedMemos", "id">,
@@ -85,9 +84,9 @@ export const IDB_OBJECT_STORE_CONFIGS = [
         schema: ClientActivitySessionSchema,
         options: { keyPath: "sessionId" },
         indexes: [
-            { name: "by-startedAt", keyPath: "startedAt", options: { unique: false } },
-            { name: "by-endedAt", keyPath: "endedAt", options: { unique: false } },
-        ],
+            { name: "by-startedAt", keyPath: "startedAt" },
+            { name: "by-endedAt", keyPath: "endedAt" },
+        ]
     } satisfies ObjectStoreConfig<"activitySessions", typeof ClientActivitySessionSchema, "activity_sessions", "sessionId">,
     {
         name: "history" as const,
@@ -99,8 +98,11 @@ export const IDB_OBJECT_STORE_CONFIGS = [
         }),
         options: { keyPath: "id" },
         indexes: [
-            { name: "by-sessionId", keyPath: "sessionId" }, // セッションIDで検索・フィルタリングすることを想定
-        ],
+            {
+                name: "by-sessionId",
+                keyPath: "sessionId",
+            }, // セッションIDで検索・フィルタリングすることを想定
+        ]
     } satisfies ObjectStoreConfig<"history", z.ZodObject<{
         id: z.ZodOptional<z.ZodNumber>;
         sessionId: z.ZodString;

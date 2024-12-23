@@ -22,6 +22,9 @@ type BackupData = {
     [K in keyof MyIDB]?: StoreSchema<K>[];
 };
 
+type StoreIndexes<K extends keyof MyIDB> = keyof MyIDB[K]["indexes"];
+
+
 export class IndexedDBManager implements IIndexedDBManager {
     private static instance: IndexedDBManager;
     private dbPromise: Promise<IDBPDatabase<MyIDB>>; // 非同期にindexedDBを開きデータベース接続管理
@@ -101,7 +104,7 @@ export class IndexedDBManager implements IIndexedDBManager {
         try {
             const idb = await openDB<MyIDB>(DB_NAME, DB_VERSION);
 
-            // 各オブジェクトストアのデータをバックアップ
+            // 各オブジェクトストアのデータバックアップ
             for (const storeConfig of IDB_OBJECT_STORE_CONFIGS) {
                 const storeName = storeConfig.name as keyof MyIDB;
                 const storeData = await idb.getAll<StoreSchema<typeof storeName>>(storeName);
@@ -115,7 +118,7 @@ export class IndexedDBManager implements IIndexedDBManager {
             for (const storeName of Object.keys(backupData) as IdbObjectStoreName[]) {
                 const data = backupData[storeName] || [];
                 for (const item of data) {
-                    await this.put(storeName, item); // 既存のputメソッドを利用
+                    await this.put(storeName, item);
                 }
             }
 
@@ -202,12 +205,13 @@ export class IndexedDBManager implements IIndexedDBManager {
         await idb.clear(storeName);
     }
 
-    public async getAllFromIndex<K extends IdbObjectStoreName, I extends keyof MyIDB[K]["indexes"]>(
+    public async getAllFromIndex<K extends IdbObjectStoreName, I extends StoreIndexes<K>>(
         storeName: K,
         indexName: I,
-        query: IDBKeyRange | (string extends keyof MyIDB[K]["indexes"] ? MyIDB[K]["indexes"][keyof MyIDB[K]["indexes"] & string] : IDBValidKey) | null | undefined
+        query: IDBKeyRange | IDBValidKey | null | undefined
     ): Promise<MyIDB[K]["value"][]> {
         const idb = await this.getDB();
+        const typedIndexName = indexName as keyof MyIDB[K][""]
         return idb.getAllFromIndex(storeName, indexName as string, query);
     }
 
