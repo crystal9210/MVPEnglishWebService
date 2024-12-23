@@ -53,15 +53,15 @@ export const IDB_OBJECT_STORE_CONFIGS = [
         options: { keyPath: "id" },
         indexes: [
             {
-                name: "by-createdAt",
+                name: "by-createdAt" as const,
                 keyPath: "createdAt",
             },
             {
-                name: "by-lastUpdatedAt", // メモを最終更新日時でソート・フィルタリングすることを想定
+                name: "by-lastUpdatedAt" as const, // メモを最終更新日時でソート・フィルタリングすることを想定
                 keyPath: "lastUpdatedAt",
             },
             {
-                name: "by-tags",
+                name: "by-tags" as const,
                 keyPath: "tags",
                 options: { multiEntry: true }
             }
@@ -74,7 +74,7 @@ export const IDB_OBJECT_STORE_CONFIGS = [
         options: { keyPath: "id" },
         indexes: [
             {
-                name: "by-deletedAt",
+                name: "by-deletedAt" as const,
                 keyPath: "deletedAt",
             }
         ]
@@ -85,8 +85,8 @@ export const IDB_OBJECT_STORE_CONFIGS = [
         schema: ClientActivitySessionSchema,
         options: { keyPath: "sessionId" },
         indexes: [
-            { name: "by-startedAt", keyPath: "startedAt" },
-            { name: "by-endedAt", keyPath: "endedAt" },
+            { name: "by-startedAt" as const, keyPath: "startedAt" },
+            { name: "by-endedAt" as const, keyPath: "endedAt" },
         ]
     } satisfies ObjectStoreConfig<"activitySessions", typeof ClientActivitySessionSchema, "activity_sessions", "sessionId">,
     {
@@ -100,7 +100,7 @@ export const IDB_OBJECT_STORE_CONFIGS = [
         options: { keyPath: "id" },
         indexes: [
             {
-                name: "by-sessionId",
+                name: "by-sessionId" as const,
                 keyPath: "sessionId",
             }, // セッションIDで検索・フィルタリングすることを想定
         ]

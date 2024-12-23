@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { DBSchema } from "idb";
+// import { DBSchema } from "idb";
 import { IDB_OBJECT_STORE_CONFIGS, IdbObjectStoreName, IndexConfig } from "./objectStores";
 
 
@@ -27,6 +27,13 @@ type GenerateStoreValueMap<T extends readonly { name: string; schema: z.ZodTypeA
 // 各オブジェクトストアの型定義を動的生成
 type StoreValueMap = GenerateStoreValueMap<typeof IDB_OBJECT_STORE_CONFIGS>;
 
+type IndexesToObject<Indexes extends readonly IndexConfig<any>[]> = {
+    [I in Indexes[number]["name"]]: {
+        keyPath: Extract<Indexes[number], { name: I }>["keyPath"];
+        options?: Extract<Indexes[number], { name: I }>["options"];
+    };
+};
+
 
 // 動的型定義の最終構造
 export type DynamicObjectStoreTypes<
@@ -42,14 +49,12 @@ export type DynamicObjectStoreTypes<
         key: GetKeyType<Configs, K>;
         value: StoreValueMap[K];
         // idbの仕様からkeyPathのみの構成とする >> idbの公式の方インターフェースファイルモジュール情報参照
-        indexes: {
-            [I in Extract<Extract<Configs[number], { name: K }>["indexes"][number]["name"], string>]: Extract<Extract<Configs[number], { name: K }>["indexes"][number], { name: I }>["keyPath"];
-        };
+        indexes: IndexesToObject<Extract<Configs[number], { name: K }>["indexes"]>;
     }
 };
 
 // オブジェクトストア型定義
-export type MyIDB = DBSchema & DynamicObjectStoreTypes<typeof IDB_OBJECT_STORE_CONFIGS>;
+export type MyIDB = DynamicObjectStoreTypes<typeof IDB_OBJECT_STORE_CONFIGS>;
 
 type MemoIndexes = MyIDB["memoList"]["indexes"];
 type ActivityIndexes = MyIDB["activitySessions"]["indexes"];

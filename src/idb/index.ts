@@ -13,7 +13,17 @@ import { IDB_OBJECT_STORE_CONFIGS, IdbObjectStoreName, IndexConfig } from "@/con
 import { DB_NAME, DB_VERSION } from "@/constants/clientSide/idb/dbConfig";
 import { IIndexedDBManager } from "@/interfaces/clientSide/repositories/managers/IIndexedDBManager";
 // import { BackUpData } from "@/constants/clientSide/idb/idbGenerator";
-import { z } from "zod";
+
+// ヘルパータイプ: ストアごとのインデックス設定
+function createIndexes<K extends IdbObjectStoreName>(
+    store: IDBPObjectStore<MyIDB, readonly [K], K, "versionchange">,
+    indexes: IndexConfig<MyIDB[K]["value"]>[] // 修正
+) {
+    indexes.forEach((index) => {
+        const keyPath = index.keyPath as string | string[];
+        store.createIndex(index.name, keyPath, index.options);
+    });
+}
 
 
 export class IndexedDBManager implements IIndexedDBManager {
@@ -35,15 +45,15 @@ export class IndexedDBManager implements IIndexedDBManager {
         let attempts = 0;
         const maxRetries = 3;
 
-        function createIndexes<K extends IdbObjectStoreName>(
-            store: IDBPObjectStore<MyIDB, K, MyIDB[K]["key"], "versionchange">,
-            indexes: IndexConfig<z.infer<MyIDB[K]["value"]>>[]
-        ) {
-            indexes.forEach((index) => {
-                const keyPath = index.keyPath as string | string[];
-                store.createIndex(index.name, keyPath, index.options);
-            });
-        }
+        // function createIndexes<K extends IdbObjectStoreName>(
+        //     store: IDBPObjectStore<MyIDB, K, MyIDB[K]["key"], "versionchange">,
+        //     indexes: IndexConfig<MyIDB[K]["indexes"]>[]
+        // ) {
+        //     indexes.forEach((index) => {
+        //         const keyPath = index.keyPath as string | string[];
+        //         store.createIndex(index.keyPath, keyPath, index.options);
+        //     });
+        // }
 
         while (attempts < maxRetries) {
             try {
@@ -57,19 +67,26 @@ export class IndexedDBManager implements IIndexedDBManager {
                                 // storeConfig.indexes?.forEach((index: IndexConfig<MyIDB[K][]>) => {
                                 //     store.createIndex(index.name, index.keyPath, index.options);
                                 // });
-                                storeConfig.indexes?.forEach((index) => {
-                                    // ジェネリクスにストアの値の型を渡すための型アサーション (仮)
-                                    // ここでは storeConfig.schema を基にした型推論が必要
-                                    // しかし、TypeScript の制約上、直接的な型推論が難しいため、
-                                    // ストアの値の型を明示的に指定する必要がある
-                                    // ストアの値の型を取得
-                                    type StoreValue = z.infer<typeof storeConfig.schema>;
-                                    // 型アサーションを使用
-                                    const typedIndex = index as IndexConfig<StoreValue>;
-                                    // const indexName = typedIndex.name.replace(/^by/, "") as IDBValidKey;
-                                    // TODO
-                                    createIndexes(store, [index]);
-                                });
+                                createIndexes(
+                                    store as IDBPObjectStore<MyIDB, readonly [typeof storeConfig.name], typeof storeConfig.name, "versionchange">,
+                                    storeConfig.indexes // IndexConfig 配列を渡す
+                                );
+                                // storeConfig.indexes?.forEach((index) => {
+                                //     // ジェネリクスにストアの値の型を渡すための型アサーション (仮)
+                                //     // ここでは storeConfig.schema を基にした型推論が必要
+                                //     // しかし、TypeScript の制約上、直接的な型推論が難しいため、
+                                //     // ストアの値の型を明示的に指定する必要がある
+                                //     // ストアの値の型を取得
+                                //     // type StoreValue = z.infer<typeof storeConfig.schema>;
+                                //     // 型アサーションを使用
+                                //     // const typedIndex = index as IndexConfig<StoreValue>;
+                                //     // const indexName = typedIndex.name.replace(/^by/, "") as IDBValidKey;
+                                //     // TODO
+                                //     createIndexes(
+                                //         store as IDBPObjectStore<MyIDB, readonly [typeof storeConfig.name], typeof storeConfig.name, "versionchange">,
+                                //         storeConfig.indexes // IndexConfig 配列を渡す
+                                //     );
+                                // });
                             }
                         });
                     },
