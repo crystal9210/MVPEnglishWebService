@@ -6,7 +6,7 @@ import { useMemoContext } from "@/app/_contexts/MemoContext";
 import MemoModal from "./MemoModal";
 
 const MemoButton: React.FC = () => {
-  const { memos, deleteMemo } = useMemoContext();
+  const { memoList, deleteMemo } = useMemoContext();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingMemo, setEditingMemo] = useState<{ id: string; content: string } | undefined>(undefined);
   const [isVisible, setIsVisible] = useState(false);
@@ -52,11 +52,11 @@ const MemoButton: React.FC = () => {
                 <PlusIcon className="h-5 w-5" />
               </button>
             </div>
-            {memos.length === 0 ? (
+            {memoList.length === 0 ? (
               <p className="text-gray-500">メモがありません。</p>
             ) : (
               <ul className="space-y-2">
-                {memos.map(memo => (
+                {memoList.map(memo => (
                   <li key={memo.id} className="border-b pb-2">
                     <div className="flex justify-between items-start">
                       <p className="text-gray-700">{memo.content}</p>

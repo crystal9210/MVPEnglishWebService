@@ -3,6 +3,15 @@ import { DBSchema } from "idb";
 import { IDB_OBJECT_STORE_CONFIGS, IdbObjectStoreName, IndexConfig } from "./objectStores";
 
 
+
+type StoreSchema<K extends keyof MyIDB> = MyIDB[K]["value"];
+
+export type BackUpData = {
+    [K in keyof MyIDB]?: StoreSchema<K>[];
+};
+
+
+
 type GetKeyType<
     Configs extends readonly { name: IdbObjectStoreName; options: { keyPath: string | string[] } }[],
     Name extends IdbObjectStoreName
@@ -32,14 +41,18 @@ export type DynamicObjectStoreTypes<
     [K in Configs[number]["name"]]: {
         key: GetKeyType<Configs, K>;
         value: StoreValueMap[K];
-        indexes: Extract<Configs[number], { name: K }>["indexes"];
+        // idbの仕様からkeyPathのみの構成とする >> idbの公式の方インターフェースファイルモジュール情報参照
+        indexes: {
+            [I in Extract<Extract<Configs[number], { name: K }>["indexes"][number]["name"], string>]: Extract<Extract<Configs[number], { name: K }>["indexes"][number], { name: I }>["keyPath"];
+        };
     }
 };
 
 // オブジェクトストア型定義
 export type MyIDB = DBSchema & DynamicObjectStoreTypes<typeof IDB_OBJECT_STORE_CONFIGS>;
 
-type TestIndexes = MyIDB["memoList"]["indexes"];
+type MemoIndexes = MyIDB["memoList"]["indexes"];
+type ActivityIndexes = MyIDB["activitySessions"]["indexes"];
 
 
 type MemoKey = MyIDB["memoList"]["key"]; // 推論: "id"

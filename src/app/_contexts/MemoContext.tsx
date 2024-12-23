@@ -6,6 +6,7 @@ import { IMemoContext } from "@/interfaces/clientSide/memo/IMemoContext";
 import { MyIDB } from "@/interfaces/clientSide/memo/idb";
 import { MemoManager } from "../_components/memo/memoManager";
 import { openDB, IDBPDatabase } from "idb";
+import { IDB_OBJECT_STORE_CONFIGS, IDB_OBJECT_STORES } from "@/constants/clientSide/idb/objectStores";
 // import { useAuth } from "@/components/AuthProvider";
 
 
@@ -14,7 +15,7 @@ const initDB = async (): Promise<IDBPDatabase<MyIDB>> => {
     upgrade(db) {
       // すでにクライアントサイドに存在している場合のハンドリング
       // - アップデート処理・そもそもアップデート部分がなければ処理を回避、など
-      const memoStore = db.createObjectStore("memoList", { keyPath: "id" });
+      const memoStore = db.createObjectStore(IDB_OBJECT_STORE_CONFIGS[0].name, { keyPath: "id" });
       memoStore.createIndex("by-createdAt", "createdAt");
       memoStore.createIndex("by-tags", "tags", { multiEntry: true });
 
@@ -25,7 +26,6 @@ const initDB = async (): Promise<IDBPDatabase<MyIDB>> => {
 }
 
 // メモコンテキスト作成
-// TODO undefinedの扱い - 本当にこの初期化でいいか - 脅威モデル
 const MemoContext = createContext<IMemoContext | undefined>(undefined);
 
 // メモプロバイダーコンポーネント
@@ -44,30 +44,32 @@ export const MemoProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // メモの更新時にローカルストレージに保存
   useEffect(() => {
-    localStorage.setItem("memos", JSON.stringify(memos));
-  }, [memos]);
+    localStorage.setItem("memoList", JSON.stringify(memoList));
+  }, [memoList]);
 
   const addMemo = (content: string) => {
     const newMemo: Memo = { id: Date.now().toString(), content };
-    setMemos([...memos, newMemo]);
+    setMemoList([...memoList, newMemo]);
   };
 
   const editMemo = (id: string, content: string) => {
-    setMemos(memos.map(memo => (memo.id === id ? { ...memo, content } : memo)));
+    setMemoList(memoList.map(memo => (memo.id === id ? { ...memo, content } : memo)));
   };
 
   const deleteMemo = (id: string) => {
-    setMemos(memos.filter(memo => memo.id !== id));
+    setMemoList(memoList.filter(memo => memo.id !== id));
   };
 
   return (
-    <MemoContext.Provider value={{ memos, addMemo, editMemo, deleteMemo }}>
+    <MemoContext.Provider value={{ memoList, addMemo, editMemo, deleteMemo }}>
       {children}
     </MemoContext.Provider>
   );
 };
 
-// カスタムフック
+/**
+ * custom hook of the contexts for "memo" function.
+ */
 export const useMemoContext = () => {
   const context = useContext(MemoContext);
   if (!context) {

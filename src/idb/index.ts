@@ -7,22 +7,14 @@
 // TODO オブジェクト名に応じてキー(プライマリキー;主キー)が正確に取得でき、それによりアクセスパスを取得し、かつidとなる情報からデータの整合性等を保証できる
 // >> 上記の要件を満たすことで正確にデータアクセス(CRUD)が可能
 
-import { openDB, IDBPDatabase, IDBPTransaction } from "idb";
+import { openDB, IDBPDatabase, IDBPTransaction, IDBPObjectStore } from "idb";
 import { MyIDB } from "@/constants/clientSide/idb/idbGenerator";
 import { IDB_OBJECT_STORE_CONFIGS, IdbObjectStoreName, IndexConfig } from "@/constants/clientSide/idb/objectStores";
 import { DB_NAME, DB_VERSION } from "@/constants/clientSide/idb/dbConfig";
 import { IIndexedDBManager } from "@/interfaces/clientSide/repositories/managers/IIndexedDBManager";
+// import { BackUpData } from "@/constants/clientSide/idb/idbGenerator";
 import { z } from "zod";
 
-// 各オブジェクトストアのデータを型安全に保持
-type StoreSchema<K extends keyof MyIDB> = MyIDB[K]["value"];
-
-// BackupData 型を MyIDB から動的に構築
-type BackupData = {
-    [K in keyof MyIDB]?: StoreSchema<K>[];
-};
-
-// type StoreIndexes<K extends keyof MyIDB> = keyof MyIDB[K]["indexes"];
 
 export class IndexedDBManager implements IIndexedDBManager {
     private static instance: IndexedDBManager;
@@ -42,6 +34,16 @@ export class IndexedDBManager implements IIndexedDBManager {
     private async initializeDB(): Promise<IDBPDatabase<MyIDB>> {
         let attempts = 0;
         const maxRetries = 3;
+
+        function createIndexes<K extends IdbObjectStoreName>(
+            store: IDBPObjectStore<MyIDB, K, MyIDB[K]["key"], "versionchange">,
+            indexes: IndexConfig<z.infer<MyIDB[K]["value"]>>[]
+        ) {
+            indexes.forEach((index) => {
+                const keyPath = index.keyPath as string | string[];
+                store.createIndex(index.name, keyPath, index.options);
+            });
+        }
 
         while (attempts < maxRetries) {
             try {
@@ -66,7 +68,7 @@ export class IndexedDBManager implements IIndexedDBManager {
                                     const typedIndex = index as IndexConfig<StoreValue>;
                                     // const indexName = typedIndex.name.replace(/^by/, "") as IDBValidKey;
                                     // TODO
-                                    store.createIndex(typedIndex.name, typedIndex.keyPath, typedIndex.options);
+                                    createIndexes(store, [index]);
                                 });
                             }
                         });
