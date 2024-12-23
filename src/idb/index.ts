@@ -12,7 +12,7 @@ import { MyIDB } from "@/constants/clientSide/idb/idbGenerator";
 import { IDB_OBJECT_STORE_CONFIGS, IdbObjectStoreName, IndexConfig } from "@/constants/clientSide/idb/objectStores";
 import { DB_NAME, DB_VERSION } from "@/constants/clientSide/idb/dbConfig";
 import { IIndexedDBManager } from "@/interfaces/clientSide/repositories/managers/IIndexedDBManager";
-// import { BackUpData } from "@/constants/clientSide/idb/idbGenerator";
+import { BackUpData } from "@/constants/clientSide/idb/idbGenerator";
 
 // TODO 責任分離モデル設計・適切に配置
 // ブロックが長くて探すのめんどかったのでいったん外に出した
@@ -120,7 +120,7 @@ export class IndexedDBManager implements IIndexedDBManager {
 
     // データベースのバックアップとリカバリ処理
     private async backupAndRecover(): Promise<void> {
-        const backupData: BackupData = {};
+        const backupData: BackUpData = {};
 
         try {
             const idb = await openDB<MyIDB>(DB_NAME, DB_VERSION);

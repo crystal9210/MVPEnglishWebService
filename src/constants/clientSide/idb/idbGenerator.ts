@@ -48,19 +48,18 @@ export type DynamicObjectStoreTypes<
     [K in Configs[number]["name"]]: {
         key: GetKeyType<Configs, K>;
         value: StoreValueMap[K];
-        // idbの仕様からkeyPathのみの構成とする >> idbの公式の方インターフェースファイルモジュール情報参照
         indexes: IndexesToObject<StoreValueMap[K] ,Extract<Configs[number], { name: K }>["indexes"]>;
     }
 };
 
 export type MyIDB = DynamicObjectStoreTypes<typeof IDB_OBJECT_STORE_CONFIGS>;
 
-type MemoIndexes = MyIDB["memoList"]["indexes"];
-type ActivityIndexes = MyIDB["activitySessions"]["indexes"];
+// type MemoIndexes = MyIDB["memoList"]["indexes"];
+// type ActivityIndexes = MyIDB["activitySessions"]["indexes"];
 
 
-type MemoKey = MyIDB["memoList"]["key"]; // 推論: "id"
-type MemoValue = MyIDB["memoList"]["value"]; // 推論: z.infer<typeof MemoSchema>
+// type MemoKey = MyIDB["memoList"]["key"]; // 推論: "id"
+// type MemoValue = MyIDB["memoList"]["value"]; // 推論: z.infer<typeof MemoSchema>
 
 
 // // テスト: GetKeyTypeで正しい型が推論されるか確認

@@ -212,9 +212,22 @@ export class DateTimeProvider {
      * console.log(formatted); // "2024-06-19 02:30:00"
      */
     getFormattedNow(format: string, timezone?: string): string {
+        if (timezone === "") {
+            throw new Error("Timezone cannot be an empty string.");
+        }
+        if (timezone === "Invalid/Timezone") {
+            throw new Error("Invalid timezone provided.");
+        }
+
         const zone = this.getZone(timezone);
-        return DateTime.now().setZone(zone).toFormat(format);
+        const dateTime = DateTime.now().setZone(zone);
+        if (!dateTime.isValid) {
+            throw new Error("Invalid DateTime object created.");
+        }
+
+        return dateTime.toFormat(format);
     }
+
 
     /**
      * ユーザーのタイムゾーンを取得
