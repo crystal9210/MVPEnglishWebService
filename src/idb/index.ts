@@ -7,16 +7,19 @@
 // TODO オブジェクト名に応じてキー(プライマリキー;主キー)が正確に取得でき、それによりアクセスパスを取得し、かつidとなる情報からデータの整合性等を保証できる
 // >> 上記の要件を満たすことで正確にデータアクセス(CRUD)が可能
 
-import { openDB, IDBPDatabase, IDBPTransaction } from "idb";
+import { openDB, IDBPDatabase, IDBPTransaction, StoreValue } from "idb";
 import { MyIDB } from "@/constants/clientSide/idb/idbGenerator";
-import { IDB_OBJECT_STORE_CONFIGS, IdbObjectStoreName, IndexConfig } from "@/constants/clientSide/idb/objectStores";
+import { IDB_OBJECT_STORE_CONFIGS, IdbObjectStoreConfigs, IdbObjectStoreName, IndexConfig } from "@/constants/clientSide/idb/objectStores";
 import { DB_NAME, DB_VERSION } from "@/constants/clientSide/idb/dbConfig";
 import { IIndexedDBManager } from "@/interfaces/clientSide/repositories/managers/IIndexedDBManager";
 import { z } from "zod";
 
 // 各オブジェクトストアのデータを型安全に保持
+type StoreSchema<K extends keyof MyIDB> = MyIDB[K]["value"];
+
+// BackupData 型を MyIDB から動的に構築
 type BackupData = {
-    [K in IdbObjectStoreName]?: MyIDB[K]["value"][];
+    [K in keyof MyIDB]?: StoreSchema<K>[];
 };
 
 export class IndexedDBManager implements IIndexedDBManager {
@@ -47,7 +50,7 @@ export class IndexedDBManager implements IIndexedDBManager {
                         IDB_OBJECT_STORE_CONFIGS.forEach((storeConfig) => {
                             if (!idb.objectStoreNames.contains(storeConfig.name)) {
                                 const store = idb.createObjectStore(storeConfig.name, storeConfig.options);
-                                // storeConfig.indexes?.forEach((index: IndexConfig<storeConfig.schema>) => {
+                                // storeConfig.indexes?.forEach((index: IndexConfig<MyIDB[K][]>) => {
                                 //     store.createIndex(index.name, index.keyPath, index.options);
                                 // });
                                 storeConfig.indexes?.forEach((index) => {
@@ -65,25 +68,28 @@ export class IndexedDBManager implements IIndexedDBManager {
                         });
                     },
                 });
-            } catch (error) {
-                console.error(`Failed to open IndexedDB: ${error}`);
-                attempts++;
+            } catch (error: unknown) {
+                if (error instanceof Error) {
+                    console.error(`Failed to open IndexedDB: ${error}`);
+                    attempts++;
 
-                // 通信エラーの場合は再試行
-                if (this.isTemporaryError(error)) {
-                    console.warn("Detected temporary error. Retrying...");
-                    await this.sleep(2000);
-                    continue;
-                }
+                    // 通信エラーの場合は再試行
+                    if (this.isTemporaryError(error)) {
+                        console.warn("Detected temporary error. Retrying...");
+                        await this.sleep(2000);
+                        continue;
+                    }
 
-                if (attempts < maxRetries) {
-                    console.warn("Attempting to backup data and delete corrupted database...");
-                    await this.backupAndRecover();
-                } else {
-                    console.error("Max retries exceeded. Unable to open IndexedDB.");
-                    throw new Error("Database initialization failed after multiple attempts.");
+                    if (attempts < maxRetries) {
+                        console.warn("Attempting to backup data and delete corrupted database...");
+                        await this.backupAndRecover();
+                    } else {
+                        console.error("Max retries exceeded. Unable to open IndexedDB.");
+                        throw new Error("Database initialization failed after multiple attempts.");
+                    }
                 }
             }
+            throw new Error("Unexpected error during database initialization.");
         }
         throw new Error("Unexpected error during database initialization.");
     }
@@ -97,8 +103,8 @@ export class IndexedDBManager implements IIndexedDBManager {
 
             // 各オブジェクトストアのデータをバックアップ
             for (const storeConfig of IDB_OBJECT_STORE_CONFIGS) {
-                const storeName = storeConfig.name as IdbObjectStoreName;
-                const storeData = await idb.getAll(storeName);
+                const storeName = storeConfig.name as keyof MyIDB;
+                const storeData = await idb.getAll<StoreSchema<typeof storeName>>(storeName);
                 backupData[storeName] = storeData;
             }
 
