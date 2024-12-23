@@ -1,4 +1,3 @@
-// src/handlers/authHandler.ts
 import "@/containers/diContainer";
 import { NextAuthConfig } from "next-auth";
 import GoogleProvider from "@auth/core/providers/google"; // `@auth/core/providers` からインポート
