@@ -7,7 +7,7 @@
 // TODO オブジェクト名に応じてキー(プライマリキー;主キー)が正確に取得でき、それによりアクセスパスを取得し、かつidとなる情報からデータの整合性等を保証できる
 // >> 上記の要件を満たすことで正確にデータアクセス(CRUD)が可能
 
-import { openDB, IDBPDatabase, IDBPTransaction, IDBPObjectStore } from "idb";
+import { openDB, IDBPDatabase, IDBPTransaction, IDBPObjectStore, StoreNames } from "idb";
 import { MyIDB } from "@/constants/clientSide/idb/idbGenerator";
 import { IDB_OBJECT_STORE_CONFIGS, IdbObjectStoreName, IndexConfig } from "@/constants/clientSide/idb/objectStores";
 import { DB_NAME, DB_VERSION } from "@/constants/clientSide/idb/dbConfig";
@@ -118,26 +118,31 @@ export class IndexedDBManager implements IIndexedDBManager {
 
     // データベースのバックアップとリカバリ処理
     private async backupAndRecover(): Promise<void> {
-        const backupData: BackUpData = {};
+
+        const backupData: {
+            [K in keyof MyIDB]?: MyIDB[K]["value"][];
+        } = {};
 
         try {
             const idb = await openDB<MyIDB>(DB_NAME, DB_VERSION);
 
-            // 各オブジェクトストアのデータバックアップ
+            // backup process
             for (const storeConfig of IDB_OBJECT_STORE_CONFIGS) {
                 const storeName = storeConfig.name as IdbObjectStoreName;
-                const storeData = await idb.getAll<MyIDB[typeof storeName]["value"]>(storeName);
-                backupData[storeName] = storeData as MyIDB[typeof storeName]["value"][];
+                const storeData = await idb.getAll(storeName);
+                backupData[storeName] = storeData;
             }
 
             console.log("Backup successful. Deleting corrupted database...");
             await this.deleteDatabase();
 
             console.log("Restoring data from backup...");
-            for (const storeName of Object.keys(backupData) as IdbObjectStoreName[]) {
-                const data = backupData[storeName] as MyIDB[typeof storeName]["value"][];
-                for (const item of data) {
-                    await this.put(storeName, item);
+            for (const storeName of Object.keys(backupData) as Array<keyof MyIDB>) {
+                const data = backupData[storeName];
+                if (data) {
+                    for (const item of data) {
+                        await this.put(storeName, item);
+                    }
                 }
             }
 

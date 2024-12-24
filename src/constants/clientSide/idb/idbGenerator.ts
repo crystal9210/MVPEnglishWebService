@@ -4,10 +4,8 @@ import { IDB_OBJECT_STORE_CONFIGS, IdbObjectStoreName, IndexConfig } from "./obj
 
 
 
-type StoreSchema<K extends keyof MyIDB> = MyIDB[K]["value"];
-
 export type BackUpData = {
-    [K in keyof MyIDB]?: StoreSchema<K>[];
+    [K in keyof MyIDB]: MyIDB[K]["value"];
 };
 
 
