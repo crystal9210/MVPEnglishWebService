@@ -15,7 +15,6 @@ import { IIndexedDBManager } from "@/interfaces/clientSide/repositories/managers
 import { BackUpData } from "@/constants/clientSide/idb/idbGenerator";
 
 // TODO 責任分離モデル設計・適切に配置
-// ブロックが長くて探すのめんどかったのでいったん外に出した
 function createIndexes<K extends IdbObjectStoreName>(
     store: IDBPObjectStore<MyIDB, readonly [K], K, "versionchange">,
     indexes: IndexConfig<MyIDB[K]["value"]>[]
@@ -25,7 +24,6 @@ function createIndexes<K extends IdbObjectStoreName>(
         store.createIndex(index.name, keyPath, index.options);
     });
 }
-
 
 export class IndexedDBManager implements IIndexedDBManager {
     private static instance: IndexedDBManager;
@@ -127,9 +125,9 @@ export class IndexedDBManager implements IIndexedDBManager {
 
             // 各オブジェクトストアのデータバックアップ
             for (const storeConfig of IDB_OBJECT_STORE_CONFIGS) {
-                const storeName = storeConfig.name as keyof MyIDB;
-                const storeData = await idb.getAll<StoreSchema<typeof storeName>>(storeName);
-                backupData[storeName] = storeData;
+                const storeName = storeConfig.name as IdbObjectStoreName;
+                const storeData = await idb.getAll<MyIDB[typeof storeName]["value"]>(storeName);
+                backupData[storeName] = storeData as MyIDB[typeof storeName]["value"][];
             }
 
             console.log("Backup successful. Deleting corrupted database...");
@@ -137,7 +135,7 @@ export class IndexedDBManager implements IIndexedDBManager {
 
             console.log("Restoring data from backup...");
             for (const storeName of Object.keys(backupData) as IdbObjectStoreName[]) {
-                const data = backupData[storeName] || [];
+                const data = backupData[storeName] as MyIDB[typeof storeName]["value"][];
                 for (const item of data) {
                     await this.put(storeName, item);
                 }
@@ -182,12 +180,17 @@ export class IndexedDBManager implements IIndexedDBManager {
         return idb.get(storeName, key);
     }
 
-    public async add<K extends IdbObjectStoreName>(storeName: K, value: MyIDB[K]["value"], key?: MyIDB[K]["key"]): Promise<MyIDB[K]["key"]> {
+    public async add<K extends IdbObjectStoreName>(
+        storeName: K,
+        value: MyIDB[K]["value"],
+        key?: Extract<MyIDB[K]["key"], string>
+    ): Promise<MyIDB[K]["key"]> {
         const resolvedKey = await this.resolveKey(storeName, value, key);
         await this.checkNotExists(storeName, resolvedKey);
 
         const idb = await this.getDB();
-        return idb.add(storeName, value, resolvedKey);
+        const result = await idb.add(storeName, value, resolvedKey);
+        return result as MyIDB[K]["key"];
     }
 
     public async put<K extends IdbObjectStoreName>(
@@ -226,25 +229,29 @@ export class IndexedDBManager implements IIndexedDBManager {
         await idb.clear(storeName);
     }
 
-    // TODO
-    // public async getAllFromIndex<K extends IdbObjectStoreName & string>(
-    //     storeName: K,
-    //     indexName: MyIDB[K]["indexes"][number]["name"],
-    //     query?: IDBKeyRange | string | MyIDB[K]["key"] | null,
-    //     count?: number
-    // ): Promise<MyIDB[K]["value"][]> {
-    //     const idb = await this.getDB();
+    public async getAllFromIndex<
+        K extends IdbObjectStoreName,
+        I extends Extract<keyof MyIDB[K]["indexes"], string> // TODO keyof MyIDB[K]["indexes"] & stringとの違い
+    >(
+        storeName: K,
+        indexName: I,
+        query?: IDBKeyRange | string | MyIDB[K]["key"] | null,
+        count?: number
+    ): Promise<MyIDB[K]["value"][]> {
+        const idb = await this.getDB();
+        const storeConfig = IDB_OBJECT_STORE_CONFIGS.find(
+            (config) => config.name === storeName
+        );
 
-    //     const storeIndexes = IDB_OBJECT_STORE_CONFIGS.find(
-    //         (storeConfig) => storeConfig.name === storeName
-    //     )?.indexes;
-    //     if (!storeIndexes) {
-    //         throw new Error(`Indexes not found for store: ${storeName}`);
-    //     }
+        if (!storeConfig) {
+            throw new Error(`Store configuration not found for store: ${storeName}`);
+        }
+        if (!(indexName in storeConfig.indexes)) {
+            throw new Error(`Index ${indexName} not found in store ${storeName}`);
+        }
 
-    //     return idb.getAllFromIndex(storeName, indexName, query, count);
-    // }
-
+        return idb.getAllFromIndex(storeName, indexName, query, count); // count: max items you get from the object store by the index.
+    }
 
     public async getMultiple<K extends IdbObjectStoreName>(
         storeName: K,

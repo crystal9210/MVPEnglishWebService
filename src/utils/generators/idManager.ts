@@ -3,6 +3,7 @@ import { IdGenerator } from "./idGenerator";
 
 // TODO id専用のサービス層は作成しなくていいと思う >> 各サービス層にて必要に応じてidManager呼び出し >> 今回一緒に仮実装したサンプルコード群を参考に設計をそのまま落とし込む >> クリーンアーキテクチャ >> idManager がリポジトリやサービス層に依存するように調整
 // TODO セキュアモード実装 >> セキュアモードのロジックどの程度分離するか >> そもそもモジュール自体分離してもいい気がする >> 検知ロジックの細微な増大もあんまり良くない >> idを用いた処理を中心に扱うためのファイルモジュール群設計
+// TODO idManager層: ストレージに応じて柔軟な機能提供 >> storageの切り替えはより上位のモジュールで処理
 
 export class IdManager {
     private idGenerator: IdGenerator;
