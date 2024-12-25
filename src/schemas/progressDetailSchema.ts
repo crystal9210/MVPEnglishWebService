@@ -4,57 +4,83 @@ import { NA_PATH_ID, ServiceIdEnum } from "@/constants/serviceIds";
 import { PROGRESS_MODES, ProgressMode } from "@/constants/sessions/sessions";
 import { CustomProblemSetSchema } from "@/schemas/customProblemSetSchema";
 
-// カテゴリID・ステップIDペアスキーマ - 複数のカテゴリ指定可能
+/**
+ * Schema for a pair of category and step IDs.
+ * Allows specifying multiple categories, each with optional steps.
+ */
 const CategoryStepPairSchema = z.object({
-    categoryId: z.string(),
-    stepIds: z.array(z.string()).optional(), // 各カテゴリに属するステップIDの配列
+    categoryId: z.string().default(NA_PATH_ID),
+    stepIds: z.array(z.string().default(NA_PATH_ID)).default([]), // Array of stepIds within the category
 });
 
-const createProgressDetailSchema = <T extends ProgressMode>(progressMode: T) => {
+
+/**
+ * Base schema generator for progress details based on progress mode.
+ * @param progressMode - The mode of progress tracking
+ */
+const createProgressDetailBaseSchema = <T extends ProgressMode>(progressMode: T) => {
     return z.object({
         mode: z.literal(progressMode),
+        completedIterations: integerNonNegative(), // >> how many times the user completed the session.
+        requiredIterations: integerNonNegative(), // >> the user should accomplish the goal as many times as this field's value.
+        currentScore: integerNonNegative().default(0),
+        currentCorrectAnswerCount: integerNonNegative().default(0), // >> the number user correctly answered problems in the session.
     });
 }
 
-// ユースケース1: 問題セットベースの繰り返し
-const IterationProgressDetailSchema = z.object({
-    ...createProgressDetailSchema(PROGRESS_MODES.ITERATION).shape,
-    completedIterations: integerNonNegative(), // 完了した繰り返し回数
-    totalIterations: integerNonNegative(), // 必要な繰り返し回数
-    // CustomProblemSetSchemaのshapeオブジェクトのproblemSetIdプロパティにアクセスしそのまま値として格納
+
+/**
+ * Schema for iteration-based progress details.
+ * Tracks the number of iterations completed and required.
+ */
+const CustomProblemSetProgressDetailSchema = z.object({
+    ...createProgressDetailBaseSchema(PROGRESS_MODES.ITERATION).shape,
     problemSetId: CustomProblemSetSchema.shape.problemSetId, // TODO 参照先との連携 (NOTE:上位層実装)
+    currentProgressDetails: z.object({
+        serviceId: z.string().default(NA_PATH_ID),
+        categoryId: z.string().default(NA_PATH_ID),
+        stepId: z.string().default(NA_PATH_ID),
+        problemId: z.string().default(NA_PATH_ID),
+        isCorrect: z.boolean().default(false),
+        totalSpentTime: integerNonNegative().default(0),
+    }),
 });
 
-// ユースケース2: スコアベース
+/**
+ * Schema for score-based progress details.
+ * Tracks the user's score and achievements.
+ */
 const ScoreProgressDetailSchema = z.object({
-    ...createProgressDetailSchema(PROGRESS_MODES.SCORE).shape,
-    completedAchievements: integerNonNegative(), // 完了した実績数
-    totalAchievements: integerNonNegative(), // 必要な実績数
-    targetServiceId: ServiceIdEnum.default(NA_PATH_ID), // 対象のサービスID
-    targetCategoryStepPairs: z.array(CategoryStepPairSchema).optional(), // 対象のカテゴリIDとステップIDのペア配列
-    requiredScore: integerNonNegative(), // 必要なスコア
-    currentStore: integerNonNegative(), // 現在のスコア
+    ...createProgressDetailBaseSchema(PROGRESS_MODES.SCORE).shape,
+    requiredScore: integerNonNegative(), // >> the total score user correctly answered problems and get points of them,which is required for achieving the goal.
+    targetServiceIds: z.array(ServiceIdEnum.default(NA_PATH_ID)).default([]),
+    targetCategoryStepPairs: z.array(CategoryStepPairSchema),
 });
 
-// ユースケース3: 正解数ベース
+/**
+ * Schema for count-based progress details.
+ * Tracks the number of correct answers required to achieve the goal.
+ */
 const CountProgressDetailSchema = z.object({
-    ...createProgressDetailSchema(PROGRESS_MODES.COUNT).shape,
-    completedAchievements: integerNonNegative(), // 完了した実績数
-    totalAchievements: integerNonNegative(), // 必要な実績数
-    targetServiceId: ServiceIdEnum.default(NA_PATH_ID), // 対象のサービスID
-    targetCategoryStepPairs: z.array(CategoryStepPairSchema).optional(),
-    requiredCount: integerNonNegative(), // 目標達成に必要な正解数
-    currentCorrectCount: integerNonNegative().default(0),
+    ...createProgressDetailBaseSchema(PROGRESS_MODES.COUNT).shape,
+    requiredCount: integerNonNegative(), // >> number of problems the user must answer correctly to achieve the goal.
+    targetServiceIds: z.array(ServiceIdEnum.default(NA_PATH_ID)).default([]),
+    targetCategoryStepPairs: z.array(CategoryStepPairSchema),
 });
 
 
-export const ProgressDetailSchema = z.discriminatedUnion("mode", [
-    IterationProgressDetailSchema,
+
+/**
+ * Unified schema for progress details based on criteria.
+ * Discriminates between different progress modes.
+ */
+export const ProgressDetailByCriteriaSchema = z.discriminatedUnion("mode", [
+    CustomProblemSetProgressDetailSchema,
     ScoreProgressDetailSchema,
     CountProgressDetailSchema,
 ]);
 
-export type ProgressDetail = z.infer<typeof ProgressDetailSchema>;
+export type ProgressDetailByCriteria = z.infer<typeof ProgressDetailByCriteriaSchema>;
 
 
 // --- sample code base ---

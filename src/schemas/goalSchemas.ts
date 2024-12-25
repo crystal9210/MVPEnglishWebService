@@ -5,7 +5,11 @@ import { GoalTermTypeEnum } from '@/constants/sessions/sessions';
 import { NA_PATH_ID } from '@/constants/serviceIds';
 
 /**
- * schemas of 'Criteria' below.
+ * 'goal' schema and the 'criteria' schemas used in the 'goal' schema.
+ */
+
+/**
+ * criteria schemas:
  */
 
 const IterationCriteriaSchema = z.object({

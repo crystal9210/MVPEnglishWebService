@@ -4,48 +4,61 @@ import { NA_PATH_ID, ServiceIdEnum } from "@/constants/serviceIds";
 import { ProblemResultTypeEnum } from "@/constants/problemResultType";
 import { SESSION_STATUS, SessionStatusEnum } from "@/constants/sessions/sessions";
 import { SESSION_TYPES } from "@/constants/sessions/sessions";
-import { ProgressDetailSchema } from "../progressDetailSchema";
-import { DateSchema } from "../utils/dates";
+import { DateSchema, OptionalDateSchema } from "../utils/dates";
 import { createSessionSchema } from "./problemHistorySchemas"; // >> func
 import { UserInputSchema } from "./userInputSchemas";
-// import { sessionattemp}
+import { ProgressDetailByCriteriaSchema } from "../progressDetailSchema";
 
-// 概要としての情報を持たせることで情報のフィルタリング >> パフォ向上
+/**
+ * Schema for recording the history of user interactions with problems.
+ * Maintains summary information to enhance data filtering and performance.
+ */
 const ProblemHistorySchema = z.object({
     serviceId: ServiceIdEnum.default(NA_PATH_ID),
     categoryId: z.string().default(NA_PATH_ID),
     stepId: z.string().default(NA_PATH_ID),
     problemId: z.string().default(NA_PATH_ID),
-    correctAttempts: integerNonNegative().default(0), // セッション中にユーザは何回も同じ問題に正解するまで取り組んでいい、また、正解していても取り組める、最後の正誤判定結果が上書きされるようになっているのでそこは注意
+    correctAttempts: integerNonNegative().default(0), // >> user can try the same problem any time in an activity session.
     incorrectAttempts: integerNonNegative().default(0),
     problemAttempts: z.array(UserInputSchema).default([]),
     lastResult: ProblemResultTypeEnum,
+    spentTime: integerNonNegative().default(0), // >> specify the total time the user used in trying the specific problem.
     memo: z.string().max(100).default(""), // for improving UX
 });
 
+/**
+ * Schema for a single attempt within a session.
+ */
 const SessionAttemptSchema = z.object({
-    attemptId: z.string(), // 自作ID生成ユーティリティ適用
-    startAt: z.date(),
-    endAt: DateSchema,
-    problems: z.array(ProblemHistorySchema),
+    attemptId: z.string(),
+    startAt: DateSchema,
+    endAt: OptionalDateSchema, // >> use epoch time by default instead of using 'optional()' .
+    problems: z.array(ProblemHistorySchema).default([]),
 });
 
-// ただ見かけて試しただけのコード:
-// export const exschema = ProblemHistorySchema.keyof().Values;
+export type SessionAttempt = z.infer<typeof SessionAttemptSchema>;
 
+
+/**
+ * Schema for goal-oriented activity sessions.
+ * Manages progress details and attempts related to achieving a specific goal.
+ */
 const GoalActivitySessionSchema = z.object({
     ...createSessionSchema(SESSION_TYPES.GOAL).shape,
-    goalId: z.string(), // goalセッションに必須
-    categoryId: z.string().default(NA_PATH_ID),
-    stepId: z.string().default(NA_PATH_ID),
-    progressDetails: ProgressDetailSchema, // 進捗データ
+    goalId: z.string(),
+    progressDetails: ProgressDetailByCriteriaSchema,
     attempts: z.array(SessionAttemptSchema).default([]),
-    startTime: z.date(), // セッション開始時刻
-    lastUpdatedAt: z.date(), // 最終更新時刻
+    startAt: z.date(),
+    lastUpdatedAt: z.date(),
+    endAt: z.date(),
     status: SessionStatusEnum.default(SESSION_STATUS.NOT_STARTED),
 });
 
-// ServiceActivitySessionSchema（サービス用セッション）は変更なし
+
+/**
+ * Schema for service-oriented activity sessions.
+ * Maintains information related to problem sets and progress counts.
+ */
 const ServiceActivitySessionSchema = z.object({
     ...createSessionSchema(SESSION_TYPES.SERVICE).shape,
     serviceId: z.string(),
@@ -59,7 +72,10 @@ const ServiceActivitySessionSchema = z.object({
     lastUpdatedAt: z.date(),
 });
 
-// GoalとServiceを統合 >> idbのオブジェクトストア: 統一的に管理・効率化
+/**
+ * Unified schema for all activity sessions.
+ * Discriminates between Goal and Service session types.
+ */
 export const ActivitySessionSchema = z.discriminatedUnion("sessionType", [
     GoalActivitySessionSchema,
     ServiceActivitySessionSchema,
@@ -82,9 +98,6 @@ export type ActivitySession = z.infer<typeof ActivitySessionSchema>;
 export type GoalActivitySession = z.infer<typeof GoalActivitySessionSchema>;
 export type ServiceActivitySession = z.infer<typeof ServiceActivitySessionSchema>;
 
-export type GoalSessionHistoryItem = z.infer<typeof GoalSessionHistoryItemSchema>;
-export type ServiceSessionHistoryItem = z.infer<typeof ServiceSessionHistoryItemSchema>;
-export type UserHistoryItem = z.infer<typeof UserHistoryItemSchema>;
 
-export type ProblemHistory = z.infer<typeof ProblemHistorySchema>;
-export type DetailedHistory = z.infer<typeof DetailedHistorySchema>;
+// ただ見かけて試しただけのコード:
+// export const exschema = ProblemHistorySchema.keyof().Values;
