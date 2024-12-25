@@ -2,7 +2,7 @@ import { injectable, inject } from "tsyringe";
 import { IProblemResultRepository } from "@/interfaces/repositories/IProblemResultRepository";
 import type { IFirebaseAdmin } from "@/interfaces/services/IFirebaseAdmin";
 import type { ILoggerService } from "@/interfaces/services/ILoggerService";
-import { ProblemResult, ProblemResultSchema } from "@/schemas/userHistorySchemas";
+import { ProblemResult, ProblemResultSchema } from "@/schemas/activity/problemHistorySchemas";
 import { BatchOperations } from "@/utils/batchOperations";
 import type { DocumentData, WithFieldValue, UpdateData } from "firebase-admin/firestore";
 import * as FirebaseFirestore from "firebase-admin/firestore";

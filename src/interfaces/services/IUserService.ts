@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 import { User } from "@/schemas/userSchemas";
-import { ProblemResult } from "@/schemas/userHistorySchemas";
+import { ProblemResult } from "@/schemas/activity/problemHistorySchemas";
 
 export interface IUserService {
     createUser(user: User): Promise<void>;

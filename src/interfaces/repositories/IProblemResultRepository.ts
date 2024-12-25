@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-import type { ProblemResult } from "@/schemas/userHistorySchemas";
+import type { ProblemResult } from "@/schemas/activity/problemHistorySchemas";
 
 export interface IProblemResultRepository {
     findProblemResult(problemType: string, userId: string, problemId: string): Promise<ProblemResult | null>;

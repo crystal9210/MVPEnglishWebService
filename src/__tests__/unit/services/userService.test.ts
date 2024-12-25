@@ -23,7 +23,7 @@ import { ProblemResultRepository } from "@/domain/repositories/problemResultRepo
 import { ILoggerService } from "@/interfaces/services/ILoggerService";
 import { RetryService } from "@/domain/services/retryService";
 import { User, UserSchema } from "@/schemas/userSchemas";
-import { ProblemResult } from "@/schemas/userHistorySchemas";
+import { ProblemResult } from "@/schemas/activity/problemHistorySchemas";
 import { container } from "tsyringe";
 import { jest } from "@jest/globals";
 import { isRetryableError } from "@/utils/isRetryableError";

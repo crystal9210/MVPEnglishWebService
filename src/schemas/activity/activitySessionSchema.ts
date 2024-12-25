@@ -4,23 +4,18 @@ import { NA_PATH_ID, ServiceIdEnum } from "@/constants/serviceIds";
 import { ProblemResultTypeEnum } from "@/constants/problemResultType";
 import { SESSION_STATUS, SessionStatusEnum } from "@/constants/sessions/sessions";
 import { SESSION_TYPES } from "@/constants/sessions/sessions";
-import { ProgressDetailSchema } from "./progressDetailSchema";
+import { ProgressDetailSchema } from "../progressDetailSchema";
+import { DateSchema } from "../utils/dates";
+import { createSessionSchema } from "./problemHistorySchemas"; // >> func
+import { UserInputSchema } from "./userInputSchemas";
+// import { sessionattemp}
 
-const UserInputSchema = z.object({
-    inputs: z.array(
-        z.object({
-            input: z.string().default(""), // TODO
-            result: ProblemResultTypeEnum,
-        })
-    ).default([]),
-    attemptedAt: z.date().default(() => new Date()),
-});
-
+// 概要としての情報を持たせることで情報のフィルタリング >> パフォ向上
 const ProblemHistorySchema = z.object({
     serviceId: ServiceIdEnum.default(NA_PATH_ID),
     categoryId: z.string().default(NA_PATH_ID),
     stepId: z.string().default(NA_PATH_ID),
-    problemId: z.string(),
+    problemId: z.string().default(NA_PATH_ID),
     correctAttempts: integerNonNegative().default(0), // セッション中にユーザは何回も同じ問題に正解するまで取り組んでいい、また、正解していても取り組める、最後の正誤判定結果が上書きされるようになっているのでそこは注意
     incorrectAttempts: integerNonNegative().default(0),
     problemAttempts: z.array(UserInputSchema).default([]),
@@ -31,7 +26,7 @@ const ProblemHistorySchema = z.object({
 const SessionAttemptSchema = z.object({
     attemptId: z.string(), // 自作ID生成ユーティリティ適用
     startAt: z.date(),
-    endAt: z.date().default(new Date(0)), // 中断時・完了してないときはデフォルト値として特殊な値 new Date(0)としてハンドリング
+    endAt: DateSchema,
     problems: z.array(ProblemHistorySchema),
 });
 
@@ -39,8 +34,7 @@ const SessionAttemptSchema = z.object({
 // export const exschema = ProblemHistorySchema.keyof().Values;
 
 const GoalActivitySessionSchema = z.object({
-    sessionId: z.string(),
-    sessionType: z.literal(SESSION_TYPES.GOAL),
+    ...createSessionSchema(SESSION_TYPES.GOAL).shape,
     goalId: z.string(), // goalセッションに必須
     categoryId: z.string().default(NA_PATH_ID),
     stepId: z.string().default(NA_PATH_ID),
@@ -53,8 +47,7 @@ const GoalActivitySessionSchema = z.object({
 
 // ServiceActivitySessionSchema（サービス用セッション）は変更なし
 const ServiceActivitySessionSchema = z.object({
-    sessionId: z.string(),
-    sessionType: z.literal(SESSION_TYPES.SERVICE),
+    ...createSessionSchema(SESSION_TYPES.SERVICE).shape,
     serviceId: z.string(),
     categoryId: z.string().default(NA_PATH_ID),
     stepId: z.string().default(NA_PATH_ID),

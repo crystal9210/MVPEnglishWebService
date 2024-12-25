@@ -2,7 +2,7 @@ import { injectable, inject } from "tsyringe";
 import type { IProblemResultService } from "@/interfaces/services/IProblemResultService";
 import type { IProblemResultRepository } from "@/interfaces/repositories/IProblemResultRepository";
 import type { ILoggerService } from "@/interfaces/services/ILoggerService";
-import type { ProblemResult } from "@/schemas/userHistorySchemas";
+import type { ProblemResult } from "@/schemas/activity/problemHistorySchemas";
 
 @injectable()
 export class ProblemResultService implements IProblemResultService {

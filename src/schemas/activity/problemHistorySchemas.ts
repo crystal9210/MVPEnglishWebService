@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { integerNonNegative } from "./utils/numbers";
+import { integerNonNegative } from "../utils/numbers";
 import { SESSION_TYPES, SessionType } from "@/constants/sessions/sessions";
 import { ServiceIdEnum, NA_PATH_ID } from "@/constants/serviceIds";
 
@@ -7,8 +7,6 @@ import { ServiceIdEnum, NA_PATH_ID } from "@/constants/serviceIds";
 // TODO UI設計から逆算する形で設計を進める >> DDD(UIはビジネスロジックをそのまま反映したと言えるため)
 // 1. 単調な履歴データ
 // 2. サービスごとの履歴データ
-// 3.
-
 // 要件メモ
 // /dashboard用 - /dashboardページの履歴セッション一覧にて閲覧できるセッション数:最大20個
 // /dashboard >> history >> historyItems: 取り組み日時でソート
@@ -34,11 +32,17 @@ const GoalSessionHistoryItemSchema = z.object({
 // sessionId === activitySession's id
 // TODO id設計 : 一意性の担保: セッションは1ユーザに対して同時に1つを上限として設ける仕様 -> 取り組み日時をid化 (取り組み日時データの整合性はどうするか問題 - どこの日時を基準とするか - ユーザのプロフィールか何かに住んでいる場所を入力させてそこから日時を計算するように設計)
 
-const createSessionSchema = <T extends SessionType>(sessionType: T) => {
+/**
+ * createSessionSchema function:
+ * generate basic schema of the activity session based on session type field value.
+ * @param sessionType
+ * @returns 'session' schema
+ */
+export const createSessionSchema = <T extends SessionType>(sessionType: T) => {
   return z.object({
-    sessionId: z.string().default(NA_PATH_ID),
+    sessionId: z.string().uuid("Invalid session ID format.").default(NA_PATH_ID),
     sessionType: z.literal(sessionType), // discriminator of session types
-    problemCount: integerNonNegative().min(0, { message: "Problem count must be non-negative." }),
+    problemCount: integerNonNegative(),
     correctAnswerRate: z
       .number()
       .min(0, { message: "Correct answer rate must be at least 0%." })
@@ -46,7 +50,7 @@ const createSessionSchema = <T extends SessionType>(sessionType: T) => {
     score: integerNonNegative().min(0, { message: "Score must be non-negative." }),
     maxScore: integerNonNegative().min(0, { message: "Max score must be non-negative." }),
     spentTime: integerNonNegative().min(0, { message: " Time must be non-negative" }), // i.e. how long the user spent time to complete the session.
-    attemptedTime: integerNonNegative(),
+    attemptedTime: integerNonNegative(), // >> how many times user tried the problem in the session.
     completedAt: z.date(),
   });
 };

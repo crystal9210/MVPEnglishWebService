@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { withValidationAndSanitization } from '@/middlewares/withMiddleware';
 import { z } from 'zod';
-import { ProblemResultSchema, ProblemResult } from '@/schemas/userHistorySchemas';
+import { ProblemResultSchema, ProblemResult } from '@/schemas/activity/problemHistorySchemas';
 import { UserService } from '@/domain/services/userService';
 import { container } from 'tsyringe';
 import { LoggerService } from '@/domain/services/loggerService';

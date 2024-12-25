@@ -2,7 +2,7 @@ import { injectable, inject } from "tsyringe";
 import { UserRepository } from "@/domain/repositories/userRepository";
 import { ProblemResultRepository } from "@/domain/repositories/problemResultRepository";
 import { User } from "@/schemas/userSchemas";
-import { ProblemResult } from "@/schemas/userHistorySchemas";
+import { ProblemResult } from "@/schemas/activity/problemHistorySchemas";
 import { LoggerService } from "@/domain/services/loggerService";
 import { IUserService } from "@/interfaces/services/IUserService";
 

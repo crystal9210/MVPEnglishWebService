@@ -1,4 +1,4 @@
-import { UserHistoryItemSchema, UserHistoryItem as UserHistoryItemType } from "@/schemas/userHistorySchemas";
+import { UserHistoryItemSchema, UserHistoryItem as UserHistoryItemType } from "@/schemas/activity/problemHistorySchemas";
 
 export interface UserHistoryItem {
     problemId: string;

@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-import { ActivitySession } from "@/schemas/activitySessionSchema";
+import { ActivitySession } from "@/schemas/activity/activitySessionSchema";
 
 export interface IActivitySessionClientRepository {
     addActivitySession(session: ActivitySession): Promise<void>;

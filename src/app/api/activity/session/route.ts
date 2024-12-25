@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { container } from '@/containers/diContainer';
 import { ActivityServiceInterface } from '@/interfaces/services/IActivityService';
-import { ActivitySessionSchema } from '@/schemas/activitySessionSchema';
+import { ActivitySessionSchema } from '@/schemas/activity/activitySessionSchema';
 import { ActivitySession } from '@/domain/entities/clientSide/clientActivitySession';
 
 // セッション作成

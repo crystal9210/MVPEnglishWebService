@@ -3,7 +3,7 @@ import {
     GoalActivitySessionSchema,
     ServiceActivitySessionSchema,
 
-} from "@/schemas/activitySessionSchema";
+} from "@/schemas/activity/activitySessionSchema";
 
 export interface IActivitySessionRepository {
     addSession(session: ActivitySession): Promise<void>;
