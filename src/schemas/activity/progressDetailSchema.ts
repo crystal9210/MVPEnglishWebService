@@ -73,6 +73,7 @@ const CountProgressDetailSchema = z.object({
 /**
  * Unified schema for progress details based on criteria.
  * Discriminates between different progress modes.
+ * ${T}ProgressDetailSchema's ${T} in each schema's name means the criteria for qualitative or quantitative evaluation of each mode's progress.
  */
 export const ProgressDetailByCriteriaSchema = z.discriminatedUnion("mode", [
     CustomProblemSetProgressDetailSchema,

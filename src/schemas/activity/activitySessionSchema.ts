@@ -3,11 +3,30 @@ import { integerNonNegative } from "@/schemas/utils/numbers";
 import { NA_PATH_ID, ServiceIdEnum } from "@/constants/serviceIds";
 import { ProblemResultTypeEnum } from "@/constants/problemResultType";
 import { SESSION_STATUS, SessionStatusEnum } from "@/constants/sessions/sessions";
-import { SESSION_TYPES } from "@/constants/sessions/sessions";
+import { SESSION_TYPES, SessionType } from "@/constants/sessions/sessions";
 import { DateSchema, OptionalDateSchema } from "../utils/dates";
-import { createSessionSchema } from "./problemHistorySchemas"; // >> func
 import { UserInputSchema } from "./userInputSchemas";
-import { ProgressDetailByCriteriaSchema } from "../progressDetailSchema";
+import { ProgressDetailByCriteriaSchema } from "./progressDetailSchema";
+
+
+/**
+ * createSessionSchema function:
+ * generate basic schema of the activity session based on session type field value.
+ * @param sessionType
+ * @returns 'session' schema
+ */
+export const createSessionSchema = <T extends SessionType>(sessionType: T) => {
+    return z.object({
+        sessionId: z.string().uuid("Invalid session ID format.").default(NA_PATH_ID),
+        sessionType: z.literal(sessionType), // discriminator of session types
+        startAt: z.date(),
+        lastUpdatedAt: z.date(), // >> this field is used as reference info when the user unexpectedly terminates a session.
+        endAt: z.date(),
+        spentTime: integerNonNegative().min(0, { message: " Time must be non-negative" }), // i.e. how long the user spent time to complete the session.
+        attemptedNum: integerNonNegative(), // >> how many times user tried the problem in the session.
+        feedback: z.string().max(200).default(""), // i.e. comments about the session activity (ex: whether the user is well done in the session or not. ) by the user.
+    });
+};
 
 /**
  * Schema for recording the history of user interactions with problems.
@@ -48,9 +67,6 @@ const GoalActivitySessionSchema = z.object({
     goalId: z.string(),
     progressDetails: ProgressDetailByCriteriaSchema,
     attempts: z.array(SessionAttemptSchema).default([]),
-    startAt: z.date(),
-    lastUpdatedAt: z.date(),
-    endAt: z.date(),
     status: SessionStatusEnum.default(SESSION_STATUS.NOT_STARTED),
 });
 
@@ -64,12 +80,15 @@ const ServiceActivitySessionSchema = z.object({
     serviceId: z.string(),
     categoryId: z.string().default(NA_PATH_ID),
     stepId: z.string().default(NA_PATH_ID),
+    problemCount: integerNonNegative(),
+    correctAnswerRate: z
+        .number()
+        .min(0, { message: "Correct answer rate must be at least 0%." })
+        .max(100, { message: "Correct answer rate cannot exceed 100%." }),
     progressCount: integerNonNegative(),
     totalTargetCount: integerNonNegative(),
-    correctAnswerRate: z.number().min(0).max(100),
-    score: integerNonNegative(),
-    startTime: z.date(),
-    lastUpdatedAt: z.date(),
+    score: integerNonNegative().min(0, { message: "Score must be non-negative." }),
+    maxScore: integerNonNegative().min(0, { message: "Max score must be non-negative." }),
 });
 
 /**
