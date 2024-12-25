@@ -1,5 +1,7 @@
 .
 ├── README.md
+├── cspell-report.txt
+├── cspell.json
 ├── dir_structure.txt
 ├── jest.config.ts
 ├── logs
@@ -27,12 +29,24 @@
 │   │   ├── penetration
 │   │   ├── system
 │   │   └── unit
+│   ├── _components
+│   │   ├── ActivityManagerComponent.tsx
+│   │   ├── CreateGoalForm.tsx
+│   │   ├── FileUpload
+│   │   ├── GoalCard.tsx
+│   │   ├── LoginForm.tsx
+│   │   ├── Notifications.tsx
+│   │   ├── RegisterForm.tsx
+│   │   ├── UnitProblemList.tsx
+│   │   └── signout_button.tsx
 │   ├── adapters
 │   │   └── customFirestoreAdapter.ts
 │   ├── app
+│   │   ├── _components
+│   │   ├── _contexts
+│   │   ├── activity
 │   │   ├── api
 │   │   ├── basis
-│   │   ├── contexts
 │   │   ├── dashboard
 │   │   ├── favicon.ico
 │   │   ├── fonts
@@ -49,42 +63,40 @@
 │   │   ├── terms-of-service
 │   │   ├── verify-email-sent
 │   │   └── writing
-│   ├── components
-│   │   ├── ActivityManagerComponent.tsx
-│   │   ├── CreateGoalForm.tsx
-│   │   ├── FileUpload
-│   │   ├── GoalCard.tsx
-│   │   ├── LoginForm.tsx
-│   │   ├── Notifications.tsx
-│   │   ├── RegisterForm.tsx
-│   │   ├── UnitProblemList.tsx
-│   │   ├── activityManager.tsx
-│   │   ├── managers
-│   │   └── signout_button.tsx
 │   ├── config
 │   │   ├── constants
 │   │   └── index.ts
 │   ├── config.ts
 │   ├── constants
-│   │   └── retryConfig.ts
+│   │   ├── clientSide
+│   │   ├── dates.ts
+│   │   ├── dbHub.ts
+│   │   ├── problemResultType.ts
+│   │   ├── retryConfig.ts
+│   │   ├── serverSide
+│   │   ├── serviceIds.ts
+│   │   └── sessionConstants.ts
 │   ├── containers
 │   │   └── diContainer.ts
 │   ├── contexts
 │   │   ├── NotificationContext.tsx
-│   │   ├── activityContext.tsx
 │   │   └── mockDataContext.tsx
 │   ├── domain
 │   │   ├── entities
 │   │   ├── repositories
 │   │   └── services
 │   ├── handlers
-│   │   └── authHandler.ts
+│   │   ├── authHandler.ts
+│   │   └── secureLocalStorageProvider.ts
 │   ├── hooks
 │   │   ├── useActivitySession.ts
 │   │   └── useAuth.ts
+│   ├── idb
+│   │   ├── index.ts
+│   │   └── stores
 │   ├── index.ts
 │   ├── interfaces
-│   │   ├── components
+│   │   ├── clientSide
 │   │   ├── repositories
 │   │   └── services
 │   ├── lib
@@ -125,7 +137,9 @@
 │   │   ├── UserInputSchemas.ts
 │   │   ├── WritingExerciseSchema.ts
 │   │   ├── account.ts
+│   │   ├── activity
 │   │   ├── activitySessionSchema.ts
+│   │   ├── app
 │   │   ├── auth.ts
 │   │   ├── baseSchemas.ts
 │   │   ├── bookmarkSchemas.ts
@@ -133,15 +147,18 @@
 │   │   ├── customUserSchema.ts
 │   │   ├── goalSchemas.ts
 │   │   ├── historySchemas.ts
+│   │   ├── idb.ts
 │   │   ├── index.ts
 │   │   ├── notificationSchema.ts
 │   │   ├── problemSchemas.ts
+│   │   ├── progressDetailSchema.ts
 │   │   ├── sessionSchemas.ts
 │   │   ├── signInSchemas.ts
 │   │   ├── subscriptionSchema.ts
 │   │   ├── subscriptionSchemas.ts
 │   │   ├── userHistorySchemas.ts
-│   │   └── userSchemas.ts
+│   │   ├── userSchemas.ts
+│   │   └── utils
 │   ├── styles
 │   │   └── global.css
 │   ├── types
@@ -154,11 +171,13 @@
 │       ├── __tests__
 │       ├── auth.ts
 │       ├── batchOperations.ts
+│       ├── crypto.ts
 │       ├── customError.ts
 │       ├── env.ts
 │       ├── errorHandler.ts
 │       ├── fileExtensions.ts
 │       ├── fileUtils.ts
+│       ├── generators
 │       ├── helpers.ts
 │       ├── isRetryableError.ts
 │       ├── keys.ts
@@ -169,6 +188,7 @@
 │       └── validators
 ├── tailwind.config.ts
 ├── tsconfig.json
+├── unknown-words.txt
 └── utilCommands.md
 
-58 directories, 114 files
+67 directories, 125 files

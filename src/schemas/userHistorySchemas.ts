@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { integerNonNegative } from "./utils/numbers";
-import { SESSION_TYPES, SessionType } from "@/constants/clientSide/sessions/sessions";
+import { SESSION_TYPES, SessionType } from "@/constants/sessions/sessions";
 import { ServiceIdEnum, NA_PATH_ID } from "@/constants/serviceIds";
 
 

@@ -7,7 +7,7 @@ const config: Config = {
     testPathIgnorePatterns: ["/node_modules/", "/dist/"],
     moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
     moduleNameMapper: {
-        '^@/(.*)$': '<rootDir>/src/$1', // パスエイリアスのマッピング
+        '^@/(.*)$': '<rootDir>/src/$1', // >> path alias
     }
 };
 

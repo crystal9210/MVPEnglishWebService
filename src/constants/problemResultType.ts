@@ -5,10 +5,10 @@ import { z } from "zod";
 // 今回はPROBLEM_RESULT_TYPESなので the problem is "".の""に適合する s v c の c の部分を使用
 export const PROBLEM_RESULT_TYPES = {
     CORRECT: "correct",
-    PARTIALLY_CORERCT: "partially-correct", // 複数問が一括である場合のケースに対応
+    PARTIALLY_CORERCT: "partially_correct", // 複数問が一括である場合のケースに対応
     INCORRECT: "incorrect",
     // SKIPPED: "skipped" // なんかありそうだが使わなそうな気もするのでコメアウト
-    NOT_STARTED: "not-started",
+    NOT_STARTED: "not_started",
 } as const;
 
 /**

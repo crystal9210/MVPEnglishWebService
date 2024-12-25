@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { integerNonNegative } from "@/schemas/utils/numbers";
 import { NA_PATH_ID, ServiceIdEnum } from "@/constants/serviceIds";
-import { PROGRESS_MODES, ProgressMode } from "@/constants/clientSide/sessions/sessions";
+import { PROGRESS_MODES, ProgressMode } from "@/constants/sessions/sessions";
 import { CustomProblemSetSchema } from "@/schemas/customProblemSetSchema";
 
 // カテゴリID・ステップIDペアスキーマ - 複数のカテゴリ指定可能

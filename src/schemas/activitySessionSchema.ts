@@ -2,8 +2,8 @@ import { z } from "zod";
 import { integerNonNegative } from "@/schemas/utils/numbers";
 import { NA_PATH_ID, ServiceIdEnum } from "@/constants/serviceIds";
 import { ProblemResultTypeEnum } from "@/constants/problemResultType";
-import { GOAL_STATUS, GoalStatusEnum } from "@/constants/sessionConstants";
-import { SESSION_TYPES } from "@/constants/clientSide/sessions/sessions";
+import { SESSION_STATUS, SessionStatusEnum } from "@/constants/sessions/sessions";
+import { SESSION_TYPES } from "@/constants/sessions/sessions";
 import { ProgressDetailSchema } from "./progressDetailSchema";
 
 const UserInputSchema = z.object({
@@ -48,7 +48,7 @@ const GoalActivitySessionSchema = z.object({
     attempts: z.array(SessionAttemptSchema).default([]),
     startTime: z.date(), // セッション開始時刻
     lastUpdatedAt: z.date(), // 最終更新時刻
-    status: GoalStatusEnum.default(GOAL_STATUS.NOT_STARTED),
+    status: SessionStatusEnum.default(SESSION_STATUS.NOT_STARTED),
 });
 
 // ServiceActivitySessionSchema（サービス用セッション）は変更なし
@@ -86,3 +86,12 @@ export const ActivitySessionSchema = z.discriminatedUnion("sessionType", [
 // }
 
 export type ActivitySession = z.infer<typeof ActivitySessionSchema>;
+export type GoalActivitySession = z.infer<typeof GoalActivitySessionSchema>;
+export type ServiceActivitySession = z.infer<typeof ServiceActivitySessionSchema>;
+
+export type GoalSessionHistoryItem = z.infer<typeof GoalSessionHistoryItemSchema>;
+export type ServiceSessionHistoryItem = z.infer<typeof ServiceSessionHistoryItemSchema>;
+export type UserHistoryItem = z.infer<typeof UserHistoryItemSchema>;
+
+export type ProblemHistory = z.infer<typeof ProblemHistorySchema>;
+export type DetailedHistory = z.infer<typeof DetailedHistorySchema>;

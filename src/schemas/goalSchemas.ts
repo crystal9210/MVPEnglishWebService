@@ -1,10 +1,15 @@
 import { z } from 'zod';
 import { integerNonNegative } from './utils/numbers';
+import { GoalStatusEnum, PROGRESS_MODES } from '@/constants/sessions/sessions';
+import { GoalTermTypeEnum } from '@/constants/sessions/sessions';
+import { NA_PATH_ID } from '@/constants/serviceIds';
 
-// TODO
-// Criteria schemas
+/**
+ * schemas of 'Criteria' below.
+ */
+
 const IterationCriteriaSchema = z.object({
-  mode: z.literal('iteration'),
+  mode: z.literal(PROGRESS_MODES.ITERATION),
   details: z.object({
     problemSetIds: z.array(z.string()).min(1),
     requiredIterations: integerNonNegative(),
@@ -12,41 +17,43 @@ const IterationCriteriaSchema = z.object({
 });
 
 const ScoreCriteriaSchema = z.object({
-  mode: z.literal('score'),
+  mode: z.literal(PROGRESS_MODES.SCORE),
   details: z.object({
-    serviceId: z.string(),
-    categoryId: z.string().nullable(),
-    stepId: z.string().nullable(),
-    minimumScore: z.number().int().positive(),
+    serviceId: z.string().default(NA_PATH_ID),
+    categoryId: z.string().default(NA_PATH_ID),
+    stepId: z.string().default(NA_PATH_ID),
+    minimumScore: integerNonNegative(),
   }),
 });
 
 const CountCriteriaSchema = z.object({
-  mode: z.literal('count'),
+  mode: z.literal(PROGRESS_MODES.COUNT),
   details: z.object({
-    serviceId: z.string(),
-    categoryId: z.string().nullable(),
-    stepId: z.string().nullable(),
-    requiredCount: z.number().int().positive(),
+    serviceId: z.string().default(NA_PATH_ID),
+    categoryId: z.string().default(NA_PATH_ID),
+    stepId: z.string().default(NA_PATH_ID),
+    requiredCount: integerNonNegative(),
   }),
 });
 
 const TimeCriteriaSchema = z.object({
-  mode: z.literal('time'),
+  mode: z.literal(PROGRESS_MODES.TIME),
   details: z.object({
-    serviceId: z.string(),
-    categoryId: z.string().nullable(),
-    stepId: z.string().nullable(),
-    requiredTime: z.number().int().positive(), // seconds
+    serviceId: z.string().default(NA_PATH_ID),
+    categoryId: z.string().default(NA_PATH_ID),
+    stepId: z.string().default(NA_PATH_ID),
+    requiredTime: integerNonNegative(), // seconds
   }),
 });
 
-const CriteriaSchema = z.union([
+const CriteriaSchema = z.discriminatedUnion("mode", [
   IterationCriteriaSchema,
   ScoreCriteriaSchema,
   CountCriteriaSchema,
   TimeCriteriaSchema,
 ]);
+
+export type Criteria = z.infer<typeof CriteriaSchema>;
 
 // Per period targets schema
 const PerPeriodTargetsSchema = z.object({
@@ -63,13 +70,13 @@ const PerPeriodTargetsSchema = z.object({
 
 export const GoalSchema = z.object({
     id: z.string(),
-    termType: z.enum(["short", "medium", "long"]),
+    termType: GoalTermTypeEnum,
     criteria: CriteriaSchema,
     targetProblems: z.number().int().positive(), // TODO
     currentProgress: z.number().int().nonnegative(),
     createdAt: z.date(),
     updatedAt: z.date(),
-    status: z.enum(["active", "failed", "good clear", "best clear", "archived"]),
+    status: GoalStatusEnum,
     // TODO
     iterateCount: z.number().int().positive().optional(),
     completedIterations: z.number().int().nonnegative().optional(),

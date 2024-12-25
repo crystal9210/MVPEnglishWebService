@@ -1,13 +1,16 @@
 "use client";
+
 import React, { useState } from "react";
 import { useActivity } from "@/app/_contexts/activityContext";
 import { ClientActivitySessionHistoryItem } from "@/domain/entities/clientSide/activitySessionHistoryItem";
 import { ClientActivitySession } from "@/domain/entities/clientSide/clientActivitySession";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
+import { v4 as uuidv4 } from 'uuid'; // UUIDのインポート
 
 const ActivityManagerComponent = () => {
-    const { session, startSession, submitAnswer, endSession, getSessionHistory } = useActivity();
+    const { state, dispatch } = useActivity();
+    const { session } = state;
     const [problemId, setProblemId] = useState<string>("");
     const [result, setResult] = useState<"correct" | "incorrect">("correct");
     const [attempts, setAttempts] = useState<number>(1);
@@ -18,74 +21,79 @@ const ActivityManagerComponent = () => {
     const handleStartSession = async () => {
         const newSession = new ClientActivitySession({
             sessionId: `session-${Date.now()}`,
-            startedAt: new Date().toISOString(),
+            startedAt: new Date(), // Dateオブジェクトを直接渡す
             history: [],
         });
-        await startSession(newSession);
-        toast.success("Session started successfully!");
+        dispatch({ type: "START_SESSION", payload: newSession });
+        toast.success("セッションが正常に開始されました！");
+        // IndexedDBやFirestoreへの保存処理を必要に応じて追加
     };
 
     const handleSubmit = async () => {
         if (!session) return;
         if (!problemId.trim()) {
-            toast.error("Problem ID cannot be empty.");
+            toast.error("問題IDは空にできません。");
             return;
         }
         const historyItem = new ClientActivitySessionHistoryItem({
+            id: uuidv4(), // ユニークなIDを生成
             problemId,
             result,
             attempts,
-            lastAttemptAt: new Date().toISOString(),
+            lastAttemptAt: new Date(), // Dateオブジェクトを渡す
             notes: notes.trim() ? notes : undefined,
         });
         try {
-            await submitAnswer(historyItem);
-            toast.success("Answer submitted successfully!");
+            dispatch({ type: "SUBMIT_ANSWER", payload: historyItem });
+            toast.success("回答が正常に提出されました！");
+            // IndexedDBやFirestoreへの保存処理を必要に応じて追加
             // フォームのリセット
             setProblemId("");
             setResult("correct");
             setAttempts(1);
             setNotes("");
         } catch (error) {
-            console.error("Failed to submit answer", error);
-            toast.error("Failed to submit answer.");
+            console.error("回答の提出に失敗しました", error);
+            toast.error("回答の提出に失敗しました。");
         }
     };
 
     const handleEndSession = async () => {
         try {
-            await endSession();
-            toast.success("Session ended successfully!");
-            // 必要に応じてページ遷移・UIの更新
-            router.push("/dashboard"); // 例: ダッシュボードに戻る
+            dispatch({ type: "END_SESSION" });
+            toast.success("セッションが正常に終了しました！");
+            // IndexedDBやFirestoreへの保存処理を必要に応じて追加
+            router.push("/dashboard");
         } catch (error) {
-            console.error("Failed to end session", error);
-            toast.error("Failed to end session.");
+            console.error("セッションの終了に失敗しました", error);
+            toast.error("セッションの終了に失敗しました。");
         }
     };
 
     const handleViewHistory = async () => {
         if (!session) return;
         try {
-            const history = await getSessionHistory(session.sessionId);
+            // IndexedDBまたはFirestoreから履歴を取得
+            const history = await getSessionHistory(session.sessionId); // この関数は実装が必要
+            dispatch({ type: "SET_HISTORY", payload: history });
             console.log(history);
-            toast.info("History fetched successfully. Check console for details.");
-            // 必要に応じて UI に表示
+            toast.info("履歴が正常に取得されました。コンソールを確認してください。");
+            // 必要に応じてUIに履歴を表示
         } catch (error) {
-            console.error("Failed to fetch history", error);
-            toast.error("Failed to fetch history.");
+            console.error("履歴の取得に失敗しました", error);
+            toast.error("履歴の取得に失敗しました。");
         }
     };
 
     if (!session) {
         return (
             <div className="p-8 bg-white shadow-md rounded">
-                <p>No active session.</p>
+                <p>アクティブなセッションがありません。</p>
                 <button
                     onClick={handleStartSession}
                     className="mt-4 bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded"
                 >
-                    Start Session
+                    セッションを開始
                 </button>
             </div>
         );
@@ -93,15 +101,15 @@ const ActivityManagerComponent = () => {
 
     return (
         <div className="p-8 bg-white shadow-md rounded">
-            <h2 className="text-2xl font-bold mb-4">Activity Session: {session.sessionId}</h2>
-            <p className="mb-6">Started At: {session.startedAt}</p>
+            <h2 className="text-2xl font-bold mb-4">アクティビティセッション: {session.sessionId}</h2>
+            <p className="mb-6">開始時刻: {session.startedAt.toLocaleString()}</p>
             <div className="mb-6">
-                <h3 className="text-xl mb-2">Submit Answer</h3>
+                <h3 className="text-xl mb-2">回答の提出</h3>
                 <input
                     type="text"
                     value={problemId}
                     onChange={(e) => setProblemId(e.target.value)}
-                    placeholder="Problem ID"
+                    placeholder="問題ID"
                     className="border p-2 rounded w-full mb-4"
                 />
                 <select
@@ -109,28 +117,28 @@ const ActivityManagerComponent = () => {
                     onChange={(e) => setResult(e.target.value as "correct" | "incorrect")}
                     className="border p-2 rounded w-full mb-4"
                 >
-                    <option value="correct">Correct</option>
-                    <option value="incorrect">Incorrect</option>
+                    <option value="correct">正解</option>
+                    <option value="incorrect">不正解</option>
                 </select>
                 <input
                     type="number"
                     value={attempts}
                     onChange={(e) => setAttempts(Number(e.target.value))}
                     min={1}
-                    placeholder="Attempts"
+                    placeholder="試行回数"
                     className="border p-2 rounded w-full mb-4"
                 />
                 <textarea
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Optional notes"
+                    placeholder="オプションのメモ"
                     className="border p-2 rounded w-full mb-4"
                 />
                 <button
                     onClick={handleSubmit}
                     className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded"
                 >
-                    Submit Answer
+                    回答を提出
                 </button>
             </div>
             <div className="flex space-x-4">
@@ -138,19 +146,19 @@ const ActivityManagerComponent = () => {
                     onClick={handleEndSession}
                     className="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded"
                 >
-                    End Session
+                    セッションを終了
                 </button>
                 <button
                     onClick={handleViewHistory}
                     className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded"
                 >
-                    View History
+                    履歴を見る
                 </button>
                 <button
                     onClick={() => router.push("/activity/results")}
                     className="bg-purple-500 hover:bg-purple-600 text-white font-semibold py-2 px-4 rounded"
                 >
-                    View Results
+                    結果を見る
                 </button>
             </div>
         </div>

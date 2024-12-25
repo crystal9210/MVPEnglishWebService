@@ -44,16 +44,10 @@ npx cspell "**/*.{ts,tsx,js,jsx,json,md}" --no-progress --no-summary > cspell-re
 4.
 
 ```bash copy
-npx cspell "**/*.{ts,tsx,js,jsx,json,md}" --no-progress --no-summary > cspell-report.txt
-```
-
-5.
-
-```bash copy
 grep "Unknown word" cspell-report.txt | awk -F'[()]' '{print $2}' | sort -u > unknown-words.txt
 ```
 
-6.
+5.
 
 ```bash copy
 while read word; do
@@ -61,4 +55,4 @@ while read word; do
 done < unknown-words.txt
 ```
 
-7.  reload the window. (VSCode environment)
+6.  reload the window. (VSCode environment)

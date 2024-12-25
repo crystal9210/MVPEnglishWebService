@@ -13,14 +13,14 @@ const nextConfig: NextConfig = {
     ],
   },
   async headers() {
-    const isDev = process.env.NODE_ENV === "development"; // 開発環境判定
+    const isDev = process.env.NODE_ENV === "development";
     return [
       {
-        source: "/api/:path*", // `/api/` 以下のすべてのパス
+        source: "/api/:path*", // >> i.e. the ui paths of `/api/*`
         headers: [
           {
             key: "Set-Cookie",
-            value: `SameSite=Lax; HttpOnly${isDev ? "" : "; Secure"}`, // 開発環境では Secure を除外
+            value: `SameSite=Lax; HttpOnly${isDev ? "" : "; Secure"}`, // exclude 'Secure' option in the 'dev' (server's) environment.
           },
         ],
       },
