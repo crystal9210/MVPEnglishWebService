@@ -1,6 +1,6 @@
 import { ProblemDifficultyTypeEnum, QUESTION_TYPES, QuestionType } from "@/constants/problemTypes";
 import { z } from "zod";
-import { NA_PATH_ID, ServiceIdEnum } from "@/constants/serviceIds";
+import { NA_PATH_ID, ServiceIdEnum, SERVICE_IDS } from "@/constants/serviceIds";
 
 
 const createProblemBaseSchema = <T extends QuestionType>(questionType: T) => {
@@ -43,26 +43,41 @@ export const ProblemSchema = z.discriminatedUnion("questionType", [
 
 export type Problem = z.infer<typeof ProblemSchema>;
 
-// const GrammarProblemSchema = z.object({
-//   ...createProblemBaseSchema(SERVICE_IDS.GRAMMAR).shape,
-//   problem: z.string(),
-//   options: z.array(z.string()),
-//   answer: z.string(),
-//   details: z.string().optional(),
-// });
 
 
-// const BasisOptionSchema = z.object({
-//   text: z.string(),
-//   images: z.array(z.string()),
-// });
 
-// const BasisProblemSchema = z.object({
-//   ...createProblemBaseSchema(SERVICE_IDS.BASIS).shape,
-//   example: z.string(),
-//   options: z.array(BasisOptionSchema),
-//   answer: z.string(),
-// })
+/**
+ * Concrete service problem schemas below.
+ */
+
+const WritingContentSchema = z.union([
+  z.object({ type: z.literal("text"), value: z.string() }),
+  z.object({ type: z.literal("blank"), correctAnswer: z.string(), tips: z.string().optional() }),
+]);
+
+export const WritingInputProblemSchema = z.object({
+  ...createProblemBaseSchema(QUESTION_TYPES.INPUT).shape,
+  content: z.array(WritingContentSchema),
+});
+
+export const GrammarMultipleChoiceProblemSchema = z.object({
+  ...createProblemBaseSchema(QUESTION_TYPES.MULTIPLE_CHOICE).shape,
+  serviceId: z.literal(SERVICE_IDS.GRAMMAR),
+  problem: z.string(),
+});
+
+
+const BasisOptionSchema = z.object({
+  text: z.string(),
+  images: z.array(z.string()),
+});
+
+export const BasisProblemSchema = z.object({
+  serviceId: z.literal(SERVICE_IDS.BASIS),
+  example: z.string(),
+  options: z.array(BasisOptionSchema), // TODO try integration with multiple-choice question type schema
+  answer: z.string(),
+})
 
 
 // export const ProblemSchema = z.discriminatedUnion("serviceId", [
