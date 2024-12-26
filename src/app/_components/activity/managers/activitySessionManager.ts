@@ -1,175 +1,221 @@
-"use client";
+import { ActivitySession, SessionAttempt, SessionAttemptSchema, GoalActivitySession, ServiceActivitySession } from "@/schemas/activity/activitySessionSchema";
+import { SESSION_STATUS, SESSION_TYPES } from "@/constants/sessions/sessions";
+import { IIndexedDBActivitySessionRepository } from "@/interfaces/clientSide/repositories/IIdbActivitySessionRepository";
 
-import { openDB, DBSchema, IDBPDatabase } from "idb";
-import { IActivitySessionHistoryItem } from "@/schemas/activity/clientSide/activitySessionHistoryItemSchema";
-import { ProblemSet } from "@/schemas/activity/clientSide/problemSetSchema";
-import { ClientActivitySessionType } from "@/schemas/activity/clientSide/clientActivitySessionSchema";
 
-// TODO
-interface ClientActivitySession extends ClientActivitySessionType {}
+/**
+ * Listener type for session state changes.
+ */
+/* eslint-disable no-unused-vars */
+type Listener = (session: ActivitySession | null) => void;
 
-interface ActivityDB extends DBSchema {
-    sessions: {
-        key: string; // sessionId
-        value: ClientActivitySession;
-    };
-    history: {
-        key: number; // auto-increment
-        value: {
-            id?: number; // auto-increment optional key for idb
-            sessionId: string;
-            historyItem: IActivitySessionHistoryItem;
-        };
-        indexes: { "by-sessionId": string };
-    };
-}
-
-type Listener = (session: ClientActivitySession | null) => void;
-
+/**
+ * ActivityManager class manages activity sessions and their attempts using a repository.
+ */
 export class ActivityManager {
-    private dbPromise: Promise<IDBPDatabase<ActivityDB>>;
-    private currentSession: ClientActivitySession | null = null;
+    private currentSession: ActivitySession | null = null;
     private listeners: Listener[] = [];
+    private repository: IIndexedDBActivitySessionRepository;
 
-    constructor() {
-        this.dbPromise = openDB<ActivityDB>("activity-db", 1, {
-            upgrade(db) {
-                db.createObjectStore("sessions", { keyPath: "sessionId" });
-                const historyStore = db.createObjectStore("history", { keyPath: "id", autoIncrement: true });
-                historyStore.createIndex("by-sessionId", "sessionId");
-            },
-        });
-
+    constructor(repository: IIndexedDBActivitySessionRepository) {
+        this.repository = repository;
         this.initialize();
     }
 
+    /**
+     * Initializes the ActivityManager by loading the current session from the repository.
+     */
     private async initialize() {
-        // DBから現在のセッションをロード
-        const db = await this.dbPromise;
-        const allSessions = await db.getAll("sessions");
+        const allSessions = await this.repository.getAllSessions();
         this.currentSession = allSessions.length > 0 ? allSessions[0] : null;
         this.notifyListeners();
     }
 
-    async startSession(session: ClientActivitySession): Promise<void> {
-        const db = await this.dbPromise;
-        await db.put("sessions", session);
+    /**
+     * Starts a new activity session.
+     * @param session - The ActivitySession to start.
+     */
+    async startSession(session: ActivitySession): Promise<void> {
+        await this.repository.addSession(session);
         this.currentSession = session;
         this.notifyListeners();
     }
 
+    /**
+     * Ends the current activity session.
+     */
     async endSession(): Promise<void> {
         if (!this.currentSession) return;
-        const db = await this.dbPromise;
-        await db.delete("sessions", this.currentSession.sessionId);
+
+        const updatedSession: Partial<ActivitySession> = {
+            endAt: new Date(),
+            lastUpdatedAt: new Date(),
+        };
+
+        if (this.isGoalActivitySession(this.currentSession)) {
+            (updatedSession as Partial<GoalActivitySession>).status = SESSION_STATUS.COMPLETED;
+        }
+
+        await this.repository.updateSession(this.currentSession.sessionId, updatedSession);
         this.currentSession = null;
         this.notifyListeners();
     }
 
-    async submitAnswer(historyItem: IActivitySessionHistoryItem): Promise<void> {
+
+    /**
+     * Submits an answer (SessionAttempt) to the current session.
+     * @param historyItem - The SessionAttempt to submit.
+     */
+    async submitAnswer(historyItem: SessionAttempt): Promise<void> {
         if (!this.currentSession) throw new Error("No active session");
-        const db = await this.dbPromise;
-        await db.add("history", { sessionId: this.currentSession.sessionId, historyItem });
+
+        SessionAttemptSchema.parse(historyItem);
+
+        await this.repository.addAttempt(this.currentSession.sessionId, historyItem);
+
+        this.currentSession = await this.repository.getSessionById(this.currentSession.sessionId);
+        this.notifyListeners();
     }
 
-    getCurrentSession(): ClientActivitySession | null {
+    /**
+     * Retrieves the current active session.
+     * @returns The current ActivitySession or null.
+     */
+    getCurrentSession(): ActivitySession | null {
         return this.currentSession;
     }
 
+    /**
+     * Subscribes to session state changes.
+     * @param listener - The callback to invoke on session state changes.
+     * @returns A function to unsubscribe.
+     */
     subscribe(listener: Listener): () => void {
         this.listeners.push(listener);
-        // 現在の状態をリスナーに即時通知
         listener(this.currentSession);
         return () => {
             this.listeners = this.listeners.filter(l => l !== listener);
         };
     }
 
+    /**
+     * Notifies all subscribed listeners of the current session state.
+     */
     private notifyListeners(): void {
         this.listeners.forEach(listener => listener(this.currentSession));
     }
 
-    async getSessionHistory(sessionId: string): Promise<IActivitySessionHistoryItem[]> {
-        const db = await this.dbPromise;
-        const historyEntries = await db.getAllFromIndex("history", "by-sessionId", sessionId);
-        return historyEntries.map(entry => entry.historyItem);
+    /**
+     * Retrieves the history (attempts) of a specific session.
+     * @param sessionId - The ID of the session.
+     * @returns An array of SessionAttempt.
+     */
+    async getSessionHistory(sessionId: string): Promise<SessionAttempt[]> {
+        const session = await this.repository.getSessionById(sessionId);
+        if (this.isGoalActivitySession(session)) {
+            return session.attempts;
+        }
+        throw new Error("Session type does not support history retrieval.");
     }
 
-    // 全セッション取得
-    async getAllSessions(): Promise<ClientActivitySession[]> {
-        const db = await this.dbPromise;
-        const sessions = await db.getAll("sessions");
-        return sessions;
+    /**
+     * Retrieves all activity sessions.
+     * @returns An array of ActivitySession.
+     */
+    async getAllSessions(): Promise<ActivitySession[]> {
+        return await this.repository.getAllSessions();
     }
 
-    // 特定セッション削除
+    /**
+     * Deletes a specific session.
+     * @param sessionId - The ID of the session to delete.
+     */
     async deleteSession(sessionId: string): Promise<void> {
-        const db = await this.dbPromise;
-        await db.delete("sessions", sessionId);
-        console.log(`Session with ID ${sessionId} deleted.`);
-        // もし削除されたセッションが現在のセッションであれば、currentSession を null に
+        await this.repository.deleteSession(sessionId);
         if (this.currentSession?.sessionId === sessionId) {
             this.currentSession = null;
             this.notifyListeners();
         }
     }
 
-    // 特定セッション更新
-    async updateSession(sessionId: string, updatedSession: Partial<ClientActivitySession>): Promise<void> {
-        const db = await this.dbPromise;
-        const session = await db.get("sessions", sessionId);
-
-        if (!session) {
-            throw new Error(`Session with ID ${sessionId} not found.`);
-        }
-
-        // 更新するプロパティが problemSet の場合、必須フィールドを保持
-        if (updatedSession.problemSet) {
-            const existingProblemSet = session.problemSet;
-            updatedSession.problemSet = { ...existingProblemSet, ...updatedSession.problemSet };
-        }
-
-        const newSession: ClientActivitySession = {
-            ...session,
-            ...updatedSession,
-        };
-
-        await db.put("sessions", newSession);
-        console.log(`Session with ID ${sessionId} updated.`);
-
+    /**
+     * Updates a specific session.
+     * @param sessionId - The ID of the session to update.
+     * @param updatedSession - The updates to apply to the session.
+     */
+    async updateSession(sessionId: string, updatedSession: Partial<ActivitySession>): Promise<void> {
+        await this.repository.updateSession(sessionId, updatedSession);
         if (this.currentSession?.sessionId === sessionId) {
-            this.currentSession = newSession;
+            this.currentSession = await this.repository.getSessionById(sessionId);
             this.notifyListeners();
         }
     }
 
-    // 全ての履歴を取得
-    async getAllHistory(): Promise<{ id: number; sessionId: string; historyItem: IActivitySessionHistoryItem }[]> {
-        const db = await this.dbPromise;
-        const historyEntries = await db.getAll("history");
-        return historyEntries.map((entry) => ({
-            id: entry.id!,
-            sessionId: entry.sessionId,
-            historyItem: entry.historyItem,
-        }));
+    /**
+     * Retrieves all history (attempts) across all sessions.
+     * @returns An array of objects containing sessionId and SessionAttempt.
+     */
+    async getAllHistory(): Promise<{ sessionId: string; historyItem: SessionAttempt }[]> {
+        const sessions = await this.repository.getAllSessions();
+        return sessions.flatMap(session =>
+            this.isGoalActivitySession(session)
+                ? session.attempts.map(attempt => ({ sessionId: session.sessionId, historyItem: attempt }))
+                : []
+        );
     }
 
-    // 特定の履歴を削除
-    async deleteHistoryItem(id: number): Promise<void> {
-        const db = await this.dbPromise;
-        await db.delete("history", id);
-        console.log(`History item with ID ${id} deleted.`);
-    }
+    /**
+     * Deletes a specific history item (SessionAttempt) from a session.
+     * @param sessionId - The ID of the session containing the attempt.
+     * @param attemptId - The ID of the attempt to delete.
+     */
+    async deleteHistoryItem(sessionId: string, attemptId: string): Promise<void> {
+        const session = await this.repository.getSessionById(sessionId);
+        if (this.isGoalActivitySession(session)) {
+            const attemptIndex = session.attempts.findIndex(a => a.attemptId === attemptId);
+            if (attemptIndex === -1) throw new Error(`Attempt with ID ${attemptId} not found`);
 
-    // 特定の履歴を更新
-    async updateHistoryItem(id: number, updatedHistoryItem: Partial<IActivitySessionHistoryItem>): Promise<void> {
-        const db = await this.dbPromise;
-        const historyEntry = await db.get("history", id);
-        if (!historyEntry) {
-            throw new Error(`History item with ID ${id} not found.`);
+            session.attempts.splice(attemptIndex, 1);
+            await this.repository.updateSession(sessionId, { attempts: session.attempts });
+        } else {
+            throw new Error("Session type does not support deleting history items.");
         }
-        const newHistoryItem: IActivitySessionHistoryItem = { ...historyEntry.historyItem, ...updatedHistoryItem };
-        await db.put("history", { ...historyEntry, historyItem: newHistoryItem });
-        console.log(`History item with ID ${id} updated.`);
+    }
+
+    /**
+     * Updates a specific history item (SessionAttempt) within a session.
+     * @param sessionId - The ID of the session containing the attempt.
+     * @param attemptId - The ID of the attempt to update.
+     * @param updatedAttempt - The updates to apply to the attempt.
+     */
+    async updateHistoryItem(sessionId: string, attemptId: string, updatedAttempt: Partial<SessionAttempt>): Promise<void> {
+        const session = await this.repository.getSessionById(sessionId);
+        if (this.isGoalActivitySession(session)) {
+            const attemptIndex = session.attempts.findIndex(a => a.attemptId === attemptId);
+            if (attemptIndex === -1) throw new Error(`Attempt with ID ${attemptId} not found`);
+
+            session.attempts[attemptIndex] = { ...session.attempts[attemptIndex], ...updatedAttempt };
+            await this.repository.updateSession(sessionId, { attempts: session.attempts });
+        } else {
+            throw new Error("Session type does not support updating history items.");
+        }
+    }
+
+    /**
+     * Checks if the session is a GoalActivitySession.
+     * @param session - The session to check.
+     * @returns True if the session is a GoalActivitySession.
+     */
+    private isGoalActivitySession(session: ActivitySession | null): session is GoalActivitySession {
+        return session?.sessionType === SESSION_TYPES.GOAL;
+    }
+
+    /**
+     * Checks if the session is a ServiceActivitySession.
+     * @param session - The session to check.
+     * @returns True if the session is a ServiceActivitySession.
+     */
+    private isServiceActivitySession(session: ActivitySession | null): session is ServiceActivitySession {
+        return session?.sessionType === SESSION_TYPES.SERVICE;
     }
 }

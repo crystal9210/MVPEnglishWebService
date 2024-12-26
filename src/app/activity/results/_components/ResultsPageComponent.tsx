@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { useActivity } from "@/app/_contexts/activityContext";
+import { useActivity } from "@/app/_contexts/activitySessionContext";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 

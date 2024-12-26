@@ -3,7 +3,7 @@ import React, { useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { mockProblemSets } from "@/sample_datasets/v1/activity/mockProblemSets1";
 import { ProblemSet } from "@/schemas/activity/clientSide/problemSetSchema";
-import { useActivity } from "@/app/_contexts/activityContext";
+import { useActivity } from "@/app/_contexts/activitySessionContext";
 import { ClientActivitySession } from "@/domain/entities/clientSide/clientActivitySession";
 
 const ProblemSetSelector: React.FC = () => {

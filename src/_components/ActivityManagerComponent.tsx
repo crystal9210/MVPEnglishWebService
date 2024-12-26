@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { useActivity } from "@/app/_contexts/activityContext";
+import { useActivity } from "@/app/_contexts/activitySessionContext";
 import { ClientActivitySessionHistoryItem } from "@/domain/entities/clientSide/activitySessionHistoryItem";
 import { ClientActivitySession } from "@/domain/entities/clientSide/clientActivitySession";
 import { toast } from "react-toastify";

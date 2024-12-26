@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useActivity } from "@/app/_contexts/activityContext";
+import { useActivity } from "@/app/_contexts/activitySessionContext";
 import { ClientActivitySessionType } from "@/schemas/activity/clientSide/clientActivitySessionSchema";
 import { ClientActivitySessionHistoryItem } from "@/domain/entities/clientSide/activitySessionHistoryItem";
 

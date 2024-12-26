@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useActivity } from "@/app/_contexts/activityContext";
+import { useActivity } from "@/app/_contexts/activitySessionContext";
 import { ClientActivitySessionHistoryItem } from "@/domain/entities/clientSide/activitySessionHistoryItem";
 import { toast } from "react-toastify";
 import ProblemSetSelector from "@/app/_components/activity/problemSetSelector";

@@ -48,7 +48,7 @@ const ProblemHistorySchema = z.object({
 /**
  * Schema for a single attempt within a session.
  */
-const SessionAttemptSchema = z.object({
+export const SessionAttemptSchema = z.object({
     attemptId: z.string(),
     startAt: DateSchema,
     endAt: OptionalDateSchema, // >> use epoch time by default instead of using 'optional()' .
@@ -62,7 +62,7 @@ export type SessionAttempt = z.infer<typeof SessionAttemptSchema>;
  * Schema for goal-oriented activity sessions.
  * Manages progress details and attempts related to achieving a specific goal.
  */
-const GoalActivitySessionSchema = z.object({
+export const GoalActivitySessionSchema = z.object({
     ...createSessionSchema(SESSION_TYPES.GOAL).shape,
     goalId: z.string(),
     progressDetails: ProgressDetailByCriteriaSchema,
@@ -75,7 +75,7 @@ const GoalActivitySessionSchema = z.object({
  * Schema for service-oriented activity sessions.
  * Maintains information related to problem sets and progress counts.
  */
-const ServiceActivitySessionSchema = z.object({
+export const ServiceActivitySessionSchema = z.object({
     ...createSessionSchema(SESSION_TYPES.SERVICE).shape,
     serviceId: z.string(),
     categoryId: z.string().default(NA_PATH_ID),

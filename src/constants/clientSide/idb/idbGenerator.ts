@@ -13,7 +13,11 @@ export type BackUpData = {
 type GetKeyType<
     Configs extends readonly { name: IdbObjectStoreName; options: { keyPath: string | string[] } }[],
     Name extends IdbObjectStoreName
-> = Extract<Configs[number], { name: Name }>["options"]["keyPath"];
+> = Extract<Configs[number], { name: Name }>["options"]["keyPath"] extends string
+    ? string
+    : Extract<Configs[number], { name: Name }>["options"]["keyPath"] extends string[]
+        ? string[]
+        : never;
 
 
 type GenerateStoreValueMap<T extends readonly { name: string; schema: z.ZodTypeAny }[]> = {

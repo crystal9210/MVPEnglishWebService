@@ -1,11 +1,13 @@
-import { IActivitySessionRepository } from "@/interfaces/repositories/IActivitySessionRepository";
+import { IIndexedDBActivitySessionRepository } from "@/interfaces/clientSide/repositories/IIdbActivitySessionRepository";
 import { ActivitySession, GoalActivitySessionSchema, ServiceActivitySessionSchema, SessionAttempt, SessionAttemptSchema } from "@/schemas/activity/activitySessionSchema";
-import { collection, addDoc, doc, updateDoc, getDoc, getDocs, deleteDoc } from "firebase/firestore";
-import { db } from "@/firebase"; // Firestore の初期化済みインスタンスをインポート
+import { GenericRepository } from "./genericRepository";
+import { IIndexedDBManager } from "@/interfaces/clientSide/repositories/managers/IIndexedDBManager";
 import { SESSION_TYPES } from "@/constants/sessions/sessions";
 
-export class ActivitySessionRepository implements IActivitySessionRepository {
-    private sessionsCollection = collection(db, "activitySessions");
+export class IndexedDBActivitySessionRepository extends GenericRepository<"activitySessions"> implements IIndexedDBActivitySessionRepository {
+    constructor(idbManager: IIndexedDBManager) {
+        super(idbManager, "activitySessions");
+    }
 
     /**
      * Adds a new session.
@@ -19,7 +21,8 @@ export class ActivitySessionRepository implements IActivitySessionRepository {
         } else {
             throw new Error(`Unknown session type is detected. The session is: ${JSON.stringify(session, null, 2)}`);
         }
-        await addDoc(this.sessionsCollection, session);
+
+        await this.add(session);
     }
 
     /**
@@ -28,8 +31,7 @@ export class ActivitySessionRepository implements IActivitySessionRepository {
      * @param updatedSession - The updates to be applied to the session.
      */
     async updateSession(sessionId: string, updatedSession: Partial<ActivitySession>): Promise<void> {
-        const sessionDoc = doc(this.sessionsCollection, sessionId);
-        await updateDoc(sessionDoc, updatedSession);
+        await this.update(updatedSession, sessionId);
     }
 
     /**
@@ -38,18 +40,17 @@ export class ActivitySessionRepository implements IActivitySessionRepository {
      * @returns The specified session or null if not found.
      */
     async getSessionById(sessionId: string): Promise<ActivitySession | null> {
-        const sessionDoc = doc(this.sessionsCollection, sessionId);
-        const docSnapshot = await getDoc(sessionDoc);
-        if (!docSnapshot.exists()) {
+        const session = await this.get(sessionId);
+        if (!session) {
             return null;
         }
-        const data = docSnapshot.data();
-        if (data.sessionType === "GOAL") {
-            return GoalActivitySessionSchema.parse(data);
-        } else if (data.sessionType === "SERVICE") {
-            return ServiceActivitySessionSchema.parse(data);
+
+        if (session.sessionType === SESSION_TYPES.GOAL) {
+            return GoalActivitySessionSchema.parse(session);
+        } else if (session.sessionType === SESSION_TYPES.SERVICE) {
+            return ServiceActivitySessionSchema.parse(session);
         } else {
-            throw new Error(`Unknown session type: ${data.sessionType}`);
+            throw new Error(`Unknown session type: ${session.sessionType}`);
         }
     }
 
@@ -58,15 +59,14 @@ export class ActivitySessionRepository implements IActivitySessionRepository {
      * @returns An array of all activity sessions.
      */
     async getAllSessions(): Promise<ActivitySession[]> {
-        const querySnapshot = await getDocs(this.sessionsCollection);
-        return querySnapshot.docs.map(doc => {
-            const data = doc.data();
-            if (data.sessionType === "GOAL") {
-                return GoalActivitySessionSchema.parse(data);
-            } else if (data.sessionType === "SERVICE") {
-                return ServiceActivitySessionSchema.parse(data);
+        const sessions = await this.getAll();
+        return sessions.map(session => {
+            if (session.sessionType === SESSION_TYPES.GOAL) {
+                return GoalActivitySessionSchema.parse(session);
+            } else if (session.sessionType === SESSION_TYPES.SERVICE) {
+                return ServiceActivitySessionSchema.parse(session);
             } else {
-                throw new Error(`Unknown session type: ${data.sessionType}`);
+                throw new Error(`Unknown session type: ${session.sessionType}`);
             }
         });
     }
@@ -76,8 +76,7 @@ export class ActivitySessionRepository implements IActivitySessionRepository {
      * @param sessionId - The ID of the session to delete.
      */
     async deleteSession(sessionId: string): Promise<void> {
-        const sessionDoc = doc(this.sessionsCollection, sessionId);
-        await deleteDoc(sessionDoc);
+        await this.delete(sessionId);
     }
 
     /**
