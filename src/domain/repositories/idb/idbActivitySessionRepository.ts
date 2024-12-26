@@ -50,7 +50,7 @@ export class IndexedDBActivitySessionRepository extends GenericRepository<"activ
         } else if (session.sessionType === SESSION_TYPES.SERVICE) {
             return ServiceActivitySessionSchema.parse(session);
         } else {
-            throw new Error(`Unknown session type: ${session.sessionType}`);
+            throw new Error(`Unknown session type. The session is : ${JSON.stringify(session)}`);
         }
     }
 
@@ -66,7 +66,7 @@ export class IndexedDBActivitySessionRepository extends GenericRepository<"activ
             } else if (session.sessionType === SESSION_TYPES.SERVICE) {
                 return ServiceActivitySessionSchema.parse(session);
             } else {
-                throw new Error(`Unknown session type: ${session.sessionType}`);
+                throw new Error(`Unknown session type. The session is : ${JSON.stringify(session)}`);
             }
         });
     }

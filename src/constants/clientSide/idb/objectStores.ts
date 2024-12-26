@@ -3,17 +3,16 @@
 // 本ファイルモジュール要求定義
 // ok オブジェクト名に応じてオブジェクトストアに格納するデータバリューの型情報が正確に取得してアクセスできる
 // ok オブジェクト名に応じてキー(プライマリキー;主キー)が正確に取得でき、それによりアクセスパスを取得し、かつidとなる情報からデータの整合性等を保証できる
-import { MemoSchema } from "@/schemas/app/_contexts/memoSchemas";
-import { ActivitySessionHistoryItemSchema } from "@/schemas/activity/serverSide/activitySessionHistoryItemSchema";
 import { z } from "zod";
-import { ClientActivitySessionSchema } from "@/schemas/activity/clientSide/clientActivitySessionSchema";
+import { MemoSchema } from "@/schemas/app/_contexts/memoSchemas";
+import { ActivitySessionSchema } from "@/schemas/activity/activitySessionSchema";
 
 // List of the idb object store literals.
 export const IDB_OBJECT_STORES = {
     MEMO_LIST: "memoList" as const,
     TRASHED_MEMO_LIST: "trashedMemoList" as const,
     ACTIVITY_SESSIONS: "activitySessions" as const,
-    HISTORY: "history" as const,
+    // HISTORY: "history" as const,
 } as const;
 
 // union type of the list; IDB_OBJECT_STORES
@@ -82,33 +81,33 @@ export const IDB_OBJECT_STORE_CONFIGS = [
     {
         name: "activitySessions" as const,
         firestorePath: "activity_sessions",
-        schema: ClientActivitySessionSchema,
+        schema: ActivitySessionSchema,
         options: { keyPath: "sessionId" },
         indexes: [
             { name: "by-startedAt" as const, keyPath: "startedAt" },
             { name: "by-endedAt" as const, keyPath: "endedAt" },
         ]
-    } satisfies ObjectStoreConfig<"activitySessions", typeof ClientActivitySessionSchema, "activity_sessions", "sessionId">,
-    {
-        name: "history" as const,
-        firestorePath: "history_items",
-        schema: z.object({ // インラインでスキーマを定義することも可能
-            id: z.number().optional(),
-            sessionId: z.string(),
-            historyItem: ActivitySessionHistoryItemSchema,
-        }),
-        options: { keyPath: "id" },
-        indexes: [
-            {
-                name: "by-sessionId" as const,
-                keyPath: "sessionId",
-            }, // セッションIDで検索・フィルタリングすることを想定
-        ]
-    } satisfies ObjectStoreConfig<"history", z.ZodObject<{
-        id: z.ZodOptional<z.ZodNumber>;
-        sessionId: z.ZodString;
-        historyItem: typeof ActivitySessionHistoryItemSchema;
-    }>, "history_items", "id">,
+    } satisfies ObjectStoreConfig<"activitySessions", typeof ActivitySessionSchema, "activity_sessions", "sessionId">,
+    // {
+    //     name: "history" as const,
+    //     firestorePath: "history_items",
+    //     schema: z.object({ // インラインでスキーマを定義することも可能
+    //         id: z.number().optional(),
+    //         sessionId: z.string(),
+    //         historyItem: ActivitySessionSchema,
+    //     }),
+    //     options: { keyPath: "id" },
+    //     indexes: [
+    //         {
+    //             name: "by-sessionId" as const,
+    //             keyPath: "sessionId",
+    //         }, // セッションIDで検索・フィルタリングすることを想定
+    //     ]
+    // } satisfies ObjectStoreConfig<"history", z.ZodObject<{
+    //     id: z.ZodOptional<z.ZodNumber>;
+    //     sessionId: z.ZodString;
+    //     historyItem: typeof ActivitySessionHistoryItemSchema;
+    // }>, "history_items", "id">,
 ] as const;
 
 export type IdbObjectStoreConfigs = typeof IDB_OBJECT_STORE_CONFIGS;

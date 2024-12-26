@@ -433,6 +433,11 @@ export class IndexedDBManager implements IIndexedDBManager {
     public getDB(): Promise<IDBPDatabase<MyIDB>> {
         return this.dbPromise;
     }
+
+    async count<K extends IdbObjectStoreName>(storeName: K): Promise<number> {
+        const db = await this.getDB();
+        return await db.count(storeName);
+    }
 }
 
 export default IndexedDBManager;

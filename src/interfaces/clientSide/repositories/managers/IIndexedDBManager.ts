@@ -98,6 +98,11 @@ export interface IIndexedDBManager {
     getDB(): Promise<IDBPDatabase<MyIDB>>;
 
     /**
+     * オブジェクトストア内のデータ数カウント
+     */
+    count<K extends IdbObjectStoreName>(storeName: K): Promise<number>;
+
+    /**
      * DBのバックアップ・リカバリ処理実行
      * (バックアップデータの復元:内部実行)
      * これは公開しない >> ハンドリング:内部処理
