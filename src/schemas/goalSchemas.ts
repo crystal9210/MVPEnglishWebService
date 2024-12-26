@@ -62,13 +62,13 @@ export type Criteria = z.infer<typeof CriteriaSchema>;
 // Per period targets schema
 const PerPeriodTargetsSchema = z.object({
   enabled: z.boolean().default(false),
-  period: z.enum(['daily', 'weekly']).optional(),
+  period: z.enum(["daily", "weekly"]).optional(),
   targetRate: z.number().min(0).max(100).optional(), // percentage
 }).refine(data => {
   if (!data.enabled) return true;
   return data.period !== undefined && data.targetRate !== undefined;
 }, {
-  message: 'When enabled is true, period and targetRate must be specified.',
+  message: "When enabled is true, period and targetRate must be specified.",
 });
 
 
@@ -88,7 +88,7 @@ export const GoalSchema = z.object({
         reasonableDeadline: z.date(),
         bestDeadline: z.date(),
     }).refine(data => data.bestDeadline <= data.reasonableDeadline, {
-        message: 'Best deadline must be on or before reasonable deadline.',
+        message: "Best deadline must be on or before reasonable deadline.",
     }),
     perPeriodTargets: PerPeriodTargetsSchema.optional(),
 });
