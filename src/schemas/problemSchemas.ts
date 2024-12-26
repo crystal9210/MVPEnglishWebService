@@ -99,11 +99,6 @@ export const ServiceTypeProblemSchema = z.discriminatedUnion("serviceId", [
 export type ServiceTypeProblem = z.infer<typeof ServiceTypeProblemSchema>;
 
 
-export const ProblemFiltersSchema = z.object({
-
-})
-
-
 // export const PatternSchema = baseProblemSchema.extend({
 //   type: z.literal("pattern"),
 //   title: z.string(),
