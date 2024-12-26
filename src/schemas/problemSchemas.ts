@@ -1,7 +1,7 @@
 import { QUESTION_TYPES, QuestionType } from "@/constants/problemTypes";
 import { z } from "zod";
 import { NA_PATH_ID, ServiceIdEnum, SERVICE_IDS } from "@/constants/serviceIds";
-import { integerNonNegative } from "./utils/numbers";
+import { ProblemDifficultyLevelEnum } from "@/constants/userStatisticTypes";
 
 
 const createProblemBaseSchema = <T extends QuestionType>(questionType: T) => {
@@ -14,7 +14,7 @@ const createProblemBaseSchema = <T extends QuestionType>(questionType: T) => {
       title: z.string(),
       description: z.string().optional(),
       explanation: z.string().optional(),
-      difficulty: integerNonNegative().min(1).max(5), // TODO >> 共通化しなくていい、おそらくソートの時も外部定義して利用するケースはないはず
+      difficulty: ProblemDifficultyLevelEnum, // TODO >> 共通化しなくていい、おそらくソートの時も外部定義して利用するケースはないはず
       tags: z.array(z.string()).default([]),
   });
 }

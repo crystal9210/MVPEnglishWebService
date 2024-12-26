@@ -6,6 +6,7 @@ import { integerNonNegative } from "@/schemas/utils/numbers";
 import { DateSchema } from "../utils/dates";
 import { UserInputSchema } from "./userInputSchemas";
 import { ServiceIdEnum, NA_PATH_ID } from "@/constants/serviceIds";
+import { UserRankTypeEnum } from "@/constants/userStatisticTypes";
 
 /**
  * Schema of memo for additional info to a specific problem.
@@ -77,14 +78,17 @@ const ProblemAttemptSchema = z.object({
  *       isCorrect: true,
  *     },
  *   ],
+ * latestResponseTimes: [200000, 180000, 210000, 190000, 205000], // >> the rank is determined by latest 5 history item's values.
  * }
  */
 const SessionProblemHistorySchema = z.object({
-  problemId: z.string(),   // ID of the problem.
-  serviceId: z.string(),   // ID of the service related to the problem.
-  categoryId: z.string(),  // ID of the category of the problem.
-  stepId: z.string(),      // ID of the step of the problem.
-  attempts: z.array(ProblemAttemptSchema), // Array of attempts for this problem in the session.
+    problemId: z.string(),   // ID of the problem.
+    serviceId: z.string(),   // ID of the service related to the problem.
+    categoryId: z.string(),  // ID of the category of the problem.
+    stepId: z.string(),      // ID of the step of the problem.
+    attempts: z.array(ProblemAttemptSchema), // array of attempts for this problem in the session.
+    latestResponseTimes: z.array(integerNonNegative().max(5).optional()),
+    rank: UserRankTypeEnum.optional(),
 });
 
 /**

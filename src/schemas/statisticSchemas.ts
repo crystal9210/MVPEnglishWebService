@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { integerNonNegative } from "./utils/numbers";
+import { GoalPeriodTypeEnum, UserRankTypeEnum } from "@/constants/userStatisticTypes";
 
 // --- Collections structure in firestore ---
 // users/{userId}/
@@ -72,7 +73,7 @@ import { integerNonNegative } from "./utils/numbers";
  * ```
  */
 export const SessionStatisticsSchema = z.object({
-    period: z.enum(["daily", "weekly", "monthly"]),
+    period: GoalPeriodTypeEnum,
     totalSessions: integerNonNegative(),
     totalSpentTime: integerNonNegative(), // >> total time spent in milliseconds
     averageSpentTime: integerNonNegative(), // average time per session's problem in milliseconds
@@ -101,7 +102,7 @@ export type SessionStatistics = z.infer<typeof SessionStatisticsSchema>;
  * ```
  */
 export const GoalStatisticsSchema = z.object({
-    period: z.enum(["daily", "weekly", "monthly"]),
+    period: GoalPeriodTypeEnum,
     totalGoals: integerNonNegative(),
     goalsCompleted: integerNonNegative(),
     completionRate: z.number().min(0).max(100), // Percentage
@@ -130,7 +131,7 @@ export type GoalStatistics = z.infer<typeof GoalStatisticsSchema>;
  * ```
  */
 export const ProblemStatisticsSchema = z.object({
-    period: z.enum(["daily", "weekly", "monthly"]),
+    period: GoalPeriodTypeEnum,
     totalProblemsAttempted: integerNonNegative(),
     totalCorrectAnswers: integerNonNegative(),
     correctAnswerRate: z.number().min(0).max(100), // Percentage
@@ -158,7 +159,7 @@ export type ProblemStatistics = z.infer<typeof ProblemStatisticsSchema>;
  * ```
  */
 export const UserActivitySchema = z.object({
-    period: z.enum(["daily", "weekly", "monthly"]),
+    period: GoalPeriodTypeEnum,
     totalActions: integerNonNegative(),
     activeDays: integerNonNegative(),
     averageDailyActions: integerNonNegative(),
@@ -188,6 +189,26 @@ export const StatisticsSummarySchema = z.object({
 
 export type StatisticsSummary = z.infer<typeof StatisticsSummarySchema>;
 
+
+/**
+ * Schema for User Rank
+ *
+ * @example
+ * ```typescript
+ * {
+ *   rank: "Gold",
+ *   calculatedAt: new Date("2024-12-31T23:59:59.999Z"),
+ * }
+ * ```
+ */
+export const UserRankSchema = z.object({
+    rank: UserRankTypeEnum,
+    calculatedAt: z.date(),
+    totalPoints: integerNonNegative(),
+});
+
+export type UserRank = z.infer<typeof UserRankSchema>;
+
 /**
  * Combined Statistics Schema
  *
@@ -208,6 +229,7 @@ export const CombinedStatisticsSchema = z.object({
     problemStatistics: ProblemStatisticsSchema,
     userActivity: UserActivitySchema,
     summary: StatisticsSummarySchema,
+    userRank: UserRankSchema,
 });
 
 export type CombinedStatistics = z.infer<typeof CombinedStatisticsSchema>;
