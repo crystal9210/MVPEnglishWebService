@@ -13,6 +13,7 @@ export const SERVICE_IDS = {
     BASIS: "basis",
     WRITING: "writing",
     MULTIPLE_CHOICE: " multiple-choice",
+    GRAMMAR: 'grammar', // TODO >> 仮、後で調整
     // N/A >> You should use constants defined below: NA_PATH_ID.
     NA_PATH_ID: NA_PATH_ID
 } as const;

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ProblemResultTypeEnum } from "@/constants/problemResultType";
+import { ProblemResultTypeEnum } from "@/constants/problemTypes";
 import { DateSchema } from "../utils/dates";
 import { integerNonNegative } from "../utils/numbers";
 

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { integerNonNegative } from "@/schemas/utils/numbers";
 import { NA_PATH_ID, ServiceIdEnum } from "@/constants/serviceIds";
-import { ProblemResultTypeEnum } from "@/constants/problemResultType";
+import { ProblemResultTypeEnum } from "@/constants/problemTypes";
 import { SESSION_STATUS, SessionStatusEnum } from "@/constants/sessions/sessions";
 import { SESSION_TYPES, SessionType } from "@/constants/sessions/sessions";
 import { DateSchema, OptionalDateSchema } from "../utils/dates";
