@@ -1,59 +1,37 @@
 /* eslint-disable no-unused-vars */
-import type { Problem } from "@/schemas/problemSchemas";
+import { Problem } from "@/schemas/problemSchemas";
+import { QuestionType } from "@/constants/problemTypes";
 
+/**
+ * Defines the interface for the ProblemService.
+ * This interface outlines the methods that the ProblemService should implement.
+ */
 export interface IProblemService {
-    getProblemById(serviceId: string, problemId: string): Promise<Problem | null>;
-
-    getProblemsByCategory(
-        serviceId: string,
-        category: string,
-        limit?: number,
-        random?: boolean
-    ): Promise<Problem[]>;
-
-    getProblemsByDifficulty(
-        serviceId: string,
-        difficulty: string,
-        limit?: number,
-        random?: boolean
-    ): Promise<Problem[]>;
-
-    getAllProblems(
-        serviceId: string,
-        limit?: number,
-        random?: boolean
-    ): Promise<Problem[]>;
+    /**
+     * Retrieves a problem by its ID.
+     * @param serviceId The ID of the service the problem belongs to.
+     * @param problemId The ID of the problem to retrieve.
+     * @param questionType The type of the question.
+     * @returns A promise that resolves to the problem data, or null if not found.
+     */
+    getProblemById(serviceId: string, problemId: string, questionType: QuestionType): Promise<Problem | null>;
 
     /**
-     * 複数カテゴリから、それぞれlimit数取得
-     * randomがtrueならランダムサンプリング
+     * Finds problems based on the specified filters.
+     * @param serviceId The ID of the service the problems belong to.
+     * @param questionType The type of the question.
+     * @param filters The filters to apply when searching for problems.
+     * @returns A promise that resolves to an array of problems matching the filters.
      */
-    getProblemsByCategories(
+    findProblemsWithFilters(
         serviceId: string,
-        categoryRequests: {category: string; limit: number}[],
-        random?: boolean
-    ): Promise<Problem[]>;
-
-    /**
-     * 複数難易度から、それぞれlimit数取得
-     */
-    getProblemsByDifficulties(
-        serviceId: string,
-        difficultyRequests: {difficulty: string; limit: number}[],
-        random?: boolean
-    ): Promise<Problem[]>;
-
-    /**
-     * 柔軟なフィルタリング
-     * categories, difficulties, limit, randomを指定可能
-     */
-    getProblemsWithFilters(
-        serviceId: string,
-        options: {
+        questionType: QuestionType,
+        filters: {
             categories?: string[];
             difficulties?: string[];
             limit?: number;
-            random?: boolean;
+            orderBy?: { field: string; direction: "asc" | "desc" };
+            startAfter?: unknown;
         }
     ): Promise<Problem[]>;
 }
