@@ -1,110 +1,127 @@
 /* eslint-disable no-unused-vars */
 import { injectable, inject } from "tsyringe";
-import type { IProblemRepository } from "@/interfaces/repositories/IProblemRepository";
+import { IProblemRepository } from "@/interfaces/repositories/IProblemRepository";
 import type { IFirebaseAdmin } from "@/interfaces/services/IFirebaseAdmin";
 import type { ILoggerService } from "@/interfaces/services/ILoggerService";
-import type { Problem } from "@/schemas/problemSchemas";
-import { ProblemSchema } from "@/schemas/problemSchemas";
+import { SERVICE_IDS } from "@/constants/serviceIds";
+import { QUESTION_TYPES, QuestionType } from "@/constants/problemTypes";
+import { WritingInputProblemSchema, GrammarMultipleChoiceProblemSchema, BasisProblemSchema, MultipleChoiceProblemSchema, InputProblemSchema, SortingProblemSchema, Problem } from "@/schemas/problemSchemas";
+import { z } from "zod";
+
+type ProblemFilters = {
+    categories?: string[];
+    difficulties?: string[];
+    orderBy?: { field: string; direction: "asc" | "desc" };
+    limit?: number;
+    startAfter?: FirebaseFirestore.QueryDocumentSnapshot;
+};
+
+const serviceTypeMap: {
+    [key in typeof SERVICE_IDS[keyof typeof SERVICE_IDS]]?: {
+        [key in QuestionType]?: z.ZodTypeAny;
+    };
+    } = {
+    [SERVICE_IDS.WRITING]: {
+        [QUESTION_TYPES.INPUT]: WritingInputProblemSchema,
+    },
+    [SERVICE_IDS.GRAMMAR]: {
+        [QUESTION_TYPES.MULTIPLE_CHOICE]: GrammarMultipleChoiceProblemSchema,
+    },
+    [SERVICE_IDS.BASIS]: {
+        [QUESTION_TYPES.MULTIPLE_CHOICE]: BasisProblemSchema,
+    },
+};
 
 @injectable()
 export class ProblemRepository implements IProblemRepository {
+    private readonly problemsCollection: FirebaseFirestore.CollectionReference;
+
     constructor(
         @inject("IFirebaseAdmin") private readonly firebaseAdmin: IFirebaseAdmin,
         @inject("ILoggerService") private readonly logger: ILoggerService
-    ) {}
-
-    private collection(serviceId: string) {
-        const firestore = this.firebaseAdmin.getFirestore();
-        return firestore.collection("problemServices").doc(serviceId).collection("problems");
+    ) {
+        this.problemsCollection = this.firebaseAdmin.getFirestore().collection("problems");
     }
 
-    private validateData(data: unknown): Problem | null {
-        const parsed = ProblemSchema.safeParse(data);
-        if (parsed.success) {
-            return parsed.data;
+    private getServiceSpecificSchema(serviceId: string, questionType: QuestionType): z.ZodTypeAny {
+        const serviceSchemas = serviceTypeMap[serviceId as keyof typeof serviceTypeMap];
+        if (serviceSchemas && serviceSchemas[questionType]) {
+        return serviceSchemas[questionType];
         }
-        this.logger.warn("Invalid problem data", { errors: parsed.error.errors });
+
+        const baseSchemaMap: {
+        [key in QuestionType]?: z.ZodTypeAny;
+        } = {
+        [QUESTION_TYPES.MULTIPLE_CHOICE]: MultipleChoiceProblemSchema,
+        [QUESTION_TYPES.INPUT]: InputProblemSchema,
+        [QUESTION_TYPES.SORTING]: SortingProblemSchema,
+        };
+
+        return baseSchemaMap[questionType] ?? z.any();
+    }
+
+    private validateProblemData(serviceId: string, questionType: QuestionType, data: unknown): Problem | null {
+        try {
+        const schema = this.getServiceSpecificSchema(serviceId, questionType);
+        return schema.parse(data) as Problem; // 型キャスト
+        } catch (error) {
+        this.logger.error("Problem validation failed", { error, serviceId, questionType, data });
         return null;
+        }
     }
 
-    async getProblemById(serviceId: string, problemId: string): Promise<Problem | null> {
-        const docSnap = await this.collection(serviceId).doc(problemId).get();
+    async getProblemById(serviceId: string, problemId: string, questionType: QuestionType): Promise<Problem | null> {
+        try {
+        const docSnap = await this.problemsCollection
+            .doc(problemId)
+            .get();
+
         if (!docSnap.exists) {
-            this.logger.warn(`Problem not found: serviceId=${serviceId}, PID=${problemId}`);
             return null;
         }
-        const problem = this.validateData(docSnap.data());
-        if (!problem) {
-            this.logger.warn(`Invalid problem at ID=${problemId} in serviceId=${serviceId}`);
-            return null;
+
+        const data = docSnap.data();
+        return this.validateProblemData(serviceId, questionType, data);
+        } catch (error) {
+        this.logger.error("Failed to get problem", { error, serviceId, problemId, questionType });
+        throw error;
         }
-        return problem;
     }
 
-    async findProblemsByCategory(serviceId: string, category: string): Promise<Problem[]> {
-        const querySnap = await this.collection(serviceId).where("category", "==", category).get();
-        const problems: Problem[] = [];
-        querySnap.forEach(doc => {
-            const p = this.validateData(doc.data());
-            if (p) problems.push(p);
-        });
-        return problems;
-    }
+    async findProblemsWithFilters(
+        serviceId: string,
+        questionType: QuestionType,
+        filters: ProblemFilters
+    ): Promise<Problem[]> {
+        try {
+        let query = this.problemsCollection
+            .where("serviceId", "==", serviceId)
+            .where("questionType", "==", questionType);
 
-    async findProblemsByDifficulty(serviceId: string, difficulty: string): Promise<Problem[]> {
-        const querySnap = await this.collection(serviceId).where("difficulty", "==", difficulty).get();
-        const problems: Problem[] = [];
-        querySnap.forEach(doc => {
-            const p = this.validateData(doc.data());
-            if (p) problems.push(p);
-        });
-        return problems;
-    }
-
-    async findAllProblems(serviceId: string): Promise<Problem[]> {
-        const querySnap = await this.collection(serviceId).get();
-        const problems: Problem[] = [];
-        querySnap.forEach(doc => {
-            const p = this.validateData(doc.data());
-            if (p) problems.push(p);
-        });
-        return problems;
-    }
-
-    async findProblemsByCategories(serviceId: string, categories: string[]): Promise<Problem[]> {
-        // FirestoreにORクエリ（複数条件）を直接書くにはlimitがあるので複数クエリを行い合体する必要がある
-        // ここでは単純にcategoriesをループして合体
-        let allProblems: Problem[] = [];
-        for (const cat of categories) {
-            const catProblems = await this.findProblemsByCategory(serviceId, cat);
-            allProblems = allProblems.concat(catProblems);
+        if (filters.categories?.length) {
+            query = query.where("categoryId", "in", filters.categories);
         }
-        return allProblems;
-    }
-
-    async findProblemsByDifficulties(serviceId: string, difficulties: string[]): Promise<Problem[]> {
-        let allProblems: Problem[] = [];
-        for (const diff of difficulties) {
-            const diffProblems = await this.findProblemsByDifficulty(serviceId, diff);
-            allProblems = allProblems.concat(diffProblems);
+        if (filters.difficulties?.length) {
+            query = query.where("difficulty", "in", filters.difficulties);
         }
-        return allProblems;
-    }
-
-    async findProblemsWithFilters(serviceId: string, filters: {categories?: string[], difficulties?: string[]}): Promise<Problem[]> {
-        // categories, difficultiesが両方指定された場合はAND条件とする
-        // Firestoreは複数whereでANDは可能だがORは難しい
-        // ここでは複数クエリ+合体後にフィルタするロジック
-        let problems = await this.findAllProblems(serviceId);
-
-        if (filters.categories) {
-            problems = problems.filter(p => filters.categories!.includes(p.category));
+        if (filters.orderBy) {
+            query = query.orderBy(filters.orderBy.field, filters.orderBy.direction);
+        }
+        if (filters.limit) {
+            query = query.limit(filters.limit);
+        }
+        if (filters.startAfter) {
+            query = query.startAfter(filters.startAfter);
         }
 
-        if (filters.difficulties) {
-            problems = problems.filter(p => filters.difficulties!.includes(p.difficulty));
-        }
+        const querySnap = await query.get();
 
-        return problems;
+        return querySnap.docs
+            .map(doc => this.validateProblemData(serviceId, questionType, doc.data()))
+            .filter((problem): problem is Problem => problem !== null);
+        } catch (error) {
+        this.logger.error("Failed to find problems", { error, serviceId, questionType, filters });
+        throw error;
+        }
     }
 }
