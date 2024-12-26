@@ -1,3 +1,4 @@
+
 // TODO RBAC: firebase authenticationのセキュリティルール側でも保証しているが専用の機構を内部的に用意する >> モノシリックなため不正アクセス + 暗号化された内容を解読できる攻撃者に対する防御には足りないが内部制御の専用モジュール開発・導入 >> 本来ならコードベースの暗号化についても危殆化対策として定期的にリフレッシュする専用の機構を用意するべき >> 異なるロジックの暗号による複数回の暗号化により事実上解読不可能にはなるはず
 export const COLLECTION_PATHS = {
     AUDIT_LOGS: "auditLogs", // システム全体の重要なイベント・アクションを記録 >> 不正アクセス・障害時のトラブルシューティング実施時;セキュリティ監査利用
@@ -7,15 +8,23 @@ export const COLLECTION_PATHS = {
     PROFILES: (userId: string) => `users/${userId}/profiles`,
     BOOKMARKS: (userId: string) => `users/${userId}/bookmarks`,
     CUSTOM_PROBLEM_SETS: (userId: string) => `users/${userId}/customProblemSets`,
-    SESSION_HISTORIES: (userId: string) =>
-        `users/${userId}/sessionHistories`,
-    SESSION_HISTORY: (userId: string, sessionId: string) => `users/${userId}/sessionHistories/${sessionId}`,
-    SESSION_DEFAULTS: (userId: string, yearMonth: string, sessionId: string) =>
-        `users/${userId}/sessionHistories/${yearMonth}/${sessionId}`, // TODO
+    CUSTOM_PROBLEM_SET: (userId: string, problemSetId: string) => `users/${userId}/customProblemSets/${problemSetId}`,
+    ACTIVITY_SESSION_HISTORIES: (userId: string, year: string) =>
+        `users/${userId}/activitySessionHistories/${year}/historyItems`,
+    ACTIVITY_SESSION_HISTORY: (userId: string,year: string, sessionId: string) => `users/${userId}/activitySessionHistories/${year}/historyItems/${sessionId}`,
+    PROBLEM_HISTORIES: (userId: string) => `users/${userId}/problemHistories`,
+    PROBLEM_HISTORY: (userId: string, problemXId: string) => `users/${userId}/problemHistories/${problemXId}`, // >> problemXId === serviceId.categoryId.stepId.problemId (This field is specially assigned to improve search performance, normal id groups are also implemented. )
+    ACTIVATE_SESSIONS: (userId: string, sessionId: string) =>
+        `users/${userId}/activateSessions/${sessionId}`,
     NOTES: (userId: string, yearMonth: string, sessionId: string) =>
         `users/${userId}/sessionHistories/${yearMonth}/${sessionId}/notes`,
     GOALS: (userId: string) => `users/${userId}/goals`,
-    STATISTICS: (userId: string, period: string) => `users/${userId}/statistics/${period}`,
+    // Statistics
+    STATISTICS: (userId: string) => `users/${userId}/statistics`,
+    SESSION_STATISTICS: (userId: string, period: string) => `users/${userId}/statistics/session/${period}`,
+    GOAL_STATISTICS: (userId: string, period: string) => `users/${userId}/statistics/goal/${period}`,
+    PROBLEM_STATISTICS: (userId: string, period: string) => `users/${userId}/statistics/problem/${period}`,
+    USER_ACTIVITY: (userId: string, period: string) => `users/${userId}/statistics/userActivity/${period}`,
     REPORTS: (userId: string) => `users/${userId}/reports`, // 一定期間の学習成果をまとめたレポート生成機能、PDFなどにエクスポートするための基盤設計
     REPORT: (userId: string, reportId: string) => `users/${userId}/reports/${reportId}`,
 };

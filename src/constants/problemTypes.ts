@@ -22,25 +22,6 @@ export const ProblemResultTypeEnum = z.enum(
 export type ProblemResultType = z.infer<typeof ProblemResultTypeEnum>;
 
 
-
-export const PROBLEM_DIFFICULTY_TYPES = {
-    EASY: "easy",
-    INTERMEDIATE: "normal",
-    HARD: "hard",
-} as const;
-
-/**
- * PROBLEM_DIFFICULTY_TYPES >> Zod schema
-*/
-export const ProblemDifficultyTypeEnum = z.enum(
-    Object.values(PROBLEM_DIFFICULTY_TYPES) as unknown as [
-        typeof PROBLEM_DIFFICULTY_TYPES[keyof typeof PROBLEM_DIFFICULTY_TYPES]
-    ]
-);
-
-export type ProblemDifficultyType = z.infer<typeof ProblemDifficultyTypeEnum>;
-
-
 export const QUESTION_TYPES = {
     MULTIPLE_CHOICE: "multiple-choice",
     INPUT: "input",
