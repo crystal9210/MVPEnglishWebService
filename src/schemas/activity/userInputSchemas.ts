@@ -1,38 +1,32 @@
 import { z } from "zod";
 import { ProblemResultTypeEnum } from "@/constants/problemTypes";
-import { DateSchema } from "../utils/dates";
-import { integerNonNegative } from "../utils/numbers";
+import { sanitizeInput } from "@/utils/sanitizeInput";
 
 /**
- * The schema for managing input to a problem from the user.
- * - Maintains user's input for each question's input section
- * - Maintains correct or incorrect info and time spent while answering the question's section.
- *
- * @example
- * ```typescript
- * {
- *   input: [
- *     { value: "answer1", isCorrect: true, timeSpent: 1500 },
- *     { value: "answer2", isCorrect: false, timeSpent: 2000 }
- *   ],
- *   result: "CORRECT",
- *   attemptedAt: new Date("2024-12-25T12:15:00.000Z"),
- * }
- * ```
- *
+ * 整数で非負のものを検証するカスタムスキーマ
  */
+const integerNonNegative = () => z.number().int().nonnegative();
+
 export const UserInputSchema = z.object({
     input: z.array(
         z.object({
-            value: z.string().min(1).max(600), // Ensure at least one character and limit size of inputs to prevent abuse.
+            value: z.string()
+                .min(1, { message: "Value must be at least 1 character long." })
+                .max(600, { message: "Value must not exceed 600 characters." })
+                .refine((val) => {
+                    try {
+                        sanitizeInput(val);
+                        return true;
+                    } catch (error) {
+                        return false;
+                    }
+                }, { message: "Invalid input detected." }),
             isCorrect: z.boolean(),
             timeSpent: integerNonNegative(),
         })
-    ).max(10), // Limit total number of inputs
+    )
+    .min(1, { message: "Input array must contain at least one item." })
+    .max(10, { message: "Input array must not contain more than 10 items." }),
     result: ProblemResultTypeEnum,
-    attemptedAt: DateSchema,
+    attemptedAt: z.date(), // 必須フィールドとして定義
 });
-
-export type UserInput = z.infer<typeof UserInputSchema>;
-
-// TODO: Implement the input schemas for other input types like boolean, number, etc.
