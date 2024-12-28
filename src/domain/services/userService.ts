@@ -1,24 +1,24 @@
 import { injectable, inject } from "tsyringe";
 import { UserRepository } from "@/domain/repositories/userRepository";
-import { ProblemResultRepository } from "@/domain/repositories/problemResultRepository";
+// import { ProblemResultRepository } from "@/domain/repositories/problemResultRepository";
 import { User } from "@/schemas/userSchemas";
-import { ProblemResult } from "@/schemas/activity/problemHistorySchemas";
+// import { ProblemResult } from "@/schemas/activity/problemHistorySchemas";
 import { LoggerService } from "@/domain/services/loggerService";
 import { IUserService } from "@/interfaces/services/IUserService";
 
 @injectable()
 export class UserService implements IUserService {
     private readonly userRepository: UserRepository;
-    private readonly problemResultRepository: ProblemResultRepository;
+    // private readonly problemResultRepository: ProblemResultRepository;
     private readonly logger: LoggerService;
 
     constructor(
         @inject(UserRepository) userRepository: UserRepository,
-        @inject(ProblemResultRepository) problemResultRepository: ProblemResultRepository,
+        // @inject(ProblemResultRepository) problemResultRepository: ProblemResultRepository,
         @inject(LoggerService) logger: LoggerService
     ) {
         this.userRepository = userRepository;
-        this.problemResultRepository = problemResultRepository;
+        // this.problemResultRepository = problemResultRepository;
         this.logger = logger;
     }
 
@@ -89,33 +89,33 @@ export class UserService implements IUserService {
      * @param userId ユーザーID
      * @param problemResults 問題ごとの結果データ
      */
-    async saveAllProblemResults(userId: string, problemResults: ProblemResult[]): Promise<void> {
-        try {
-            // ユーザーが存在することを確認
-            const user = await this.userRepository.findUserById(userId);
-            if (!user) {
-                this.logger.warn(`User not found: UID = ${userId}`);
-                throw new Error(`User not found: UID = ${userId}`);
-            }
+    // async saveAllProblemResults(userId: string, problemResults: ProblemResult[]): Promise<void> {
+    //     try {
+    //         // ユーザーが存在することを確認
+    //         const user = await this.userRepository.findUserById(userId);
+    //         if (!user) {
+    //             this.logger.warn(`User not found: UID = ${userId}`);
+    //             throw new Error(`User not found: UID = ${userId}`);
+    //         }
 
-            for (const result of problemResults) {
-                // 問題形態の特定（問題IDのプレフィックスやその他のロジックで判定）
-                const problemType = this.getProblemType(result.problemId);
-                if (!problemType) {
-                    this.logger.warn(`Unknown problem type for problemId: ${result.problemId}`);
-                    continue; // またはエラーを投げる
-                }
+    //         for (const result of problemResults) {
+    //             // 問題形態の特定（問題IDのプレフィックスやその他のロジックで判定）
+    //             const problemType = this.getProblemType(result.problemId);
+    //             if (!problemType) {
+    //                 this.logger.warn(`Unknown problem type for problemId: ${result.problemId}`);
+    //                 continue; // またはエラーを投げる
+    //             }
 
-                // 問題結果を保存
-                await this.problemResultRepository.saveProblemResult(problemType, userId, result);
-            }
+    //             // 問題結果を保存
+    //             await this.problemResultRepository.saveProblemResult(problemType, userId, result);
+    //         }
 
-            this.logger.info(`All problem results saved successfully for user: UID = ${userId}`);
-        } catch (error) {
-            this.logger.error(`Failed to save all problem results for user: UID = ${userId}`, { error });
-            throw error;
-        }
-    }
+    //         this.logger.info(`All problem results saved successfully for user: UID = ${userId}`);
+    //     } catch (error) {
+    //         this.logger.error(`Failed to save all problem results for user: UID = ${userId}`, { error });
+    //         throw error;
+    //     }
+    // }
 
     /**
      * 問題IDから問題形態を判定する関数

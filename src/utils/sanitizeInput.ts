@@ -22,12 +22,18 @@ const domPurifyConfig: Config = {
 const getDOMPurify = (): DOMPurifyType => {
   if (domPurify) return domPurify;
 
-  const { window } = new JSDOM("");
-  domPurify = DOMPurify(window);
+  if (isServer) {
+    const { window } = new JSDOM("");
+    domPurify = DOMPurify(window);
+  } else {
+    domPurify = DOMPurify(window);
+  }
+
   domPurify.setConfig(domPurifyConfig);
 
   return domPurify;
 };
+
 
 const decodeInput = (input: string): string => {
   let decoded = input;
@@ -122,21 +128,22 @@ export const sanitizeInput = (input: string): string => {
   return sanitized;
 };
 
-export const sanitizeObject = (input: unknown): unknown => {
+export const sanitizeObject = <T>(input: T): T => {
   if (typeof input === "string") {
-    return sanitizeInput(input);
+    return sanitizeInput(input) as T;
   }
 
   if (Array.isArray(input)) {
-    return input.map(sanitizeObject);
+    return input.map((item) => sanitizeObject(item)) as T;
   }
 
   if (typeof input === "object" && input !== null) {
     return Object.entries(input).reduce((acc, [key, value]) => {
-      acc[key] = sanitizeObject(value);
+      acc[key as keyof T] = sanitizeObject(value);
       return acc;
-    }, {} as Record<string, unknown>);
+    }, {} as T);
   }
 
   return input;
 };
+

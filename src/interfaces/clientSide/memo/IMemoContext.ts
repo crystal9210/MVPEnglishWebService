@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { Memo } from "@/schemas/app/_contexts/memoSchemas";
 
 // TODO MemoArrayをmemoSchemasにて実装しているが全体のトレードオフおよび責任分離の観点からどのように扱うべきか

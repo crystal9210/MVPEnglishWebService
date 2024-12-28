@@ -15,18 +15,29 @@ export function validate<T>(schema: ZodSchema<T>, data: unknown): T {
 }
 
 /**
+ * サニタイズ関数をサーバサイドとクライアントサイドで切り替え
+ * @returns サニタイズ関数
+ */
+const getSanitizer = () => {
+    if (typeof window === "undefined") {
+        const window = new JSDOM('').window;
+        return DOMPurify(window);
+    }
+    return null; // クライアントサイド用の DOMPurify を別途用意する場合はここに追加
+};
+
+/**
  * 入力データをサニタイズする関数
  * @param data サニタイズ対象のデータオブジェクト
  * @param fields サニタイズ対象のフィールド名
  * @returns サニタイズされたデータオブジェクト
  */
 export function sanitize<T>(data: T, fields: (keyof T)[]): T {
-    const window = new JSDOM('').window;
-    const purify = DOMPurify(window);
+    const purify = getSanitizer();
 
     fields.forEach(field => {
         const value = data[field];
-        if (typeof value === 'string') {
+        if (purify && typeof value === 'string') {
             (data as any)[field] = purify.sanitize(value);
         }
     });
@@ -63,7 +74,7 @@ export function withValidationAndSanitization<T>(
             // バリデーション
             if (schema) {
                 try {
-                    data = validate(schema, data);
+                    data = schema.parse(data);
                 } catch (error) {
                     if (error instanceof ZodError) {
                         return NextResponse.json(
@@ -91,7 +102,7 @@ export function withValidationAndSanitization<T>(
                 }
             }
 
-            // APIハンドラーにサニタイズ・バリデーション済みのデータを渡す
+            // サニタイズ・バリデーション済みデータを API ハンドラーに渡す
             context.validatedBody = data;
         }
 

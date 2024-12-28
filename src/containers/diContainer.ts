@@ -1,7 +1,8 @@
+// インターフェース群 (type importでdecoratorエラー回避)
 import "reflect-metadata";
 import { container } from "tsyringe";
 
-// インターフェース群 (type importでdecoratorエラー回避)
+// インターフェース群
 import type { IFirebaseAdmin } from "@/interfaces/services/IFirebaseAdmin";
 import type { ILoggerService } from "@/interfaces/services/ILoggerService";
 import type { IAuthService } from "@/interfaces/services/IAuthService";
@@ -10,18 +11,17 @@ import type { IUserProfileService } from "@/interfaces/services/IUserProfileServ
 import type { IUserHistoryService } from "@/interfaces/services/IUserHistoryService";
 import type { IUserBookmarkService } from "@/interfaces/services/IUserBookmarkService";
 import type { IProblemService } from "@/interfaces/services/IProblemService";
-// import type { IHistoryService } from "@/interfaces/services/IHistoryService";
 import type { ISubscriptionService } from "@/interfaces/services/ISubscriptionService";
 import type { IActivityService } from "@/interfaces/services/IActivityService";
 
 import type { IAccountRepository } from "@/interfaces/repositories/IAccountRepository";
 import type { IUserRepository } from "@/interfaces/repositories/IUserRepository";
 import type { IProblemRepository } from "@/interfaces/repositories/IProblemRepository";
-import type { IProblemResultRepository } from "@/interfaces/repositories/IProblemResultRepository";
 import type { IProfileRepository } from "@/interfaces/repositories/IProfileRepository";
 import type { IUserHistoryRepository } from "@/interfaces/repositories/IUserHistoryRepository";
 import type { ISubscriptionRepository } from "@/interfaces/repositories/ISubscriptionRepository";
 import type { IActivitySessionRepository } from "@/interfaces/repositories/IActivitySessionRepository";
+
 
 // 実装クラス群
 import { AuthService } from "@/domain/services/authService";
@@ -33,26 +33,24 @@ import { UserHistoryService } from "@/domain/services/userHistoryService";
 import { UserBookmarkService } from "@/domain/services/userBookmarkService";
 import { ProblemService } from "@/domain/services/problemService";
 import { SubscriptionService } from "@/domain/services/subscriptionService";
+import { ActivityService } from "@/domain/services/activityService";
 
 import { UserRepository } from "@/domain/repositories/userRepository";
 import { ProblemRepository } from "@/domain/repositories/problemRepository";
-import { ProblemResultRepository } from "@/domain/repositories/problemResultRepository";
 import { ProfileRepository } from "@/domain/repositories/userProfileRepository";
 import { UserHistoryRepository } from "@/domain/repositories/userHistoryRepository";
 import { SubscriptionRepository } from "@/domain/repositories/subscriptionRepository";
 import { AccountRepository } from "@/domain/repositories/accountRepository";
+import { ActivitySessionRepository } from "@/domain/repositories/activitySessionRepository";
+
+
 import { BatchOperations } from "@/utils/batchOperations";
 import { RetryService } from "@/domain/services/retryService";
-import { ActivityService } from "@/domain/services/activityService";
-import { ActivitySessionRepository } from "@/domain/repositories/activitySessionRepository";
 
 // Utility
 // 最初に他のサービスに依存しないサービスを登録 - tsyringeの仕様
 container.registerSingleton<ILoggerService>("ILoggerService", LoggerService);
-
 container.registerSingleton<IFirebaseAdmin>("IFirebaseAdmin", FirebaseAdmin);
-
-// container.registerSingleton<BatchOperations>("BatchOperations", BatchOperations); // NOTE: "BatchOperations"のトークンを指定しなければならない
 container.registerSingleton(BatchOperations);
 container.registerSingleton(RetryService);
 
@@ -60,10 +58,10 @@ container.registerSingleton(RetryService);
 container.registerSingleton<IAccountRepository>("IAccountRepository", AccountRepository);
 container.registerSingleton<IUserRepository>("IUserRepository", UserRepository);
 container.registerSingleton<IProblemRepository>("IProblemRepository", ProblemRepository);
-container.registerSingleton<IProblemResultRepository>("IProblemResultRepository", ProblemResultRepository);
 container.registerSingleton<IProfileRepository>("IProfileRepository", ProfileRepository);
 container.registerSingleton<IUserHistoryRepository>("IUserHistoryRepository", UserHistoryRepository);
 container.registerSingleton<ISubscriptionRepository>("ISubscriptionRepository", SubscriptionRepository);
+container.registerSingleton<IActivitySessionRepository>("IActivitySessionRepository", ActivitySessionRepository);
 
 // Services
 container.registerSingleton<IAuthService>("IAuthService", AuthService);
@@ -72,9 +70,7 @@ container.registerSingleton<IUserProfileService>("IUserProfileService", UserProf
 container.registerSingleton<IUserHistoryService>("IUserHistoryService", UserHistoryService);
 container.registerSingleton<IUserBookmarkService>("IUserBookmarkService", UserBookmarkService);
 container.registerSingleton<IProblemService>("IProblemService", ProblemService);
-container.registerSingleton<IUserHistoryRepository>("IUserHistoryRepository", UserHistoryRepository);
 container.registerSingleton<ISubscriptionService>("ISubscriptionService", SubscriptionService);
-container.registerSingleton<IActivitySessionRepository>("IActivitySessionRepository", ActivitySessionRepository);
 container.registerSingleton<IActivityService>("IActivityService", ActivityService);
 
 export { container };

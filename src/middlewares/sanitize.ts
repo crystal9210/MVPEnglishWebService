@@ -1,10 +1,10 @@
-// src/middlewares/sanitize.ts
 import DOMPurify from 'dompurify';
 import { JSDOM } from 'jsdom';
 import { NextResponse } from 'next/server';
 
 /**
  * 入力データをサニタイズするミドルウェア
+ * サーバサイド専用の処理を追加
  * @param fields サニタイズ対象のフィールド名
  * @returns NextMiddleware
  */
@@ -12,12 +12,13 @@ export function sanitizeMiddleware(fields: string[]) {
     return async (req: Request) => {
         try {
             const body = await req.json();
-            const window = new JSDOM('').window;
-            const purify = DOMPurify(window);
+
+            // サーバサイドでのみ JSDOM を使用して DOMPurify をセットアップ
+            const purify = typeof window === "undefined" ? DOMPurify(new JSDOM('').window) : null;
 
             fields.forEach(field => {
                 if (body[field] && typeof body[field] === 'string') {
-                    body[field] = purify.sanitize(body[field]);
+                    body[field] = purify ? purify.sanitize(body[field]) : body[field];
                 }
             });
 

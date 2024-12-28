@@ -5,7 +5,7 @@ import type { ILoggerService } from "@/interfaces/services/ILoggerService";
 import type { IAuthService } from "@/interfaces/services/IAuthService";
 import { FieldValue } from "firebase-admin/firestore";
 
-const firebaseAdmin = container.resolve<IFirebaseAdmin>("IFirebaseAdmin");
+export const firebaseAdmin = container.resolve<IFirebaseAdmin>("IFirebaseAdmin");
 const logger = container.resolve<ILoggerService>("ILoggerService");
 const authService = container.resolve<IAuthService>("IAuthService");
 const firestore = firebaseAdmin.getFirestore();

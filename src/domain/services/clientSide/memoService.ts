@@ -1,43 +1,50 @@
-import { MemoRepository } from "@/domain/repositories/clientSide/memoRepository";
-import { IIndexedDBManager } from "@/interfaces/clientSide/repositories/managers/IIndexedDBManager";
+import type { IMemoRepository } from "@/interfaces/clientSide/repositories/IMemoRepository";
+import { IMemoService } from "@/interfaces/services/clientSide/IMemoService";
 import { Memo } from "@/schemas/app/_contexts/memoSchemas";
 
-export class MemoService {
-    private memoRepository: MemoRepository;
+export class MemoService implements IMemoService {
+  private repository: IMemoRepository;
 
-    constructor(idbManager: IIndexedDBManager) {
-        this.memoRepository = new MemoRepository(idbManager);
+  constructor(repository: IMemoRepository) {
+    this.repository = repository;
+  }
+
+  async getAllMemos(): Promise<Memo[]> {
+    return this.repository.getAllMemos();
+  }
+
+  async createMemo(content: string): Promise<Memo> {
+    const newMemo: Memo = {
+      id: Date.now().toString(),
+      content,
+      createdAt: new Date(),
+      lastUpdatedAt: new Date(),
+      tags: [],
+      deleted: false,
+      deletedAt: new Date(),
+    };
+
+    await this.repository.addMemo(newMemo);
+    return newMemo;
+  }
+
+  async updateMemo(id: string, updates: Partial<Memo>): Promise<void> {
+    const existingMemo = await this.repository.getMemo(id);
+    if (!existingMemo) {
+      throw new Error(`Memo with ID ${id} does not exist.`);
     }
 
-    async createMemo(memo: Memo): Promise<string | number> {
-        return this.memoRepository.add(memo, memo.id);
+    const updatedMemo = { ...existingMemo, ...updates, lastUpdatedAt: new Date() };
+    await this.repository.updateMemo(id, updatedMemo);
+  }
+
+  async deleteMemo(id: string): Promise<void> {
+    const existingMemo = await this.repository.getMemo(id);
+    if (!existingMemo) {
+      throw new Error(`Memo with ID ${id} does not exist.`);
     }
 
-    async getAllMemos(): Promise<Memo[]> {
-        return this.memoRepository.getAll();
-    }
-
-    async searchMemosByKeyword(keyword: string): Promise<Memo[]> {
-        return this.memoRepository.getMemoListByKeyword(keyword);
-    }
-
-    async getMemosByDateRange(startDate: Date, endDate: Date): Promise<Memo[]> {
-        return this.memoRepository.getMemoListByRange(startDate, endDate);
-    }
-
-    async updateMemo(memo: Memo): Promise<void> {
-        await this.memoRepository.update(memo, memo.id);
-    }
-
-    async deleteMemo(id: string | number): Promise<void> {
-        await this.memoRepository.delete(id);
-    }
-
-    async bulkAddMemos(memos: Memo[]): Promise<(string | number)[]> {
-        return this.memoRepository.addMultipleMemos(memos);
-    }
-
-    async bulkUpdateMemos(memos: Memo[]): Promise<void> {
-        await this.memoRepository.updateMultipleMemos(memos);
-    }
+    const updatedMemo = { ...existingMemo, deleted: true, deletedAt: new Date() };
+    await this.repository.updateMemo(id, updatedMemo);
+  }
 }

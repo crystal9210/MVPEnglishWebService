@@ -24,11 +24,11 @@ function createIndexes<K extends IdbObjectStoreName>(
     });
 }
 
-export class IndexedDBManager implements IIndexedDBManager {
+class IndexedDBManager implements IIndexedDBManager {
     private static instance: IndexedDBManager;
     private dbPromise: Promise<IDBPDatabase<MyIDB>>; // 非同期にindexedDBを開きデータベース接続管理
 
-    private constructor() {
+    constructor() {
         this.dbPromise = this.initializeDB();
     }
 
@@ -439,5 +439,6 @@ export class IndexedDBManager implements IIndexedDBManager {
         return await db.count(storeName);
     }
 }
+
 
 export default IndexedDBManager;

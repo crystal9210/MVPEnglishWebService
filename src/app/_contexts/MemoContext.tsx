@@ -1,75 +1,119 @@
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
-import { Memo, MemoSchema, MemoArraySchema } from "@/schemas/app/_contexts/memoSchemas";
-import { IMemoContext } from "@/interfaces/clientSide/memo/IMemoContext";
-import { MyIDB } from "@/interfaces/clientSide/memo/idb";
-import { MemoManager } from "../_components/memo/memoManager";
-import { openDB, IDBPDatabase } from "idb";
-import { IDB_OBJECT_STORE_CONFIGS, IDB_OBJECT_STORES } from "@/constants/clientSide/idb/objectStores";
-// import { useAuth } from "@/components/AuthProvider";
+import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { Memo } from "@/schemas/app/_contexts/memoSchemas";
+import { MemoService } from "@/domain/services/clientSide/memoService";
+import { MemoRepository } from "@/domain/repositories/idb/memoRepository";
+import IndexedDBManager from "@/idb";
 
+// Context型定義
+const MemoContext = createContext<{
+  memoList: Memo[];
+  addMemo: (content: string) => Promise<void>;
+  editMemo: (id: string, content: string) => Promise<void>;
+  deleteMemo: (id: string) => Promise<void>;
+  isLoading: boolean;
+  error: string | null;
+} | null>(null);
 
-const initDB = async (): Promise<IDBPDatabase<MyIDB>> => {
-  return await openDB<MyIDB>("memoDB", 1, {
-    upgrade(db) {
-      // すでにクライアントサイドに存在している場合のハンドリング
-      // - アップデート処理・そもそもアップデート部分がなければ処理を回避、など
-      const memoStore = db.createObjectStore(IDB_OBJECT_STORE_CONFIGS[0].name, { keyPath: "id" });
-      memoStore.createIndex("by-createdAt", "createdAt");
-      memoStore.createIndex("by-tags", "tags", { multiEntry: true });
-
-      const trashedStore = db.createObjectStore("trashedMemoList", { keyPath: "id" });
-      trashedStore.createIndex("by-deletedAt", "deletedAt");
-    }
-  })
-}
-
-// メモコンテキスト作成
-const MemoContext = createContext<IMemoContext | undefined>(undefined);
-
-// メモプロバイダーコンポーネント
+// プロバイダー
 export const MemoProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  // const { user } =useAuth();
+  const [memoService, setMemoService] = useState<MemoService | null>(null);
   const [memoList, setMemoList] = useState<Memo[]>([]);
-  const [trashedMemoList, setTrashedMemoList] = useState<Memo[]>([]);
-  const [idb, setIDb] = useState<IDBPDatabase<MyIDB> | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // セットアップ
+  // 非同期で依存関係を初期化
   useEffect(() => {
-    const setupDB = async () => {
-      if (!user) {}
+    const initialize = async () => {
+      try {
+        const idbManager = new IndexedDBManager();
+        const memoRepository = new MemoRepository(idbManager);
+        const service = new MemoService(memoRepository);
+        setMemoService(service);
+      } catch (err) {
+        setError("Failed to initialize MemoService.");
+        console.error(err);
+      }
+    };
+
+    initialize();
+  }, []);
+
+  // 初期化: 全てのメモをロード
+  useEffect(() => {
+    if (!memoService) return;
+
+    const loadMemos = async () => {
+      try {
+        const allMemos = await memoService.getAllMemos();
+        setMemoList(allMemos);
+      } catch (err) {
+        setError("Failed to load memos.");
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadMemos();
+  }, [memoService]);
+
+  // メモを追加
+  const addMemo = async (content: string) => {
+    if (!memoService) return;
+    try {
+      const newMemo = await memoService.createMemo(content);
+      setMemoList((prev) => [...prev, newMemo]);
+    } catch (err) {
+      setError("Failed to add memo.");
+      console.error(err);
     }
-  })
-
-  // メモの更新時にローカルストレージに保存
-  useEffect(() => {
-    localStorage.setItem("memoList", JSON.stringify(memoList));
-  }, [memoList]);
-
-  const addMemo = (content: string) => {
-    const newMemo: Memo = { id: Date.now().toString(), content };
-    setMemoList([...memoList, newMemo]);
   };
 
-  const editMemo = (id: string, content: string) => {
-    setMemoList(memoList.map(memo => (memo.id === id ? { ...memo, content } : memo)));
+  // メモを編集
+  const editMemo = async (id: string, content: string) => {
+    if (!memoService) return;
+    try {
+      await memoService.updateMemo(id, { content });
+      setMemoList((prev) =>
+        prev.map((memo) => (memo.id === id ? { ...memo, content, lastUpdatedAt: new Date() } : memo))
+      );
+    } catch (err) {
+      setError("Failed to edit memo.");
+      console.error(err);
+    }
   };
 
-  const deleteMemo = (id: string) => {
-    setMemoList(memoList.filter(memo => memo.id !== id));
+  // メモを削除
+  const deleteMemo = async (id: string) => {
+    if (!memoService) return;
+    try {
+      await memoService.deleteMemo(id);
+      setMemoList((prev) => prev.filter((memo) => memo.id !== id));
+    } catch (err) {
+      setError("Failed to delete memo.");
+      console.error(err);
+    }
   };
 
   return (
-    <MemoContext.Provider value={{ memoList, addMemo, editMemo, deleteMemo }}>
+    <MemoContext.Provider
+      value={{
+        memoList,
+        addMemo,
+        editMemo,
+        deleteMemo,
+        isLoading,
+        error,
+      }}
+    >
       {children}
     </MemoContext.Provider>
   );
 };
 
-/**
- * custom hook of the contexts for "memo" function.
- */
+// useMemoContextフック
 export const useMemoContext = () => {
   const context = useContext(MemoContext);
   if (!context) {
