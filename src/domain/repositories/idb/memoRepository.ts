@@ -1,3 +1,5 @@
+"use client";
+
 import { GenericRepository } from "./genericRepository";
 import type { IIndexedDBManager } from "@/interfaces/clientSide/repositories/managers/IIndexedDBManager";
 import { Memo } from "@/schemas/app/_contexts/memoSchemas";

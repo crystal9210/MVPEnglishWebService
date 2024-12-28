@@ -1,3 +1,5 @@
+"use client";
+
 import { IIndexedDBManager } from "@/interfaces/clientSide/repositories/managers/IIndexedDBManager";
 import { MyIDB } from "@/constants/clientSide/idb/idbGenerator";
 import { IdbObjectStoreName } from "@/constants/clientSide/idb/objectStores";

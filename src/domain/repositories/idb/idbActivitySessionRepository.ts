@@ -1,3 +1,5 @@
+"use client";
+
 import { IIndexedDBActivitySessionRepository } from "@/interfaces/clientSide/repositories/IIdbActivitySessionRepository";
 import { ActivitySession, GoalActivitySessionSchema, ServiceActivitySessionSchema, SessionAttempt, SessionAttemptSchema } from "@/schemas/activity/activitySessionSchema";
 import { GenericRepository } from "./genericRepository";

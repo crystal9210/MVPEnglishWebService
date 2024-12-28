@@ -5,7 +5,7 @@
 "use client";
 import React, { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { ActivityProvider, useActivity } from "@/app/_contexts/activitySessionContext";
+import { ActivityProvider, useActivity } from "@/contexts/activitySessionContext";
 import { toast } from "react-toastify";
 
 const ActivityLayoutWrapper = ({ children }: { children: React.ReactNode }) => {

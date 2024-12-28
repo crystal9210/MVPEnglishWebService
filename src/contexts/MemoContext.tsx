@@ -1,10 +1,15 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
 import { Memo } from "@/schemas/app/_contexts/memoSchemas";
 import { MemoService } from "@/domain/services/clientSide/memoService";
 import { MemoRepository } from "@/domain/repositories/idb/memoRepository";
-import IndexedDBManager from "@/idb";
 
 // Context型定義
 const MemoContext = createContext<{
@@ -27,6 +32,10 @@ export const MemoProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     const initialize = async () => {
       try {
+        // ここで動的 import を行い、SSR では呼ばれないようにする
+        const { default: IndexedDBManager } = await import("@/idb/index");
+        // ↑ もし export default でないなら { IndexedDBManager } と書く
+
         const idbManager = new IndexedDBManager();
         const memoRepository = new MemoRepository(idbManager);
         const service = new MemoService(memoRepository);
@@ -37,6 +46,7 @@ export const MemoProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
     };
 
+    // ブラウザ上でのみ実行したいなら、さらに typeof window チェックを入れる場合もある
     initialize();
   }, []);
 
@@ -77,7 +87,9 @@ export const MemoProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       await memoService.updateMemo(id, { content });
       setMemoList((prev) =>
-        prev.map((memo) => (memo.id === id ? { ...memo, content, lastUpdatedAt: new Date() } : memo))
+        prev.map((memo) =>
+          memo.id === id ? { ...memo, content, lastUpdatedAt: new Date() } : memo
+        )
       );
     } catch (err) {
       setError("Failed to edit memo.");

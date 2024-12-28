@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { DocumentTextIcon, PencilIcon, XMarkIcon, PlusIcon } from "@heroicons/react/24/solid";
-import { useMemoContext } from "@/app/_contexts/MemoContext";
+import { useMemoContext } from "@/contexts/MemoContext";
 import MemoModal from "./MemoModal";
 
 const MemoButton: React.FC = () => {

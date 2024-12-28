@@ -2,6 +2,14 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
+  webpack: (config) => {
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      child_process: false,
+      fs: false,
+    };
+    return config;
+  },
   images: {
     remotePatterns: [
       {

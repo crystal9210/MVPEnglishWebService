@@ -7,6 +7,8 @@
 // TODO オブジェクト名に応じてキー(プライマリキー;主キー)が正確に取得でき、それによりアクセスパスを取得し、かつidとなる情報からデータの整合性等を保証できる
 // >> 上記の要件を満たすことで正確にデータアクセス(CRUD)が可能
 
+"use client";
+
 import { openDB, IDBPDatabase, IDBPTransaction, IDBPObjectStore } from "idb";
 import { MyIDB } from "@/constants/clientSide/idb/idbGenerator";
 import { IDB_OBJECT_STORE_CONFIGS, IdbObjectStoreName, IndexConfig } from "@/constants/clientSide/idb/objectStores";

@@ -1,3 +1,5 @@
+"use client";
+
 import type { IMemoRepository } from "@/interfaces/clientSide/repositories/IMemoRepository";
 import { IMemoService } from "@/interfaces/services/clientSide/IMemoService";
 import { Memo } from "@/schemas/app/_contexts/memoSchemas";
