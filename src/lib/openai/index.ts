@@ -26,8 +26,8 @@ export class OpenAI extends APIClient {
         const baseURL = opts.baseURL ?? "https://api.openai.com/v1";
 
         super({
-        baseURL,
-        fetch: opts.fetch,
+            baseURL,
+            fetch: opts.fetch,
         });
 
         this.chat = new API.Chat(this);
@@ -50,21 +50,27 @@ export interface AzureOpenAIOptions extends OpenAIOptions {
  */
 export class AzureOpenAI extends OpenAI {
     private _deployment: string | undefined;
-    apiVersion: string = '';
+    apiVersion: string = "";
 
     constructor(opts: AzureOpenAIOptions = {}) {
-        const baseURL = opts.baseURL ?? (opts.endpoint ? `${opts.endpoint}/openai` : "https://example.azure.com/openai");
+        if (!opts.endpoint || !opts.deployment || !opts.apiVersion) {
+            throw new Error(
+                "AzureOpenAI requires endpoint, deployment, and apiVersion."
+            );
+        }
+
+        const baseURL = opts.baseURL ?? `${opts.endpoint}/openai`;
 
         super({
-        ...opts,
-        baseURL,
+            ...opts,
+            baseURL,
         });
 
         this._deployment = opts.deployment;
-        this.apiVersion = opts.apiVersion ?? '';
+        this.apiVersion = opts.apiVersion;
     }
 
-  // 必要に応じてデプロイメント固有のメソッドのオーバーライド
+    // 必要に応じてデプロイメント固有のメソッドのオーバーライド
 }
 
 // エラークラスのエクスポート

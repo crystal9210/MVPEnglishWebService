@@ -1,43 +1,101 @@
-// TODO
-import { ProblemRepository } from "@/domain/repositories/problemRepository";
-import { StatisticsRepository } from "@/domain/repositories/statisticsRepository";
-import { Problem, ProblemSchema } from "@/schemas/problemSchemas";
-import { ProblemDifficultyLevelEnum } from "@/constants/userStatisticTypes";
+import { injectable, inject } from "tsyringe";
+import type { SessionStatistics } from "@/schemas/statisticSchemas"; // 'import type' に変更
+import type { Preferences } from "@/schemas/preferencesSchemas"; // 'import type' に変更
+import type { IProblemRepository } from "@/interfaces/repositories/IProblemRepository"; // 'import type' に変更
+import { Problem } from "@/schemas/problemSchemas";
+import { z } from "zod";
 
 /**
- * 自動問題セット生成
+ * ProblemSetGeneratorService:
+ *   - Generates problem sets based on user statistics and preferences.
  */
+@injectable()
 export class ProblemSetGeneratorService {
-  constructor(
-    private problemRepo: ProblemRepository,
-    private statsRepo: StatisticsRepository
-  ) {}
+    /**
+     * Constructor:
+     *   - Injects IProblemRepository.
+     * @param problemRepo - Instance of IProblemRepository.
+     */
+    constructor(
+        @inject("IProblemRepository") private problemRepo: IProblemRepository
+    ) {}
 
-  async generateProblemSet(
-    userId: string,
-    serviceId: string,
-    difficulty: string,
-    limit: number
-  ): Promise<Problem[]> {
-    // 1. ユーザ統計取得
-    const userStats = await this.statsRepo.getUserStats(userId);
+    /**
+     * generate:
+     *   - Generates a problem set based on user statistics and preferences.
+     * @param userStats - The user's historical performance data.
+     * @param preferences - User-specified settings such as difficulty, categories, etc.
+     * @returns A generated problem set.
+     */
+    async generate(
+        userStats: SessionStatistics,
+        preferences: Preferences
+    ): Promise<Problem[]> {
+        try {
+            // 1. フィルタに基づく問題の取得
+            const candidateProblems =
+                await this.problemRepo.findProblemsWithFilters(
+                    preferences.serviceId,
+                    preferences.questionType,
+                    {
+                        categories: preferences.categories,
+                        difficulties: preferences.difficulties,
+                        limit: preferences.problemLimit,
+                        orderBy: preferences.orderBy,
+                    }
+                );
 
-    // 2. DBから該当問題を取得
-    const candidateProblems = await this.problemRepo.findByServiceAndDifficulty(
-      serviceId,
-      difficulty as ProblemDifficultyLevelEnum
-    );
+            // 2. 苦手度合いが高い順にソート
+            candidateProblems.sort((a, b) => {
+                const rateA = userStats.problemCorrectRates[a.id] ?? 100;
+                const rateB = userStats.problemCorrectRates[b.id] ?? 100;
+                return rateA - rateB; // correctRateが低い順=苦手度が高い
+            });
 
-    // 3. 苦手度合いが高い順にsort
-    candidateProblems.sort((a, b) => {
-      const rateA = userStats.problemCorrectRates[a.id] ?? 100;
-      const rateB = userStats.problemCorrectRates[b.id] ?? 100;
-      return rateA - rateB; // correctRate低い順=苦手度が高い
-    });
+            // 3. 先頭からlimit分を選択
+            const selected = candidateProblems.slice(
+                0,
+                preferences.problemLimit
+            );
 
-    // 4. slice limit
-    const selected = candidateProblems.slice(0, limit);
-    // 5. Zod parse
-    return selected.map(p => ProblemSchema.parse(p));
-  }
+            // 4. Zodによるバリデーション
+            const validProblems = selected
+                .map((p) => {
+                    try {
+                        return z
+                            .object({
+                                id: z.string(),
+                                questionType: z.string(),
+                                serviceId: z.string(),
+                                categoryId: z.string(),
+                                stepId: z.string(),
+                                title: z.string(),
+                                choices: z.array(z.any()), // 具体的なスキーマに置き換えることを推奨
+                                difficulty: z.number().int().min(1).max(5), // 数値型に修正
+                                tags: z.array(z.string()),
+                                description: z.string().optional(),
+                            })
+                            .parse(p) as Problem;
+                    } catch (error) {
+                        // エラーハンドリング（例: ロギング）
+                        console.error(
+                            `Problem validation failed for ID ${p.id}:`,
+                            error
+                        );
+                        return null;
+                    }
+                })
+                .filter((p): p is Problem => p !== null);
+
+            return validProblems;
+        } catch (error) {
+            // エラーハンドリング
+            console.error("Failed to generate problem set:", error);
+            throw new Error(
+                `ProblemSetGeneratorService generate failed: ${
+                    error instanceof Error ? error.message : String(error)
+                }`
+            );
+        }
+    }
 }

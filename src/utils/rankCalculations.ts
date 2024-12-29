@@ -1,4 +1,9 @@
-import { UserRankType, USER_RANK_TYPES, ProblemDifficultyLevel, PROBLEM_DIFFICULTY_LEVEL_TYPES } from "@/constants/userStatisticTypes";
+import {
+    UserRankType,
+    USER_RANK_TYPES,
+    ProblemDifficultyLevel,
+    PROBLEM_DIFFICULTY_LEVEL_TYPES,
+} from "@/constants/userStatisticTypes";
 import { UserInput } from "@/schemas/activity/userInputSchemas";
 
 /**
@@ -33,12 +38,24 @@ export function calculateAverage(numbers: number[]): number {
  * @param averageResponseTime - The average response time in seconds.
  * @returns The determined rank for the problem.
  */
-export function determineProblemRank(difficulty: ProblemDifficultyLevel, averageResponseTime: number): UserRankType {
-    if (difficulty >= PROBLEM_DIFFICULTY_LEVEL_TYPES.VERY_HARD && averageResponseTime < 30) {
+export function determineProblemRank(
+    difficulty: ProblemDifficultyLevel,
+    averageResponseTime: number
+): UserRankType {
+    if (
+        difficulty >= PROBLEM_DIFFICULTY_LEVEL_TYPES.VERY_HARD &&
+        averageResponseTime < 30
+    ) {
         return USER_RANK_TYPES.PLATINUM;
-    } else if (difficulty >= PROBLEM_DIFFICULTY_LEVEL_TYPES.HARD && averageResponseTime < 60) {
+    } else if (
+        difficulty >= PROBLEM_DIFFICULTY_LEVEL_TYPES.HARD &&
+        averageResponseTime < 60
+    ) {
         return USER_RANK_TYPES.GOLD;
-    } else if (difficulty >= PROBLEM_DIFFICULTY_LEVEL_TYPES.MEDIUM && averageResponseTime < 90) {
+    } else if (
+        difficulty >= PROBLEM_DIFFICULTY_LEVEL_TYPES.MEDIUM &&
+        averageResponseTime < 90
+    ) {
         return USER_RANK_TYPES.SILVER;
     } else {
         return USER_RANK_TYPES.BRONZE;
@@ -52,7 +69,10 @@ export function determineProblemRank(difficulty: ProblemDifficultyLevel, average
  * @param difficulty - The difficulty level of the problem.
  * @returns The points awarded for the problem.
  */
-export function calculateProblemPoints(rank: UserRankType, difficulty: ProblemDifficultyLevel): number {
+export function calculateProblemPoints(
+    rank: UserRankType,
+    difficulty: ProblemDifficultyLevel
+): number {
     switch (rank) {
         case USER_RANK_TYPES.BRONZE:
             return difficulty * 10;
@@ -73,8 +93,12 @@ export function calculateProblemPoints(rank: UserRankType, difficulty: ProblemDi
  * @param userInput - The user's input data for a problem.
  * @returns The adjusted rank based on input quality.
  */
-export function evaluateUserInputAndAdjustRank(userInput: UserInput): UserRankType {
-    const correctAnswers = userInput.input.filter(input => input.isCorrect).length;
+export function evaluateUserInputAndAdjustRank(
+    userInput: UserInput
+): UserRankType {
+    const correctAnswers = userInput.input.filter(
+        (input) => input.isCorrect
+    ).length;
     const totalAnswers = userInput.input.length;
     const correctRate = (correctAnswers / totalAnswers) * 100;
 

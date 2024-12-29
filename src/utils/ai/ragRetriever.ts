@@ -6,27 +6,27 @@ import { LLMService } from "@/domain/services/serverSide/LLMService";
 export interface EmbeddingDoc {
     id: string;
     text: string;
-    embedding: number[]; // ベクトル
+    embedding: number[]; // >> vector
 }
 
 /**
  * 例: インメモリで保持する文書とそのembedding
- * 実際にはDB/Pinecone/Supabaseなどに格納されることが多い
+ * 実際にはDB/Pinecone/Supabaseなどに格納されることが多いらしい
  */
-const embeddingDocs: EmbeddingDoc[] = [
+const sampleEmbeddingDocs: EmbeddingDoc[] = [
     {
-        id: 'doc1',
-        text: 'This is a sample text about grammar rules in English.',
+        id: "doc1",
+        text: "This is a sample text about grammar rules in English.",
         embedding: [0.1, 0.2, 0.3], // ダミー
     },
     {
-        id: 'doc2',
-        text: 'Advanced writing techniques can help you communicate effectively.',
+        id: "doc2",
+        text: "Advanced writing techniques can help you communicate effectively.",
         embedding: [0.9, 0.8, 0.7],
     },
     {
-        id: 'doc3',
-        text: 'Reading comprehension is an essential skill for language learning.',
+        id: "doc3",
+        text: "Reading comprehension is an essential skill for language learning.",
         embedding: [0.2, 0.5, 0.2],
     },
 ];
@@ -36,7 +36,9 @@ const embeddingDocs: EmbeddingDoc[] = [
  */
 function cosSim(vecA: number[], vecB: number[]): number {
     if (vecA.length !== vecB.length) {
-        throw new Error(`Vector dimension mismatch: ${vecA.length} vs ${vecB.length}`);
+        throw new Error(
+            `Vector dimension mismatch: ${vecA.length} vs ${vecB.length}`
+        );
     }
     const dot = vecA.reduce((acc, val, i) => acc + val * vecB[i], 0);
     const normA = Math.sqrt(vecA.reduce((acc, v) => acc + v * v, 0));
@@ -64,24 +66,26 @@ async function getEmbeddingForQuery(query: string): Promise<number[]> {
  * @param llmService - LLMService インスタンス
  * @param query - 検索クエリ
  * @param topK - 上位K件を返す
+ * @param embeddingDocs - 埋め込み文書の配列
  * @returns 上位K件の EmbeddingDoc 配列
  */
 export async function ragSearchEmbeddings(
     llmService: LLMService,
     query: string,
-    topK = 3
+    topK = 3,
+    embeddingDocs: EmbeddingDoc[] = sampleEmbeddingDocs
 ): Promise<EmbeddingDoc[]> {
-    // (1) query埋め込み取得
+    // query埋め込み取得
     const queryEmbedding = await llmService.getEmbedding(query);
 
-    // (2) cosSimを計算
-    const scored = embeddingDocs.map(doc => ({
+    // cosSimを計算
+    const scored = embeddingDocs.map((doc) => ({
         doc,
         score: cosSim(doc.embedding, queryEmbedding),
     }));
 
-    // (3) 類似度が高い順にsort→topK
+    // 類似度が高い順にsort→topK
     scored.sort((a, b) => b.score - a.score);
 
-    return scored.slice(0, topK).map(s => s.doc);
+    return scored.slice(0, topK).map((s) => s.doc);
 }

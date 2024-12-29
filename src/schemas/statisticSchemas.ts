@@ -1,6 +1,9 @@
 import { z } from "zod";
 import { integerNonNegative } from "./utils/numbers";
-import { GoalPeriodTypeEnum, UserRankTypeEnum } from "@/constants/userStatisticTypes";
+import {
+    GoalPeriodTypeEnum,
+    UserRankTypeEnum,
+} from "@/constants/userStatisticTypes";
 
 // --- Collections structure in firestore ---
 // users/{userId}/
@@ -79,6 +82,7 @@ export const SessionStatisticsSchema = z.object({
     averageSpentTime: integerNonNegative(), // average time per session's problem in milliseconds
     averageCorrectRate: z.number().min(0).max(100), // percentage
     goalsAchieved: integerNonNegative(),
+    problemCorrectRates: z.record(z.number()), // TODO
     createdAt: z.date(),
     updatedAt: z.date(),
 });
@@ -188,7 +192,6 @@ export const StatisticsSummarySchema = z.object({
 });
 
 export type StatisticsSummary = z.infer<typeof StatisticsSummarySchema>;
-
 
 /**
  * Schema for User Rank
