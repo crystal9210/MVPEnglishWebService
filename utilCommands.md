@@ -1,7 +1,7 @@
 ## ディレクトリ構造を調査し、リファクタリング・実装調整の際に情報をファイル形式で取得
 
 ```bash copy
-tree -I 'node_modules|.git' -L 3 > directory_structure.txt
+tree -I 'node_modules|.git' -L 10 > dir_structure.txt
 ```
 
 ## プロジェクト内部行数カウント
@@ -16,10 +16,10 @@ find . -type d \( -name "node_modules" -o -name ".next" -o -name ".git" \) -prun
 
 ```json
 {
-  "version": "0.2",
-  "language": "en",
-  "words": [],
-  "ignorePaths": ["node_modules/**", "dist/**", ".next/**"]
+    "version": "0.2",
+    "language": "en",
+    "words": [],
+    "ignorePaths": ["node_modules/**", "dist/**", ".next/**"]
 }
 ```
 

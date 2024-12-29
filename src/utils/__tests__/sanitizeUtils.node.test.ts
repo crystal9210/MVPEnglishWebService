@@ -1,4 +1,4 @@
-import { filterBadWords } from '../sanitizeUtils';
+import { filterBadWords } from '../filterBadWords';
 
 describe('filterBadWords', () => {
     // 基本機能テスト

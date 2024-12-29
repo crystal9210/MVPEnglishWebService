@@ -8,53 +8,58 @@
 
 ### **Frontend & Server**
 
-- **Hosting & Deployment:** Vercel
-- **Languages & Frameworks:** TypeScript, Next.js 15 (App Router)
-- **Libraries:**
-  - React
-  - Zod
-  - Auth.js v5
-  - Nodemailer
-  - Tailwind CSS
-  - IDB
-  - tryringe
-  - DOMPurify
-  - etc
+-   **Hosting & Deployment:** Vercel
+-   **Languages & Frameworks:** TypeScript, Next.js 15 (App Router)
+-   **Libraries:**
+    -   React
+    -   Zod
+    -   Auth.js v5
+    -   Nodemailer
+    -   Tailwind CSS
+    -   IDB
+    -   tryringe
+    -   DOMPurify
+    -   GPT (for customized user experience.)
+    -   etc
 
 ### **Authentication & Security**
 
-- **Protocols:** OpenID Connect, OAuth 2.0
-- **Providers:** Google
-- **Security Features:**
-  - PKCE
-  - Nonce
-  - CSRF Token
-  - JWE (JWT)
-  - RCE (Gmail)
+-   **Protocols:** OpenID Connect, OAuth 2.0
+-   **Providers:** Google
+-   **Security Features:**
+
+    -   PKCE
+    -   Nonce
+    -   CSRF Token
+    -   JWE (JWT)
+    -   RCE (Gmail)
+
+-   **Num of countermeasures in this project against security threat modelings**
+    -   over thousands of models.
 
 ### **Database & Backend Services**
 
-- **Database:** Firebase - Cloud Firestore
-- **Authentication:** Firebase Authentication
+-   **Database:** Firebase - Cloud Firestore
+-   **Authentication:** Firebase Authentication
 
 ### **Payments**
 
-- **Payment Integration:** Stripe
+-   **Payment Integration:** Stripe
 
 ### **Testing**
 
-- **Test Framework:** Jest
+-   **Test Framework:** Jest
 
 ### **Documentation**
 
-- **Notion(confidential)**
+-   **Notion(confidential)**
 
 ## Project Structure Principal is like below:
 
-- **Clean Architecture**
-- **DDD**
-- **TDD**
-- **other general principals**
+-   **Clean Architecture**
+-   **DDD**
+-   **TDD**
+-   **other general principals**
 
 ## NOTES
 
@@ -94,8 +99,8 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 
 To learn more about Next.js, take a look at the following resources:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+-   [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+-   [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 

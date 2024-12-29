@@ -4,10 +4,13 @@
 ├── cspell.json
 ├── dir_structure.txt
 ├── jest.config.ts
+├── jest.setup.ts
 ├── logs
 │   └── exceptions.log
 ├── next-env.d.ts
 ├── next.config.ts
+├── outputNodeModuleInfo
+│   └── pdfkit-exportDetailInfo.txt
 ├── package-lock.json
 ├── package.json
 ├── postcss.config.mjs
@@ -18,6 +21,27 @@
 │   ├── globe.svg
 │   ├── images
 │   │   └── basis
+│   │       └── to
+│   │           ├── 1
+│   │           │   ├── question1_for_1.png
+│   │           │   ├── question1_for_2.png
+│   │           │   ├── question1_to_1.png
+│   │           │   └── question1_to_2.png
+│   │           ├── 2
+│   │           │   ├── question2_for_1.png
+│   │           │   ├── question2_for_2.png
+│   │           │   ├── question2_to_1.png
+│   │           │   └── question2_to_2.png
+│   │           ├── 3
+│   │           │   ├── question3_for_1.png
+│   │           │   ├── question3_for_2.png
+│   │           │   ├── question3_to_1.png
+│   │           │   └── question3_to_2.png
+│   │           └── 4
+│   │               ├── question4_for_1.png
+│   │               ├── question4_for_2.png
+│   │               ├── question4_to_1.png
+│   │               └── question4_to_2.png
 │   ├── next.svg
 │   ├── vercel.svg
 │   └── window.svg
@@ -26,13 +50,27 @@
 ├── src
 │   ├── __tests__
 │   │   ├── integration
+│   │   │   ├── components
+│   │   │   │   └── ActivityManager.integration.test.ts
+│   │   │   └── servies
+│   │   │       └── UserService.integration.test.ts
 │   │   ├── penetration
 │   │   ├── system
+│   │   │   └── system.test.ts
 │   │   └── unit
+│   │       ├── repositories
+│   │       │   └── problemResultRepository.test.ts
+│   │       └── services
+│   │           ├── authService.test.ts
+│   │           ├── retryService.test.ts
+│   │           └── userService.test.ts
 │   ├── _components
 │   │   ├── ActivityManagerComponent.tsx
 │   │   ├── CreateGoalForm.tsx
 │   │   ├── FileUpload
+│   │   │   ├── AbstractFileUpload.tsx
+│   │   │   ├── DocumentUpload.tsx
+│   │   │   └── ImageUpload.tsx
 │   │   ├── GoalCard.tsx
 │   │   ├── LoginForm.tsx
 │   │   ├── Notifications.tsx
@@ -43,62 +81,304 @@
 │   │   └── customFirestoreAdapter.ts
 │   ├── app
 │   │   ├── _components
-│   │   ├── _contexts
+│   │   │   ├── activity
+│   │   │   │   ├── managers
+│   │   │   │   │   └── activitySessionManager.ts
+│   │   │   │   └── problemSetSelector.tsx
+│   │   │   ├── dashboard
+│   │   │   │   └── problemSetCard.tsx
+│   │   │   └── memo
+│   │   │       └── memoManager.ts
 │   │   ├── activity
+│   │   │   ├── [serviceId]
+│   │   │   │   └── [categoryId]
+│   │   │   │       └── [stepId]
+│   │   │   │           └── [problemId]
+│   │   │   │               └── page.tsx
+│   │   │   ├── layout.tsx
+│   │   │   ├── manage
+│   │   │   │   └── page.tsx
+│   │   │   ├── multiple
+│   │   │   │   └── page.tsx
+│   │   │   ├── page.tsx
+│   │   │   ├── results
+│   │   │   │   ├── _components
+│   │   │   │   │   └── ResultsPageComponent.tsx
+│   │   │   │   └── page.tsx
+│   │   │   ├── select
+│   │   │   │   └── [serviceId]
+│   │   │   │       └── [categoryId]
+│   │   │   │           └── [stepId]
+│   │   │   │               └── page.tsx
+│   │   │   └── session1
+│   │   │       └── category1
+│   │   │           └── step2
+│   │   │               ├── _components
+│   │   │               │   └── ActivityStepComponent.tsx
+│   │   │               └── page.tsx
 │   │   ├── api
+│   │   │   ├── activity
+│   │   │   │   └── session
+│   │   │   │       ├── end
+│   │   │   │       │   └── route.ts
+│   │   │   │       ├── results
+│   │   │   │       │   └── route.ts
+│   │   │   │       └── route.ts
+│   │   │   ├── auth
+│   │   │   │   └── [...nextauth]
+│   │   │   │       └── route.ts
+│   │   │   ├── check-registration
+│   │   │   │   └── route.ts
+│   │   │   ├── confirm-email
+│   │   │   │   └── route.ts
+│   │   │   ├── confirm-registration
+│   │   │   │   └── route.ts
+│   │   │   ├── error
+│   │   │   │   └── page.tsx
+│   │   │   ├── send-verification
+│   │   │   │   └── route.ts
+│   │   │   ├── testFirestoreAdmin
+│   │   │   │   └── route.ts
+│   │   │   ├── testGmailApi
+│   │   │   │   └── route.ts
+│   │   │   ├── users
+│   │   │   │   ├── getUser
+│   │   │   │   │   └── route.ts
+│   │   │   │   ├── route.ts
+│   │   │   │   └── submit
+│   │   │   │       └── route.ts
+│   │   │   └── verify-email
+│   │   │       └── route.ts
 │   │   ├── basis
+│   │   │   └── quiz
+│   │   │       ├── begginning
+│   │   │       │   ├── _components
+│   │   │       │   │   └── mockData.ts
+│   │   │       │   └── page.tsx
+│   │   │       └── page.tsx
+│   │   ├── clientProviders.tsx
 │   │   ├── dashboard
+│   │   │   ├── _components
+│   │   │   │   ├── ActivityChart.tsx
+│   │   │   │   ├── GoalProgress.tsx
+│   │   │   │   ├── HistoryPanel.tsx
+│   │   │   │   ├── MemoButton.tsx
+│   │   │   │   ├── MemoModal.tsx
+│   │   │   │   ├── Modal.tsx
+│   │   │   │   ├── NavigationButtons.tsx
+│   │   │   │   ├── ProblemHistoryModal.tsx
+│   │   │   │   ├── ProfileEditForm.tsx
+│   │   │   │   ├── SortableItem.tsx
+│   │   │   │   ├── SortableTrash.tsx
+│   │   │   │   ├── TodoList.tsx
+│   │   │   │   ├── TooList2.tsx
+│   │   │   │   ├── mockData.ts
+│   │   │   │   ├── problemHistoryMock.ts
+│   │   │   │   ├── store.ts
+│   │   │   │   └── utils.ts
+│   │   │   └── page.tsx
 │   │   ├── favicon.ico
 │   │   ├── fonts
+│   │   │   ├── GeistMonoVF.woff
+│   │   │   └── GeistVF.woff
 │   │   ├── globals.css
 │   │   ├── grammar
+│   │   │   ├── dashboard
+│   │   │   │   ├── _components
+│   │   │   │   │   ├── ChartSelection.tsx
+│   │   │   │   │   ├── GoalList.tsx
+│   │   │   │   │   ├── HistoryList.tsx
+│   │   │   │   │   ├── ToDoList.tsx
+│   │   │   │   │   └── mockData.ts
+│   │   │   │   └── page.tsx
+│   │   │   ├── list
+│   │   │   │   ├── page.tsx
+│   │   │   │   └── problem
+│   │   │   │       └── [id]
+│   │   │   │           ├── _components
+│   │   │   │           │   └── ProblemDetail.tsx
+│   │   │   │           └── page.tsx
+│   │   │   └── quiz
+│   │   │       ├── _components
+│   │   │       │   ├── Quiz.tsx
+│   │   │       │   ├── QuizQuestion.tsx
+│   │   │       │   └── QuizResults.tsx
+│   │   │       ├── page.tsx
+│   │   │       └── select
+│   │   │           └── page.tsx
 │   │   ├── hello_world
+│   │   │   └── page.tsx
 │   │   ├── layout.tsx
 │   │   ├── makeGoalSet
+│   │   │   └── page.tsx
 │   │   ├── page.tsx
 │   │   ├── privacy-policy
+│   │   │   └── page.tsx
 │   │   ├── register
+│   │   │   ├── _components
+│   │   │   │   └── Modal.tsx
+│   │   │   └── page.tsx
 │   │   ├── signIn
+│   │   │   ├── _components
+│   │   │   │   └── Modal.tsx
+│   │   │   └── page.tsx
 │   │   ├── success
+│   │   │   └── page.tsx
 │   │   ├── terms-of-service
+│   │   │   └── page.tsx
 │   │   ├── verify-email-sent
+│   │   │   └── page.tsx
 │   │   └── writing
+│   │       └── [id]
+│   │           ├── _components
+│   │           │   ├── HintDisplay.tsx
+│   │           │   └── InputField.tsx
+│   │           └── page.tsx
 │   ├── config
 │   │   ├── constants
+│   │   │   └── retryConfig.ts
 │   │   └── index.ts
 │   ├── config.ts
 │   ├── constants
 │   │   ├── clientSide
+│   │   │   └── idb
+│   │   │       ├── __tests__
+│   │   │       │   └── idbHelpers.test.ts
+│   │   │       ├── dbConfig.ts
+│   │   │       ├── fireStorePathMap.ts
+│   │   │       ├── idbGenerator.ts
+│   │   │       ├── idbHelpers.ts
+│   │   │       ├── keyPathMap.ts
+│   │   │       └── objectStores.ts
 │   │   ├── dates.ts
 │   │   ├── dbHub.ts
-│   │   ├── problemResultType.ts
+│   │   ├── problemTypes.ts
 │   │   ├── retryConfig.ts
 │   │   ├── serverSide
+│   │   │   └── firestore
+│   │   │       └── collectionPaths.ts
 │   │   ├── serviceIds.ts
-│   │   └── sessionConstants.ts
+│   │   ├── sessions
+│   │   │   └── sessions.ts
+│   │   └── userStatisticTypes.ts
 │   ├── containers
 │   │   └── diContainer.ts
 │   ├── contexts
+│   │   ├── MemoContext.tsx
 │   │   ├── NotificationContext.tsx
+│   │   ├── activitySessionContext.tsx
 │   │   └── mockDataContext.tsx
 │   ├── domain
 │   │   ├── entities
+│   │   │   ├── clientSide
+│   │   │   │   ├── activitySessionHistoryItem.ts
+│   │   │   │   └── clientActivitySession.ts
+│   │   │   ├── customProblemSet.ts
+│   │   │   ├── email.ts
+│   │   │   ├── goal.ts
+│   │   │   ├── problem.ts
+│   │   │   ├── serverSide
+│   │   │   │   ├── activitySession.ts
+│   │   │   │   └── activitySessionHistoryItem.ts
+│   │   │   ├── session.ts
+│   │   │   ├── sessionStatistics.ts
+│   │   │   ├── user.ts
+│   │   │   ├── userBookmarkItem.ts
+│   │   │   ├── userHistoryItem.ts
+│   │   │   └── userProfile.ts
 │   │   ├── repositories
+│   │   │   ├── accountRepository.ts
+│   │   │   ├── activitySessionRepository.ts
+│   │   │   ├── embeddingRepository.ts
+│   │   │   ├── goalRepository.ts
+│   │   │   ├── idb
+│   │   │   │   ├── genericRepository.ts
+│   │   │   │   ├── idbActivitySessionRepository.ts
+│   │   │   │   ├── localStorageRepository.ts
+│   │   │   │   ├── memoRepository.ts
+│   │   │   │   └── secureLocalStorageRepository.ts
+│   │   │   ├── problemRepository.ts
+│   │   │   ├── problemResultRepository.ts
+│   │   │   ├── subscriptionRepository.ts
+│   │   │   ├── userBookmarkRepository.ts
+│   │   │   ├── userHistoryRepository.ts
+│   │   │   ├── userProfileRepository.ts
+│   │   │   └── userRepository.ts
+│   │   ├── serviceFactory.ts
 │   │   └── services
+│   │       ├── IdManagerService.ts
+│   │       ├── activityService.ts
+│   │       ├── authService.ts
+│   │       ├── clientSide
+│   │       │   ├── apiService.ts
+│   │       │   └── memoService.ts
+│   │       ├── firebaseAdmin.ts
+│   │       ├── firebaseClient.ts
+│   │       ├── goalService.ts
+│   │       ├── loggerService.ts
+│   │       ├── problemResultService.ts
+│   │       ├── problemService.ts
+│   │       ├── retryService.ts
+│   │       ├── serverSide
+│   │       │   ├── LLMService.ts
+│   │       │   ├── RAGService.ts
+│   │       │   ├── pdfDocGeneratorService.ts
+│   │       │   └── problemSetGeneratorService.ts
+│   │       ├── subscriptionService.ts
+│   │       ├── userBookmarkService.ts
+│   │       ├── userHistoryService.ts
+│   │       ├── userProfileService.ts
+│   │       └── userService.ts
 │   ├── handlers
 │   │   ├── authHandler.ts
+│   │   ├── problemSetHandler.ts
 │   │   └── secureLocalStorageProvider.ts
 │   ├── hooks
 │   │   ├── useActivitySession.ts
 │   │   └── useAuth.ts
 │   ├── idb
-│   │   ├── index.ts
-│   │   └── stores
+│   │   └── index.ts
 │   ├── index.ts
 │   ├── interfaces
 │   │   ├── clientSide
+│   │   │   ├── memo
+│   │   │   │   ├── IMemoContext.ts
+│   │   │   │   └── idb.ts
+│   │   │   └── repositories
+│   │   │       ├── IActivitySessionClientRepository.ts
+│   │   │       ├── IIdbActivitySessionRepository.ts
+│   │   │       ├── IMemoRepository.ts
+│   │   │       └── managers
+│   │   │           └── IIndexedDBManager.ts
 │   │   ├── repositories
+│   │   │   ├── IAccountRepository.ts
+│   │   │   ├── IActivitySessionRepository.ts
+│   │   │   ├── IEmbeddingRepository.ts
+│   │   │   ├── IGoalRepository.ts
+│   │   │   ├── IProblemRepository.ts
+│   │   │   ├── IProblemResultRepository.ts
+│   │   │   ├── IProfileRepository.ts
+│   │   │   ├── ISubscriptionRepository.ts
+│   │   │   ├── IUserBookmarkRepository.ts
+│   │   │   ├── IUserHistoryRepository.ts
+│   │   │   ├── IUserRepository.ts
+│   │   │   └── IdStorage.ts
 │   │   └── services
+│   │       ├── IActivityService.ts
+│   │       ├── IAuthService.ts
+│   │       ├── IFirebaseAdmin.ts
+│   │       ├── IGoalService.ts
+│   │       ├── IHistoryService.ts
+│   │       ├── ILoggerService.ts
+│   │       ├── IProblemResultService.ts
+│   │       ├── IProblemService.ts
+│   │       ├── ISubscriptionService.ts
+│   │       ├── IUserBookmarkService.ts
+│   │       ├── IUserHistoryService.ts
+│   │       ├── IUserProfileService.ts
+│   │       ├── IUserService.ts
+│   │       └── clientSide
+│   │           └── IMemoService.ts
 │   ├── lib
 │   │   ├── auth.ts
 │   │   ├── authCallbacks.ts
@@ -108,11 +388,21 @@
 │   │   ├── customFirestoreAdapter.ts
 │   │   ├── firebase.ts
 │   │   ├── firebaseAuthCheck.ts
+│   │   ├── openai
+│   │   │   ├── core.ts
+│   │   │   ├── error.ts
+│   │   │   ├── index.ts
+│   │   │   └── resources
+│   │   │       ├── chat.ts
+│   │   │       ├── completions.ts
+│   │   │       ├── embeddings.ts
+│   │   │       └── index.ts
 │   │   ├── sendEmail.ts
 │   │   └── sendVerificationEmail.ts
 │   ├── middleware.ts
 │   ├── middlewares
 │   │   ├── __tests__
+│   │   │   └── authenticate.test.ts
 │   │   ├── authenticate.ts
 │   │   ├── authorize.ts
 │   │   ├── bandwidthLimit.ts
@@ -131,34 +421,46 @@
 │   │   ├── comparatives_and_superlatives.json
 │   │   ├── demonstratives.json
 │   │   ├── v1
+│   │   │   ├── activity
+│   │   │   │   └── mockProblemSets1.ts
+│   │   │   └── goals.ts
 │   │   └── writing
+│   │       └── sample1.json
 │   ├── schemas
 │   │   ├── FileSchemas.ts
-│   │   ├── UserInputSchemas.ts
 │   │   ├── WritingExerciseSchema.ts
 │   │   ├── account.ts
 │   │   ├── activity
-│   │   ├── activitySessionSchema.ts
+│   │   │   ├── activitySessionSchema.ts
+│   │   │   ├── problemHistorySchemas.ts
+│   │   │   ├── progressDetailSchema.ts
+│   │   │   ├── userInputSchemas.jsdom.test.ts
+│   │   │   └── userInputSchemas.ts
 │   │   ├── app
+│   │   │   └── _contexts
+│   │   │       └── memoSchemas.ts
 │   │   ├── auth.ts
 │   │   ├── baseSchemas.ts
 │   │   ├── bookmarkSchemas.ts
 │   │   ├── customProblemSetSchema.ts
 │   │   ├── customUserSchema.ts
 │   │   ├── goalSchemas.ts
-│   │   ├── historySchemas.ts
 │   │   ├── idb.ts
 │   │   ├── index.ts
 │   │   ├── notificationSchema.ts
+│   │   ├── preferencesSchemas.ts
 │   │   ├── problemSchemas.ts
-│   │   ├── progressDetailSchema.ts
-│   │   ├── sessionSchemas.ts
 │   │   ├── signInSchemas.ts
-│   │   ├── subscriptionSchema.ts
+│   │   ├── statisticSchemas.ts
 │   │   ├── subscriptionSchemas.ts
-│   │   ├── userHistorySchemas.ts
 │   │   ├── userSchemas.ts
 │   │   └── utils
+│   │       ├── dates.node.test.ts
+│   │       ├── dates.ts
+│   │       ├── numbers.node.test.ts
+│   │       ├── numbers.ts
+│   │       ├── strictObject.node.test.ts
+│   │       └── strictObject.ts
 │   ├── styles
 │   │   └── global.css
 │   ├── types
@@ -169,6 +471,20 @@
 │   │   └── next-auth.d.ts
 │   └── utils
 │       ├── __tests__
+│       │   ├── fileExtensions.node.test.ts
+│       │   ├── fileUtils.node.test.ts
+│       │   ├── fileValidator.node.test.ts
+│       │   ├── sanitizeInput.node.test.ts
+│       │   ├── sanitizeUtils.node.test.ts
+│       │   ├── textValidator.node.test.ts
+│       │   └── validation.node.test.ts
+│       ├── ai
+│       │   ├── customProblemSetGenerator.ts
+│       │   ├── graphRenderer.ts
+│       │   ├── pdfDocGenerator.ts
+│       │   ├── pdfExplorer.ts
+│       │   ├── ragRetriever.ts
+│       │   └── staticAnalyzer.ts
 │       ├── auth.ts
 │       ├── batchOperations.ts
 │       ├── crypto.ts
@@ -177,18 +493,37 @@
 │       ├── errorHandler.ts
 │       ├── fileExtensions.ts
 │       ├── fileUtils.ts
+│       ├── filterBadWords.ts
 │       ├── generators
+│       │   ├── dateTimeGenerator.test.ts
+│       │   ├── dateTimeGenerator.ts
+│       │   ├── idGenerator.ts
+│       │   ├── idManager.test.ts
+│       │   └── idManager.ts
 │       ├── helpers.ts
 │       ├── isRetryableError.ts
 │       ├── keys.ts
+│       ├── makeDevListFromTheNodePackage.mjs
+│       ├── rankCalculations.ts
 │       ├── redisClient.ts
+│       ├── sanitize.ts
+│       ├── sanitizeCommon.ts
+│       ├── sanitizeInput.client.ts
+│       ├── sanitizeInput.server.ts
 │       ├── sanitizeInput.ts
-│       ├── sanitizeUtils.ts
+│       ├── templates
+│       │   ├── customProblemSetTemplate.ts
+│       │   ├── manualProblemSetTemplate.ts
+│       │   └── progressReportTemplate.ts
+│       ├── typeGuards
+│       │   └── criterias.ts
 │       ├── validation.ts
 │       └── validators
+│           ├── fileValidator.ts
+│           └── textValidator.ts
 ├── tailwind.config.ts
 ├── tsconfig.json
 ├── unknown-words.txt
 └── utilCommands.md
 
-67 directories, 125 files
+149 directories, 378 files
