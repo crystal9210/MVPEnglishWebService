@@ -9,7 +9,10 @@ import { IdbObjectStoreName } from "@/constants/clientSide/idb/objectStores";
  * @template K The type of the object store name.
  * @template T The type of the value stored in the object store.
  */
-export class GenericRepository<K extends IdbObjectStoreName, T extends MyIDB[K]["value"] = MyIDB[K]["value"]> {
+export class GenericRepository<
+    K extends IdbObjectStoreName,
+    T extends MyIDB[K]["value"] = MyIDB[K]["value"]
+> {
     protected idbManager: IIndexedDBManager;
     protected storeName: K;
 
@@ -29,7 +32,9 @@ export class GenericRepository<K extends IdbObjectStoreName, T extends MyIDB[K][
      * @returns A promise that resolves to the value, or undefined if the key is not found.
      */
     async get(key: MyIDB[K]["key"]): Promise<T | undefined> {
-        return this.idbManager.get(this.storeName, key) as Promise<T | undefined>;
+        return this.idbManager.get(this.storeName, key) as Promise<
+            T | undefined
+        >;
     }
 
     /**
@@ -47,6 +52,7 @@ export class GenericRepository<K extends IdbObjectStoreName, T extends MyIDB[K][
      * @returns A promise that resolves to the key of the newly added value.
      */
     async add(value: T, key?: MyIDB[K]["key"]): Promise<MyIDB[K]["key"]> {
+        // key はオプショナルなので、IndexedDBManager の add メソッドで適切に処理される
         return this.idbManager.add(this.storeName, value, key);
     }
 
@@ -79,7 +85,9 @@ export class GenericRepository<K extends IdbObjectStoreName, T extends MyIDB[K][
             }
         } else {
             // Throw an error if the existing object is not found.
-            throw new Error(`Object with key ${key} not found in store ${this.storeName}.`);
+            throw new Error(
+                `Object with key ${key} not found in store ${this.storeName}.`
+            );
         }
     }
 
@@ -98,7 +106,9 @@ export class GenericRepository<K extends IdbObjectStoreName, T extends MyIDB[K][
      * @returns A promise that resolves to an array of values, or undefined for keys that are not found.
      */
     async getMultiple(keys: MyIDB[K]["key"][]): Promise<(T | undefined)[]> {
-        return this.idbManager.getMultiple(this.storeName, keys) as Promise<(T | undefined)[]>;
+        return this.idbManager.getMultiple(this.storeName, keys) as Promise<
+            (T | undefined)[]
+        >;
     }
 
     /**

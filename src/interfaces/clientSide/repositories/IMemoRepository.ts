@@ -83,4 +83,30 @@ export interface IMemoRepository {
      * @returns A promise that resolves to the total count of memos.
      */
     countMemos(): Promise<number>;
+
+    /**
+     * Retrieves all trashed memos.
+     * @returns A promise that resolves to an array of trashed memos.
+     */
+    getTrashedMemos(): Promise<Memo[]>;
+
+    /**
+     * Restores a trashed memo by its ID.
+     * @param id The ID of the memo to restore.
+     * @returns A promise that resolves when the memo is restored.
+     */
+    restoreMemo(id: string): Promise<void>;
+
+    /**
+     * Deletes a trashed memo by its ID.
+     * @param id The ID of the trashed memo to delete.
+     * @returns A promise that resolves when the memo is deleted.
+     */
+    deleteTrashedMemos(id: string): Promise<void>;
+
+    /**
+     * Deletes all trashed memos from the repository.
+     * @returns A promise that resolves when all trashed memos are deleted.
+     */
+    deleteAllTrashedMemos(): Promise<void>;
 }
