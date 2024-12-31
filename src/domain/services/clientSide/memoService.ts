@@ -9,6 +9,8 @@ import { Memo } from "@/schemas/app/_contexts/memoSchemas";
  */
 export class MemoService implements IMemoService {
     private repository: IMemoRepository;
+    private static MAX_MEMO_CONTENT_LENGTH = 2000;
+    private static MAX_TAG_LENGTH = 100;
 
     /**
      * Initializes the MemoService with the given repository.
@@ -25,6 +27,8 @@ export class MemoService implements IMemoService {
      * @returns A promise that resolves to the newly created memo.
      */
     async createMemo(content: string, tags: string[] = []): Promise<Memo> {
+        this.validateContent(content);
+        this.validateTags(tags);
         const newMemo: Memo = {
             id: generateUniqueId(),
             content,
@@ -62,6 +66,12 @@ export class MemoService implements IMemoService {
      * @param updates The updates to apply.
      */
     async updateMemo(id: string, updates: Partial<Memo>): Promise<void> {
+        if (updates.content !== undefined) {
+            this.validateContent(updates.content);
+        }
+        if (updates.tags !== undefined) {
+            this.validateTags(updates.tags);
+        }
         await this.repository.updateMemo(id, updates);
     }
 
@@ -79,6 +89,10 @@ export class MemoService implements IMemoService {
      * @returns A promise that resolves to an array of keys of the added memos.
      */
     async addMultipleMemos(memos: Memo[]): Promise<IDBValidKey[]> {
+        memos.forEach((memo) => {
+            this.validateContent(memo.content);
+            this.validateTags(memo.tags);
+        });
         return this.repository.addMultipleMemos(memos);
     }
 
@@ -87,6 +101,14 @@ export class MemoService implements IMemoService {
      * @param memos An array of partial memos to update.
      */
     async updateMultipleMemos(memos: Partial<Memo>[]): Promise<void> {
+        memos.forEach((memo) => {
+            if (memo.content !== undefined) {
+                this.validateContent(memo.content);
+            }
+            if (memo.tags !== undefined) {
+                this.validateTags(memo.tags);
+            }
+        });
         await this.repository.updateMultipleMemos(memos);
     }
 
@@ -135,6 +157,34 @@ export class MemoService implements IMemoService {
      */
     async deleteAllTrashedMemos(): Promise<void> {
         await this.repository.deleteAllTrashedMemos();
+    }
+
+    /**
+     * Validates the content of a memo.
+     * @param content The content to validate.
+     * @throws {Error} If the content exceeds the maximum length.
+     */
+    private validateContent(content: string): void {
+        if (content.length > MemoService.MAX_MEMO_CONTENT_LENGTH) {
+            throw new Error(
+                `Content exceeds maximum length of ${MemoService.MAX_MEMO_CONTENT_LENGTH} characters.`
+            );
+        }
+    }
+
+    /**
+     * Validates the tags of a memo.
+     * @param tags The tags to validate.
+     * @throws {Error} If any tag exceeds the maximum length.
+     */
+    private validateTags(tags: string[]): void {
+        tags.forEach((tag) => {
+            if (tag.length > MemoService.MAX_TAG_LENGTH) {
+                throw new Error(
+                    `Tag "${tag}" exceeds maximum length of ${MemoService.MAX_TAG_LENGTH} characters.`
+                );
+            }
+        });
     }
 }
 

@@ -27,11 +27,16 @@ interface MemoModalProps {
     memo?: Memo;
 }
 
+const MAX_MEMO_CONTENT_LENGTH = 2000;
+const MAX_TAG_LENGTH = 100;
+
 const MemoModal: React.FC<MemoModalProps> = ({ isOpen, onClose, memo }) => {
     const { addMemo, editMemo } = useMemoContext();
     const [content, setContent] = useState<string>(memo ? memo.content : "");
     const [tags, setTags] = useState<string[]>(memo ? memo.tags : []);
     const [tagInput, setTagInput] = useState<string>("");
+    const [error, setError] = useState<string>("");
+    const [tagError, setTagError] = useState<string>("");
 
     useEffect(() => {
         if (memo) {
@@ -41,10 +46,28 @@ const MemoModal: React.FC<MemoModalProps> = ({ isOpen, onClose, memo }) => {
             setContent("");
             setTags([]);
         }
-    }, [memo]);
+        setError("");
+        setTagError("");
+    }, [memo, isOpen]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (content.length > MAX_MEMO_CONTENT_LENGTH) {
+            setError(
+                `The length of memo's content is limited with ${MAX_MEMO_CONTENT_LENGTH}, but you input of the memo with length ${content.length}.`
+            );
+            return;
+        }
+        for (const tag of tags) {
+            if (tag.length > MAX_TAG_LENGTH) {
+                setTagError(
+                    `The length of memo's content is limited with ${MAX_TAG_LENGTH}, but you input of the memo with length ${tag.length}.`
+                );
+                return;
+            }
+        }
+
         if (memo) {
             // Edit existing memo
             try {
@@ -67,16 +90,29 @@ const MemoModal: React.FC<MemoModalProps> = ({ isOpen, onClose, memo }) => {
         onClose();
     };
 
+    // NOTE: タグの仕様として、ユーザが途中に余白を入れる可能性としては低い >> 仮に余白を入れたいみたいな感じの場合は余白ではなく-を中間に入れることで単語を連結したテキストを入力できるようにする
     const handleAddTag = () => {
         const trimmedTag = tagInput.trim();
-        if (trimmedTag && !tags.includes(trimmedTag)) {
+        if (!trimmedTag) return;
+        if (trimmedTag.length > MAX_TAG_LENGTH) {
+            setTagError(
+                `The length of memo's content is limited with ${MAX_TAG_LENGTH}, but you input of the memo with length ${trimmedTag.length}.`
+            );
+            return;
+        }
+        if (!tags.includes(trimmedTag)) {
             setTags([...tags, trimmedTag]);
             setTagInput("");
+            setTagError("");
+        } else {
+            setTagError("This tag is already added to your tag list.");
+            return;
         }
     };
 
     const handleRemoveTag = (tagToRemove: string) => {
         setTags(tags.filter((tag) => tag !== tagToRemove));
+        setTagError("");
     };
 
     if (!isOpen) return null;
@@ -94,6 +130,8 @@ const MemoModal: React.FC<MemoModalProps> = ({ isOpen, onClose, memo }) => {
                 <h2 className="text-2xl font-semibold mb-4 text-gray-500">
                     {memo ? "メモを編集" : "メモを追加"}
                 </h2>
+                {error && <p className="text-red-500 mb-2">{error}</p>}
+                {tagError && <p className="text-red-500 mb-2">{tagError}</p>}
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
                         <label
