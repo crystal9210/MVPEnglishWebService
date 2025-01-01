@@ -16,13 +16,14 @@ export const IDB_OBJECT_STORES = {
 } as const;
 
 // union type of the list; IDB_OBJECT_STORES
-export type IdbObjectStoreName = typeof IDB_OBJECT_STORES[keyof typeof IDB_OBJECT_STORES];
+export type IdbObjectStoreName =
+    (typeof IDB_OBJECT_STORES)[keyof typeof IDB_OBJECT_STORES];
 
-export type IndexName<T> = T extends string ? `by-${T}`: never;
+export type IndexName<T> = T extends string ? `by-${T}` : never;
 // TODO
 export interface IndexConfig<
     Value,
-    Index extends keyof Value | string = keyof Value | string,
+    Index extends keyof Value | string = keyof Value | string
 > {
     name: IndexName<Index & string>;
     keyPath: Index;
@@ -34,12 +35,14 @@ export type ObjectStoreConfig<
     ItemSchema extends z.ZodTypeAny,
     FirestorePath extends string, // TODO 適当にセット取ってくる
     KeyType extends string | string[], // TODO 厳密化
-    Indexes extends IndexConfig<z.infer<ItemSchema>>[] = IndexConfig<z.infer<ItemSchema>>[]
+    Indexes extends IndexConfig<z.infer<ItemSchema>>[] = IndexConfig<
+        z.infer<ItemSchema>
+    >[]
 > = {
     name: StoreName;
-    schema: ItemSchema
+    schema: ItemSchema;
     firestorePath: FirestorePath;
-    options: IDBObjectStoreParameters & { keyPath: KeyType } // options includes "keyPath" field.
+    options: IDBObjectStoreParameters & { keyPath: KeyType }; // options includes "keyPath" field.
     indexes: Indexes;
 };
 
@@ -62,9 +65,9 @@ export const IDB_OBJECT_STORE_CONFIGS = [
             {
                 name: "by-tags" as const,
                 keyPath: "tags",
-                options: { multiEntry: true }
-            }
-        ]
+                options: { multiEntry: true },
+            },
+        ],
     } satisfies ObjectStoreConfig<"memoList", typeof MemoSchema, "memos", "id">, // TODO "id"などのキーを@/constants/..に配置・統合管理
     {
         name: "trashedMemoList" as const,
@@ -75,9 +78,14 @@ export const IDB_OBJECT_STORE_CONFIGS = [
             {
                 name: "by-deletedAt" as const,
                 keyPath: "deletedAt",
-            }
-        ]
-    } satisfies ObjectStoreConfig<"trashedMemoList", typeof MemoSchema, "trashedMemos", "id">,
+            },
+        ],
+    } satisfies ObjectStoreConfig<
+        "trashedMemoList",
+        typeof MemoSchema,
+        "trashedMemos",
+        "id"
+    >,
     {
         name: "activitySessions" as const,
         firestorePath: "activity_sessions",
@@ -86,8 +94,13 @@ export const IDB_OBJECT_STORE_CONFIGS = [
         indexes: [
             { name: "by-startedAt" as const, keyPath: "startedAt" },
             { name: "by-endedAt" as const, keyPath: "endedAt" },
-        ]
-    } satisfies ObjectStoreConfig<"activitySessions", typeof ActivitySessionSchema, "activity_sessions", "sessionId">,
+        ],
+    } satisfies ObjectStoreConfig<
+        "activitySessions",
+        typeof ActivitySessionSchema,
+        "activity_sessions",
+        "sessionId"
+    >,
     // {
     //     name: "history" as const,
     //     firestorePath: "history_items",
@@ -111,9 +124,6 @@ export const IDB_OBJECT_STORE_CONFIGS = [
 ] as const;
 
 export type IdbObjectStoreConfigs = typeof IDB_OBJECT_STORE_CONFIGS;
-
-
-
 
 // type GetKeyType<
 //     Configs extends readonly IdbObjectStoreConfigs[],
@@ -142,8 +152,6 @@ export type IdbObjectStoreConfigs = typeof IDB_OBJECT_STORE_CONFIGS;
 // const obj: Readonly<Example> = { a: 1, b: 2 };
 // obj.a = 3; // エラー
 
-
-
 // export interface IndexConfig<
 //     Value,
 //     Index extends PropertyKey = keyof Value,
@@ -157,7 +165,6 @@ export type IdbObjectStoreConfigs = typeof IDB_OBJECT_STORE_CONFIGS;
 //     name: "by-createdAt",
 //     keyPath: "createdAt"
 // }
-
 
 // export type SimpleValue = string | number | Date | boolean | null | undefined;
 // export type IndexableValue = SimpleValue | Array<SimpleValue>;

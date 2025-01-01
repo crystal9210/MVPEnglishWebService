@@ -1,7 +1,11 @@
 import { injectable, inject } from "tsyringe";
 import type { IFirebaseAdmin } from "@/interfaces/services/IFirebaseAdmin";
 import type { ILoggerService } from "@/interfaces/services/ILoggerService";
-import type { DocumentData, WithFieldValue, UpdateData } from "firebase-admin/firestore";
+import type {
+    DocumentData,
+    WithFieldValue,
+    UpdateData,
+} from "firebase-admin/firestore";
 
 @injectable()
 export class BatchOperations {
@@ -28,16 +32,21 @@ export class BatchOperations {
         const batch = this.db.batch();
         const collectionRef = this.db.collection(collectionName);
 
-        documents.forEach(doc => {
+        documents.forEach((doc) => {
             const docRef = collectionRef.doc(doc.id);
             batch.set(docRef, doc.data);
         });
 
         try {
             await batch.commit();
-            this.logger.info(`Batch set completed for collection: ${collectionName}`);
+            this.logger.info(
+                `Batch set completed for collection: ${collectionName}`
+            );
         } catch (error) {
-            this.logger.error(`Batch set failed for collection: ${collectionName}`, { error });
+            this.logger.error(
+                `Batch set failed for collection: ${collectionName}`,
+                { error }
+            );
             throw error;
         }
     }
@@ -54,16 +63,21 @@ export class BatchOperations {
         const batch = this.db.batch();
         const collectionRef = this.db.collection(collectionName);
 
-        documents.forEach(doc => {
+        documents.forEach((doc) => {
             const docRef = collectionRef.doc(doc.id);
             batch.update(docRef, doc.data);
         });
 
         try {
             await batch.commit();
-            this.logger.info(`Batch update completed for collection: ${collectionName}`);
+            this.logger.info(
+                `Batch update completed for collection: ${collectionName}`
+            );
         } catch (error) {
-            this.logger.error(`Batch update failed for collection: ${collectionName}`, { error });
+            this.logger.error(
+                `Batch update failed for collection: ${collectionName}`,
+                { error }
+            );
             throw error;
         }
     }
@@ -77,16 +91,21 @@ export class BatchOperations {
         const batch = this.db.batch();
         const collectionRef = this.db.collection(collectionName);
 
-        ids.forEach(id => {
+        ids.forEach((id) => {
             const docRef = collectionRef.doc(id);
             batch.delete(docRef);
         });
 
         try {
             await batch.commit();
-            this.logger.info(`Batch delete completed for collection: ${collectionName}`);
+            this.logger.info(
+                `Batch delete completed for collection: ${collectionName}`
+            );
         } catch (error) {
-            this.logger.error(`Batch delete failed for collection: ${collectionName}`, { error });
+            this.logger.error(
+                `Batch delete failed for collection: ${collectionName}`,
+                { error }
+            );
             throw error;
         }
     }

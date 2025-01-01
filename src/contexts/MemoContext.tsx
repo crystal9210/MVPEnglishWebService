@@ -93,6 +93,28 @@ export const MemoProvider: React.FC<{ children: ReactNode }> = ({
     }, [memoService]);
 
     /**
+     * Retrieves all memos (decrypted).
+     * @returns An array of memo list.
+     */
+    const getAllMemos = async (): Promise<Memo[]> => {
+        if (!memoService) return [];
+        try {
+            const memoList = await memoService.getAllMemos();
+            return memoList;
+        } catch (error) {
+            console.error(error);
+            return [];
+        }
+    };
+
+    // const getEncryptedMemoList = async (): Promise<Memo[]> => {
+    //     if (!memoService) return [];
+    //     try {
+    //         const memoList = await memoService.geten
+    //     }
+    // }
+
+    /**
      * Adds a new memo.
      * @param content The content of the memo
      * @param tags Tags associated with the memo

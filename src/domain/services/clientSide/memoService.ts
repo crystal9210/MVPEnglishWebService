@@ -3,6 +3,8 @@
 import type { IMemoRepository } from "@/interfaces/clientSide/repositories/IMemoRepository";
 import { IMemoService } from "@/interfaces/services/clientSide/IMemoService";
 import { Memo } from "@/schemas/app/_contexts/memoSchemas";
+import { decryptData } from "@/utils/crypto";
+import { EncryptionOptions } from "@/utils/crypto/cryptoFactory";
 
 /**
  * Service class for managing memos, encapsulating business logic.
@@ -18,6 +20,14 @@ export class MemoService implements IMemoService {
      */
     constructor(repository: IMemoRepository) {
         this.repository = repository;
+    }
+
+    /**
+     * Initializes the options of encryption.
+     * @param options
+     */
+    async initializeEncryption(options: EncryptionOptions): Promise<void> {
+        await this.initializeEncryption(options);
     }
 
     /**
@@ -48,7 +58,14 @@ export class MemoService implements IMemoService {
      * @returns The memo, or undefined if not found.
      */
     async getMemo(id: string): Promise<Memo | undefined> {
-        return this.repository.getMemo(id);
+        const memo = await this.repository.getMemo(id);
+        if (!memo) return memo;
+        const decryptedContent = await decryptData(memo.content);
+        return { ...memo, content: decryptedContent };
+    }
+
+    async getEncryptedMemoList(): Promise<Memo[]> {
+        return await this.repository.getAllMemos();
     }
 
     /**
