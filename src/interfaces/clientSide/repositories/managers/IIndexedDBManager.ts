@@ -155,6 +155,13 @@ export interface IIndexedDBManager {
     getDB(): Promise<IDBPDatabase<MyIDB>>;
 
     /**
+     * Deletes all data from the specified object store.
+     * @param storeName The name of the object store to clear.
+     * @returns A promise that resolves when the store is cleared.
+     */
+    clearStore<K extends IdbObjectStoreName>(storeName: K): Promise<void>;
+
+    /**
      * オブジェクトストア内のデータ数カウント
      * Counts the number of values in the specified object store.
      * @param storeName The name of the object store.

@@ -31,14 +31,14 @@ export const encryptData = async (data: string): Promise<string> => {
 };
 
 /**
- * Decrypts data using the initialized encryption strategy.
- * @param ciphertext The encrypted data as a Base64 string
- * @returns The decrypted plaintext
- * @throws Error if encryption strategy is not initialized
+ * Decrypts the given encrypted data using the provided encryption strategy.
+ * @param encryptedData The encrypted data to decrypt.
+ * @param encryptionStrategy The encryption strategy to use for decryption.
+ * @returns The decrypted data as a string.
  */
-export const decryptData = async (ciphertext: string): Promise<string> => {
-    if (!encryptionStrategy) {
-        throw new Error("Encryption strategy is not initialized.");
-    }
-    return await encryptionStrategy.decrypt(ciphertext);
+export const decryptData = async (
+    encryptedData: string,
+    encryptionStrategy: IEncryptionStrategy
+): Promise<string> => {
+    return await encryptionStrategy.decrypt(encryptedData);
 };

@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import ActivityManagerComponent from "@/_components/ActivityManagerComponent";
+import ActivityManagerComponent from "@/components/ActivityManagerComponent";
 
 const ActivityPage = () => {
     return (

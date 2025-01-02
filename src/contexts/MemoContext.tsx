@@ -1,3 +1,5 @@
+/* /src/contexts/MemoContext.tsx */
+
 "use client";
 
 import React, {
@@ -13,8 +15,14 @@ import { MemoRepository } from "@/domain/repositories/idb/memoRepository";
 import { IndexedDBManager } from "@/idb/index";
 import { IMemoService } from "@/interfaces/services/clientSide/IMemoService";
 import { toast } from "react-toastify";
+import {
+    EncryptionOptions,
+    DEFAULT_ENCRYPTION_OPTIONS,
+} from "@/constants/cryptoTypes";
 
-// Context type definition
+/**
+ * Interface defining the shape of the Memo context.
+ */
 interface MemoContextProps {
     memoList: Memo[];
     trashedMemoList: Memo[];
@@ -29,9 +37,15 @@ interface MemoContextProps {
     deleteAllTrashedMemos: () => Promise<void>;
     isLoading: boolean;
     error: string | null;
+    clearAllMemos: () => Promise<void>;
+    getEncryptedMemoList: () => Promise<Memo[]>;
+    getAllMemos: () => Promise<Memo[]>;
+    memoService: IMemoService | null;
 }
 
-// Set default value to null
+/**
+ * Create Context with default value null.
+ */
 const MemoContext = createContext<MemoContextProps | null>(null);
 
 /**
@@ -45,74 +59,71 @@ export const MemoProvider: React.FC<{ children: ReactNode }> = ({
     const [memoService, setMemoService] = useState<IMemoService | null>(null);
     const [memoList, setMemoList] = useState<Memo[]>([]);
     const [trashedMemoList, setTrashedMemoList] = useState<Memo[]>([]);
-    const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [isLoading, setIsLoading] = useState<boolean>(true); // 初期化時はローディング状態
     const [error, setError] = useState<string | null>(null);
 
-    // Initialize dependencies asynchronously
-    useEffect(() => {
-        const initialize = async () => {
-            try {
-                // Create an instance of IndexedDBManager
-                const idbManager = new IndexedDBManager();
-                const memoRepository = new MemoRepository(idbManager);
-                const service = new MemoService(memoRepository);
-                setMemoService(service);
-            } catch (err) {
-                setError("Failed to initialize MemoService.");
-                console.error(err);
-            }
-        };
-
-        // Execute only in the browser by adding a condition
-        if (typeof window !== "undefined") {
-            initialize();
-        }
-    }, []);
-
-    // Initialization: Load all memos
-    useEffect(() => {
-        if (!memoService) return;
-
-        const loadMemos = async () => {
-            try {
-                const [activeMemos, trashedMemos] = await Promise.all([
-                    memoService.getAllMemos(),
-                    memoService.getTrashedMemos(),
-                ]);
-                setMemoList(activeMemos);
-                setTrashedMemoList(trashedMemos);
-            } catch (err) {
-                setError("Failed to load memos.");
-                console.error(err);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        loadMemos();
-    }, [memoService]);
-
     /**
-     * Retrieves all memos (decrypted).
-     * @returns An array of memo list.
+     * Initializes the encryption strategy with the provided options.
+     * @param options EncryptionOptions including algorithm and passphrase
      */
-    const getAllMemos = async (): Promise<Memo[]> => {
-        if (!memoService) return [];
+    const initializeEncryption = async (options: EncryptionOptions) => {
+        setIsLoading(true);
         try {
-            const memoList = await memoService.getAllMemos();
-            return memoList;
-        } catch (error) {
-            console.error(error);
-            return [];
+            // Initialize IndexedDBManager and MemoRepository
+            const idbManager = IndexedDBManager.getInstance();
+            const memoRepository = new MemoRepository(idbManager);
+
+            // Create MemoService instance using the factory method
+            const service = await MemoService.create(memoRepository, options);
+            setMemoService(service);
+            toast.success("Encryption initialized successfully!");
+
+            // Load memos after initialization
+            await loadMemos(service);
+        } catch (err) {
+            setError("Failed to initialize encryption.");
+            console.error(err);
+            toast.error("Failed to initialize encryption.");
+        } finally {
+            setIsLoading(false);
         }
     };
 
-    // const getEncryptedMemoList = async (): Promise<Memo[]> => {
-    //     if (!memoService) return [];
-    //     try {
-    //         const memoList = await memoService.geten
-    //     }
-    // }
+    /**
+     * Loads all memos (active and trashed) from the repository.
+     * @param service The initialized MemoService instance.
+     */
+    const loadMemos = async (service: IMemoService) => {
+        setIsLoading(true);
+        try {
+            const [activeMemos, trashedMemos] = await Promise.all([
+                service.getAllMemos(),
+                service.getTrashedMemos(),
+            ]);
+            setMemoList(activeMemos);
+            setTrashedMemoList(trashedMemos);
+        } catch (err) {
+            setError("Failed to load memos.");
+            console.error(err);
+            toast.error("Failed to load memos.");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    /**
+     * Effect to auto-initialize encryption with default options on mount.
+     */
+    useEffect(() => {
+        const autoInitialize = async () => {
+            try {
+                await initializeEncryption(DEFAULT_ENCRYPTION_OPTIONS);
+            } catch (err) {
+                console.error("Auto initialization failed:", err);
+            }
+        };
+        autoInitialize();
+    }, []);
 
     /**
      * Adds a new memo.
@@ -120,7 +131,11 @@ export const MemoProvider: React.FC<{ children: ReactNode }> = ({
      * @param tags Tags associated with the memo
      */
     const addMemo = async (content: string, tags: string[]) => {
-        if (!memoService) return;
+        if (!memoService) {
+            setError("MemoService not initialized.");
+            toast.error("MemoService not initialized.");
+            return;
+        }
         try {
             const newMemo = await memoService.createMemo(content, tags);
             setMemoList((prev) => [...prev, newMemo]);
@@ -128,6 +143,7 @@ export const MemoProvider: React.FC<{ children: ReactNode }> = ({
         } catch (err) {
             setError("Failed to add memo.");
             console.error(err);
+            toast.error("Failed to add memo.");
         }
     };
 
@@ -140,7 +156,11 @@ export const MemoProvider: React.FC<{ children: ReactNode }> = ({
         id: string,
         updates: { content: string; tags: string[] }
     ) => {
-        if (!memoService) return;
+        if (!memoService) {
+            setError("MemoService not initialized.");
+            toast.error("MemoService not initialized.");
+            return;
+        }
         try {
             await memoService.updateMemo(id, updates);
             setMemoList((prev) =>
@@ -148,7 +168,7 @@ export const MemoProvider: React.FC<{ children: ReactNode }> = ({
                     memo.id === id
                         ? {
                               ...memo,
-                              content: updates.content,
+                              content: updates.content, // Already decrypted
                               tags: updates.tags,
                               lastUpdatedAt: new Date(),
                           }
@@ -159,6 +179,7 @@ export const MemoProvider: React.FC<{ children: ReactNode }> = ({
         } catch (err) {
             setError("Failed to edit memo.");
             console.error(err);
+            toast.error("Failed to edit memo.");
         }
     };
 
@@ -167,7 +188,11 @@ export const MemoProvider: React.FC<{ children: ReactNode }> = ({
      * @param id The ID of the memo
      */
     const deleteMemo = async (id: string) => {
-        if (!memoService) return;
+        if (!memoService) {
+            setError("MemoService not initialized.");
+            toast.error("MemoService not initialized.");
+            return;
+        }
         try {
             await memoService.deleteMemo(id);
             setMemoList((prev) => prev.filter((memo) => memo.id !== id));
@@ -180,6 +205,7 @@ export const MemoProvider: React.FC<{ children: ReactNode }> = ({
         } catch (err) {
             setError("Failed to delete memo.");
             console.error(err);
+            toast.error("Failed to delete memo.");
         }
     };
 
@@ -188,7 +214,11 @@ export const MemoProvider: React.FC<{ children: ReactNode }> = ({
      * @param id The ID of the memo
      */
     const restoreMemo = async (id: string) => {
-        if (!memoService) return;
+        if (!memoService) {
+            setError("MemoService not initialized.");
+            toast.error("MemoService not initialized.");
+            return;
+        }
         try {
             await memoService.restoreMemo(id);
             // Fetch and update trashed memos
@@ -197,9 +227,11 @@ export const MemoProvider: React.FC<{ children: ReactNode }> = ({
             // Fetch and update active memos
             const activeMemos = await memoService.getAllMemos();
             setMemoList(activeMemos);
+            toast.success("Memo restored successfully!");
         } catch (err) {
             setError("Failed to restore memo.");
             console.error(err);
+            toast.error("Failed to restore memo.");
         }
     };
 
@@ -208,15 +240,21 @@ export const MemoProvider: React.FC<{ children: ReactNode }> = ({
      * @param id The ID of the memo
      */
     const deleteTrashedMemo = async (id: string) => {
-        if (!memoService) return;
+        if (!memoService) {
+            setError("MemoService not initialized.");
+            toast.error("MemoService not initialized.");
+            return;
+        }
         try {
             await memoService.deleteTrashedMemo(id);
             // Fetch and update trashed memos
             const trashedMemos = await memoService.getTrashedMemos();
             setTrashedMemoList(trashedMemos);
+            toast.success("Trashed memo deleted successfully!");
         } catch (err) {
             setError("Failed to delete trashed memo.");
             console.error(err);
+            toast.error("Failed to delete trashed memo.");
         }
     };
 
@@ -224,13 +262,79 @@ export const MemoProvider: React.FC<{ children: ReactNode }> = ({
      * Permanently deletes all trashed memos.
      */
     const deleteAllTrashedMemos = async () => {
-        if (!memoService) return;
+        if (!memoService) {
+            setError("MemoService not initialized.");
+            toast.error("MemoService not initialized.");
+            return;
+        }
         try {
             await memoService.deleteAllTrashedMemos();
             setTrashedMemoList([]);
+            toast.success("All trashed memos deleted successfully!");
         } catch (err) {
             setError("Failed to delete all trashed memos.");
             console.error(err);
+            toast.error("Failed to delete all trashed memos.");
+        }
+    };
+
+    /**
+     * Clears all memos from the repository.
+     * @returns A promise that resolves when all memos are deleted.
+     */
+    const clearAllMemos = async () => {
+        if (!memoService) {
+            setError("MemoService not initialized.");
+            toast.error("MemoService not initialized.");
+            return;
+        }
+        try {
+            await memoService.clearAllMemos();
+            setMemoList([]);
+            setTrashedMemoList([]);
+            toast.success("全てのメモが削除されました。");
+        } catch (err) {
+            setError("Failed to clear all memos.");
+            console.error(err);
+            toast.error("メモの削除に失敗しました。");
+        }
+    };
+
+    /**
+     * Retrieves the list of encrypted memos.
+     * @returns A promise that resolves to an array of encrypted memos.
+     */
+    const getEncryptedMemoList = async (): Promise<Memo[]> => {
+        if (!memoService) {
+            throw new Error("MemoService not initialized.");
+        }
+        try {
+            const memos = await memoService.getEncryptedMemoList();
+            return memos;
+        } catch (err) {
+            setError("Failed to retrieve encrypted memos.");
+            console.error(err);
+            toast.error("Failed to retrieve encrypted memos.");
+            return [];
+        }
+    };
+
+    /**
+     * Retrieves the list of decrypted memos.
+     * @returns A promise that resolves to an array of decrypted memos.
+     */
+    const getAllMemos = async (): Promise<Memo[]> => {
+        if (!memoService) {
+            throw new Error("MemoService not initialized.");
+        }
+        try {
+            const memos = await memoService.getAllMemos();
+            return memos;
+        } catch (err) {
+            setError("Failed to retrieve decrypted memos.");
+            console.error(err);
+            toast.error("Failed to retrieve decrypted memos.");
+            return [];
         }
     };
 
@@ -247,17 +351,46 @@ export const MemoProvider: React.FC<{ children: ReactNode }> = ({
                 deleteAllTrashedMemos,
                 isLoading,
                 error,
+                clearAllMemos,
+                getEncryptedMemoList,
+                getAllMemos,
+                memoService,
             }}
         >
-            {children}
+            {isLoading ? (
+                <div className="flex justify-center items-center h-screen">
+                    <div className="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-16 w-16"></div>
+                    {/* ローディング用のスピナーのスタイル */}
+                    <style jsx>{`
+                        .loader {
+                            border-top-color: #3498db;
+                            animation: spin 1s ease-in-out infinite;
+                        }
+
+                        @keyframes spin {
+                            to {
+                                transform: rotate(360deg);
+                            }
+                        }
+                    `}</style>
+                </div>
+            ) : (
+                children
+            )}
+            {/* エラーメッセージを表示 */}
+            {error && (
+                <div className="fixed bottom-4 right-4 bg-red-500 text-white p-4 rounded">
+                    {error}
+                </div>
+            )}
         </MemoContext.Provider>
     );
 };
 
 /**
- * useMemoContext hook retrieves the value of MemoContext.
- * @returns The value of MemoContext
- * @throws If an error occurs, indicating that it must be used within a MemoProvider
+ * Custom hook to use the MemoContext.
+ * @returns The MemoContextProps object.
+ * @throws Error if used outside of a MemoProvider.
  */
 export const useMemoContext = (): MemoContextProps => {
     const context = useContext(MemoContext);

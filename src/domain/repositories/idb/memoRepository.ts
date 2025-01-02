@@ -283,4 +283,12 @@ export class MemoRepository implements IMemoRepository {
             await this.idbManager.deleteMultiple("trashedMemoList", ids);
         }
     }
+
+    /**
+     * Clears all memos from the repository.
+     * @returns A promise that resolves when all memos are deleted.
+     */
+    public async clearAllMemos(): Promise<void> {
+        await this.idbManager.clearStore("memoList");
+    }
 }

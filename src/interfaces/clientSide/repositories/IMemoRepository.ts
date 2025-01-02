@@ -109,4 +109,10 @@ export interface IMemoRepository {
      * @returns A promise that resolves when all trashed memos are deleted.
      */
     deleteAllTrashedMemos(): Promise<void>;
+
+    /**
+     * Clears all memos from the repository.
+     * @returns A promise that resolves when all memos are deleted.
+     */
+    clearAllMemos(): Promise<void>;
 }

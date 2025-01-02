@@ -6,6 +6,12 @@ import { Memo } from "@/schemas/app/_contexts/memoSchemas";
  */
 export interface IMemoService {
     /**
+     * Retrieves the list of encrypted memos.
+     * @returns A promise that resolves to an array of encrypted memos.
+     */
+    getEncryptedMemoList(): Promise<Memo[]>;
+
+    /**
      * Retrieves all non-deleted memos.
      * @returns A promise that resolves to an array of memos.
      */
@@ -14,6 +20,7 @@ export interface IMemoService {
     /**
      * Creates a new memo.
      * @param content The content of the memo.
+     * @param tags The tags associated with the memo.
      * @returns A promise that resolves to the newly created memo.
      */
     createMemo(content: string, tags: string[]): Promise<Memo>;
@@ -85,4 +92,10 @@ export interface IMemoService {
      * @returns A promise that resolves when all trashed memos are deleted.
      */
     deleteAllTrashedMemos(): Promise<void>;
+
+    /**
+     * Clears all memos from the repository.
+     * @returns A promise that resolves when all memos are deleted.
+     */
+    clearAllMemos(): Promise<void>;
 }

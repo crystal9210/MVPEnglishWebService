@@ -848,6 +848,22 @@ export class IndexedDBManager implements IIndexedDBManager {
             throw error;
         }
     }
+
+    /**
+     * Deletes all data from the specified object store.
+     * @param storeName The name of the object store to clear.
+     * @returns A promise that resolves when the store is cleared.
+     */
+    public async clearStore<K extends IdbObjectStoreName>(
+        storeName: K
+    ): Promise<void> {
+        const db = await this.getDB();
+        const tx = db.transaction(storeName, "readwrite");
+        const store = tx.objectStore(storeName);
+        await store.clear();
+        await tx.done;
+        console.log(`Store "${storeName}" has been cleared.`);
+    }
 }
 
 export default IndexedDBManager;

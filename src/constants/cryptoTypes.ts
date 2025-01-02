@@ -34,7 +34,7 @@ export const CRYPTO_PARAMETERS = {
 
 /**
  * DeriveKeyOptions defines the options for the deriveKey function.
- * - passphrase: Required parameter.
+ * - passphrase: Required parameter and this field should be at least 8 characters.
  * - saltLength, iterations, hash, keyLength: Optional parameters with default values from CRYPTO_PARAMETERS.
  */
 export interface DeriveKeyOptions {
@@ -84,3 +84,12 @@ export type EncryptionAlgorithm = "AES-GCM"; // 将来的に他のアルゴリ�
 export interface EncryptionOptions extends DeriveKeyOptions {
     algorithm: EncryptionAlgorithm; // Required: The encryption algorithm to use
 }
+
+export const DEFAULT_ENCRYPTION_OPTIONS: EncryptionOptions = {
+    passphrase: "YourSecureDefaultPassphrase", // TODO ここはセキュリティ要件に応じて設定
+    algorithm: "AES-GCM",
+    saltLength: 16,
+    iterations: 200000,
+    hash: "SHA-512",
+    keyLength: 256,
+};

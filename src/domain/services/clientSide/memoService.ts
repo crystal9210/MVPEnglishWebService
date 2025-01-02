@@ -4,7 +4,10 @@ import type { IMemoRepository } from "@/interfaces/clientSide/repositories/IMemo
 import { IMemoService } from "@/interfaces/services/clientSide/IMemoService";
 import { Memo } from "@/schemas/app/_contexts/memoSchemas";
 import { decryptData } from "@/utils/crypto";
-import { EncryptionOptions } from "@/utils/crypto/cryptoFactory";
+import { IEncryptionStrategy } from "@/utils/crypto/crypto";
+import { EncryptionOptions } from "@/constants/cryptoTypes";
+import { EncryptionFactory } from "@/utils/crypto/cryptoFactory";
+import { toast } from "react-toastify";
 
 /**
  * Service class for managing memos, encapsulating business logic.
@@ -13,21 +16,35 @@ export class MemoService implements IMemoService {
     private repository: IMemoRepository;
     private static MAX_MEMO_CONTENT_LENGTH = 2000;
     private static MAX_TAG_LENGTH = 100;
+    private encryptionStrategy: IEncryptionStrategy;
 
     /**
-     * Initializes the MemoService with the given repository.
+     * Initializes the MemoService with the given repository and encryption strategy.
      * @param repository The memo repository instance.
+     * @param encryptionStrategy The encryption strategy instance.
      */
-    constructor(repository: IMemoRepository) {
+    constructor(
+        repository: IMemoRepository,
+        encryptionStrategy: IEncryptionStrategy
+    ) {
         this.repository = repository;
+        this.encryptionStrategy = encryptionStrategy;
     }
 
     /**
-     * Initializes the options of encryption.
-     * @param options
+     * Asynchronously creates an instance of MemoService with initialized encryption.
+     * @param repository The memo repository instance.
+     * @param options EncryptionOptions including algorithm and passphrase.
+     * @returns A promise that resolves to an instance of MemoService.
      */
-    async initializeEncryption(options: EncryptionOptions): Promise<void> {
-        await this.initializeEncryption(options);
+    static async create(
+        repository: IMemoRepository,
+        options: EncryptionOptions
+    ): Promise<MemoService> {
+        const encryptionStrategy = await EncryptionFactory.createStrategy(
+            options
+        );
+        return new MemoService(repository, encryptionStrategy);
     }
 
     /**
@@ -35,13 +52,18 @@ export class MemoService implements IMemoService {
      * @param content The content of the memo.
      * @param tags The tags associated with the memo.
      * @returns A promise that resolves to the newly created memo.
+     * @throws Error if encryption is not initialized or validation fails.
      */
     async createMemo(content: string, tags: string[] = []): Promise<Memo> {
         this.validateContent(content);
         this.validateTags(tags);
+        if (!this.encryptionStrategy) {
+            throw new Error("Encryption not initialized.");
+        }
+        const encryptedContent = await this.encryptionStrategy.encrypt(content);
         const newMemo: Memo = {
             id: generateUniqueId(),
-            content,
+            content: encryptedContent,
             createdAt: new Date(),
             lastUpdatedAt: new Date(),
             tags,
@@ -53,38 +75,94 @@ export class MemoService implements IMemoService {
     }
 
     /**
-     * Retrieves a memo by its ID.
+     * Retrieves a memo by its ID with decrypted content.
      * @param id The ID of the memo.
-     * @returns The memo, or undefined if not found.
+     * @returns A promise that resolves to the memo with decrypted content, or undefined if not found.
+     * @throws Error if encryption is not initialized.
      */
     async getMemo(id: string): Promise<Memo | undefined> {
         const memo = await this.repository.getMemo(id);
         if (!memo) return memo;
-        const decryptedContent = await decryptData(memo.content);
+        if (!this.encryptionStrategy) {
+            throw new Error("Encryption not initialized.");
+        }
+        const decryptedContent = await decryptData(
+            memo.content,
+            this.encryptionStrategy
+        );
         return { ...memo, content: decryptedContent };
     }
 
+    /**
+     * Retrieves all encrypted memos without decrypting the content.
+     * @returns A promise that resolves to an array of encrypted memos.
+     */
     async getEncryptedMemoList(): Promise<Memo[]> {
         return await this.repository.getAllMemos();
     }
 
     /**
-     * Retrieves all non-deleted memos.
-     * @returns An array of memos.
+     * Retrieves all non-deleted memos with decrypted content.
+     * @returns A promise that resolves to an array of memos with decrypted content.
+     * @throws Error if encryption is not initialized.
      */
     async getAllMemos(): Promise<Memo[]> {
         const allMemos = await this.repository.getAllMemos();
-        return allMemos.filter((memo) => !memo.deleted);
+        if (!this.encryptionStrategy) {
+            throw new Error("Encryption not initialized.");
+        }
+        const decryptedMemos = await Promise.all(
+            allMemos
+                .filter((memo) => !memo.deleted)
+                .map(async (memo) => ({
+                    ...memo,
+                    content: await decryptData(
+                        memo.content,
+                        this.encryptionStrategy
+                    ),
+                }))
+        );
+        return decryptedMemos;
+    }
+
+    /**
+     * Retrieves all trashed memos with decrypted content.
+     * @returns A promise that resolves to an array of trashed memos with decrypted content.
+     * @throws Error if encryption is not initialized.
+     */
+    async getTrashedMemos(): Promise<Memo[]> {
+        const trashedMemos = await this.repository.getTrashedMemos();
+        if (!this.encryptionStrategy) {
+            throw new Error("Encryption not initialized.");
+        }
+        const decryptedMemos = await Promise.all(
+            trashedMemos.map(async (memo) => ({
+                ...memo,
+                content: await decryptData(
+                    memo.content,
+                    this.encryptionStrategy
+                ),
+            }))
+        );
+        return decryptedMemos;
     }
 
     /**
      * Updates an existing memo.
      * @param id The ID of the memo.
-     * @param updates The updates to apply.
+     * @param updates The updates to apply (content and/or tags).
+     * @returns A promise that resolves when the memo is updated.
+     * @throws Error if encryption is not initialized or validation fails.
      */
     async updateMemo(id: string, updates: Partial<Memo>): Promise<void> {
         if (updates.content !== undefined) {
             this.validateContent(updates.content);
+            if (!this.encryptionStrategy) {
+                throw new Error("Encryption not initialized.");
+            }
+            updates.content = await this.encryptionStrategy.encrypt(
+                updates.content
+            );
         }
         if (updates.tags !== undefined) {
             this.validateTags(updates.tags);
@@ -93,45 +171,68 @@ export class MemoService implements IMemoService {
     }
 
     /**
-     * Soft deletes a memo.
+     * Soft deletes a memo by marking it as deleted.
      * @param id The ID of the memo.
+     * @returns A promise that resolves when the memo is soft deleted.
      */
     async deleteMemo(id: string): Promise<void> {
         await this.repository.deleteMemo(id);
     }
 
     /**
-     * Adds multiple memos.
+     * Adds multiple memos with encrypted content.
      * @param memos An array of memos to add.
      * @returns A promise that resolves to an array of keys of the added memos.
+     * @throws Error if encryption is not initialized or validation fails.
      */
     async addMultipleMemos(memos: Memo[]): Promise<IDBValidKey[]> {
-        memos.forEach((memo) => {
-            this.validateContent(memo.content);
-            this.validateTags(memo.tags);
-        });
-        return this.repository.addMultipleMemos(memos);
+        if (!this.encryptionStrategy) {
+            throw new Error("Encryption not initialized.");
+        }
+        const encryptedMemos = await Promise.all(
+            memos.map(async (memo) => {
+                this.validateContent(memo.content);
+                this.validateTags(memo.tags);
+                const encryptedContent = await this.encryptionStrategy.encrypt(
+                    memo.content
+                );
+                return { ...memo, content: encryptedContent };
+            })
+        );
+        return this.repository.addMultipleMemos(encryptedMemos);
     }
 
     /**
-     * Updates multiple memos.
+     * Updates multiple memos with encrypted content.
      * @param memos An array of partial memos to update.
+     * @returns A promise that resolves when all memos are updated.
+     * @throws Error if encryption is not initialized or validation fails.
      */
     async updateMultipleMemos(memos: Partial<Memo>[]): Promise<void> {
-        memos.forEach((memo) => {
-            if (memo.content !== undefined) {
-                this.validateContent(memo.content);
-            }
-            if (memo.tags !== undefined) {
-                this.validateTags(memo.tags);
-            }
-        });
-        await this.repository.updateMultipleMemos(memos);
+        if (!this.encryptionStrategy) {
+            throw new Error("Encryption not initialized.");
+        }
+        const updatedMemos = await Promise.all(
+            memos.map(async (memo) => {
+                if (memo.content !== undefined) {
+                    this.validateContent(memo.content);
+                    memo.content = await this.encryptionStrategy.encrypt(
+                        memo.content
+                    );
+                }
+                if (memo.tags !== undefined) {
+                    this.validateTags(memo.tags);
+                }
+                return memo;
+            })
+        );
+        await this.repository.updateMultipleMemos(updatedMemos);
     }
 
     /**
      * Deletes multiple memos.
      * @param ids An array of memo IDs to delete.
+     * @returns A promise that resolves when all memos are deleted.
      */
     async deleteMultipleMemos(ids: string[]): Promise<void> {
         await this.repository.deleteMultipleMemos(ids);
@@ -139,38 +240,33 @@ export class MemoService implements IMemoService {
 
     /**
      * Counts the number of memos.
-     * @returns The count of memos.
+     * @returns A promise that resolves to the count of memos.
      */
     async countMemos(): Promise<number> {
         return this.repository.countMemos();
     }
 
     /**
-     * Retrieves all trashed memos.
-     * @returns An array of trashed memos.
-     */
-    async getTrashedMemos(): Promise<Memo[]> {
-        return this.repository.getTrashedMemos();
-    }
-
-    /**
-     * Restores a trashed memo.
+     * Restores a trashed memo by marking it as not deleted.
      * @param id The ID of the memo to restore.
+     * @returns A promise that resolves when the memo is restored.
      */
     async restoreMemo(id: string): Promise<void> {
         await this.repository.restoreMemo(id);
     }
 
     /**
-     * Deletes a trashed memo permanently.
+     * Permanently deletes a trashed memo.
      * @param id The ID of the trashed memo to delete.
+     * @returns A promise that resolves when the trashed memo is deleted.
      */
     async deleteTrashedMemo(id: string): Promise<void> {
         await this.repository.deleteTrashedMemos(id);
     }
 
     /**
-     * Deletes all trashed memos permanently.
+     * Permanently deletes all trashed memos.
+     * @returns A promise that resolves when all trashed memos are deleted.
      */
     async deleteAllTrashedMemos(): Promise<void> {
         await this.repository.deleteAllTrashedMemos();
@@ -202,6 +298,16 @@ export class MemoService implements IMemoService {
                 );
             }
         });
+    }
+
+    /**
+     * Clears all memos from the repository.
+     * @returns A promise that resolves when all memos are deleted.
+     */
+    public async clearAllMemos(): Promise<void> {
+        await this.repository.clearAllMemos();
+        this.repository.clearAllMemos(); // 必要に応じてキャッシュをクリア
+        toast.success("All memos have been cleared.");
     }
 }
 
