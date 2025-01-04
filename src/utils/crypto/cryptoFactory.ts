@@ -1,4 +1,7 @@
-import { IEncryptionStrategy, AESGCMStrategy } from "./crypto";
+import {
+    IEncryptionStrategy,
+    AESGCMStrategy,
+} from "./aesGcmEncryptionStrategy";
 import { deriveKey } from "./keyDerivation";
 import {
     EncryptionOptions,

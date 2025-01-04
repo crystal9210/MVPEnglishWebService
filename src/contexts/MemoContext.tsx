@@ -1,5 +1,3 @@
-/* /src/contexts/MemoContext.tsx */
-
 "use client";
 
 import React, {
@@ -96,15 +94,18 @@ export const MemoProvider: React.FC<{ children: ReactNode }> = ({
     const loadMemos = async (service: IMemoService) => {
         setIsLoading(true);
         try {
+            console.log("Fetching all memos and trashed memos...");
             const [activeMemos, trashedMemos] = await Promise.all([
                 service.getAllMemos(),
                 service.getTrashedMemos(),
             ]);
+            console.log("Fetched active memos:", activeMemos);
+            console.log("Fetched trashed memos:", trashedMemos);
             setMemoList(activeMemos);
             setTrashedMemoList(trashedMemos);
         } catch (err) {
             setError("Failed to load memos.");
-            console.error(err);
+            console.error("Error in loadMemos:", err);
             toast.error("Failed to load memos.");
         } finally {
             setIsLoading(false);
@@ -115,6 +116,32 @@ export const MemoProvider: React.FC<{ children: ReactNode }> = ({
      * Effect to auto-initialize encryption with default options on mount.
      */
     useEffect(() => {
+        const initializeEncryption = async (options: EncryptionOptions) => {
+            setIsLoading(true);
+            try {
+                // Initialize IndexedDBManager and MemoRepository
+                const idbManager = IndexedDBManager.getInstance();
+                const memoRepository = new MemoRepository(idbManager);
+
+                // Create MemoService instance using the factory method
+                const service = await MemoService.create(
+                    memoRepository,
+                    options
+                );
+                setMemoService(service);
+                toast.success("Encryption initialized successfully!");
+
+                // Load memos after initialization
+                await loadMemos(service);
+            } catch (err) {
+                setError("Failed to initialize encryption.");
+                console.error(err);
+                toast.error("Failed to initialize encryption.");
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
         const autoInitialize = async () => {
             try {
                 await initializeEncryption(DEFAULT_ENCRYPTION_OPTIONS);

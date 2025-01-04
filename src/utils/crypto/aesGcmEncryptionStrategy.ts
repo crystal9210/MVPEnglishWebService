@@ -12,6 +12,7 @@ export interface IEncryptionStrategy {
  */
 export class AESGCMStrategy implements IEncryptionStrategy {
     private key: CryptoKey;
+    private salt: Uint8Array;
 
     /**
      * Constructs an AESGCMStrategy.

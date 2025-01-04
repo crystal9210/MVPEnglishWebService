@@ -1,6 +1,6 @@
 import { EncryptionFactory } from "./cryptoFactory";
 import { EncryptionOptions } from "@/constants/cryptoTypes";
-import { IEncryptionStrategy } from "./crypto";
+import { IEncryptionStrategy } from "./aesGcmEncryptionStrategy";
 
 /**
  * encryptionStrategy holds the current encryption strategy instance.
@@ -37,8 +37,13 @@ export const encryptData = async (data: string): Promise<string> => {
  * @returns The decrypted data as a string.
  */
 export const decryptData = async (
-    encryptedData: string,
+    encryptedText: string,
     encryptionStrategy: IEncryptionStrategy
 ): Promise<string> => {
-    return await encryptionStrategy.decrypt(encryptedData);
+    try {
+        return await encryptionStrategy.decrypt(encryptedText);
+    } catch (error) {
+        console.error("Failed to decrypt data:", error);
+        throw error;
+    }
 };

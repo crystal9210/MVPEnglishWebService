@@ -80,6 +80,9 @@ export class IndexedDBManager implements IIndexedDBManager {
                             if (
                                 !idb.objectStoreNames.contains(storeConfig.name)
                             ) {
+                                console.log(
+                                    `Creating object store: ${storeConfig.name}`
+                                );
                                 const store = idb.createObjectStore(
                                     storeConfig.name,
                                     storeConfig.options
@@ -91,7 +94,7 @@ export class IndexedDBManager implements IIndexedDBManager {
                                         typeof storeConfig.name,
                                         "versionchange"
                                     >,
-                                    storeConfig.indexes // Pass the array of IndexConfig
+                                    storeConfig.indexes
                                 );
                             }
                         });
@@ -102,7 +105,7 @@ export class IndexedDBManager implements IIndexedDBManager {
                     console.error(`Failed to open IndexedDB: ${error.message}`);
                     attempts++;
 
-                    // Retry if the error is temporary
+                    // 一時的なエラーであればリトライ
                     if (this.isTemporaryError(error)) {
                         console.warn("Detected temporary error. Retrying...");
                         await this.sleep(2000);

@@ -4,7 +4,7 @@ import type { IMemoRepository } from "@/interfaces/clientSide/repositories/IMemo
 import { IMemoService } from "@/interfaces/services/clientSide/IMemoService";
 import { Memo } from "@/schemas/app/_contexts/memoSchemas";
 import { decryptData } from "@/utils/crypto";
-import { IEncryptionStrategy } from "@/utils/crypto/crypto";
+import { IEncryptionStrategy } from "@/utils/crypto/aesGcmEncryptionStrategy";
 import { EncryptionOptions } from "@/constants/cryptoTypes";
 import { EncryptionFactory } from "@/utils/crypto/cryptoFactory";
 import { toast } from "react-toastify";

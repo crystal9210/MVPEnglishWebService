@@ -27,8 +27,8 @@ export type HashType = z.infer<typeof HashTypeEnum>;
  */
 export const CRYPTO_PARAMETERS = {
     SALT_LENGTH: 16, // Length of the salt in bytes
-    PBKDF2_ITERATIONS: 100000, // Number of iterations for PBKDF2
-    PBKDF2_HASH: HASH_TYPES.SHA256, // Hash algorithm for PBKDF2
+    PBKDF2_ITERATIONS: 200000, // Number of iterations for PBKDF2
+    PBKDF2_HASH: HASH_TYPES.SHA512, // Hash algorithm for PBKDF2
     AES_KEY_LENGTH: 256, // Length of the AES key in bits
 } as const;
 
@@ -93,3 +93,9 @@ export const DEFAULT_ENCRYPTION_OPTIONS: EncryptionOptions = {
     hash: "SHA-512",
     keyLength: 256,
 };
+
+/**
+ * An array of numbers, which indicate where to insert iv and salt strings in the encrypted data body string.
+ * Each element of the array is an index of the insertion position.
+ */
+export const INSERT_POSITIONS: number[] = [5, 10];
