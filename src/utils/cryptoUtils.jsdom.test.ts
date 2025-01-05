@@ -64,3 +64,31 @@ describe("CryptoUtils", () => {
         expect(decryptedText).toBe(largePlaintext);
     });
 });
+
+describe("Tests to confirm how long CryptoUtils' encryption function returns characters of.", () => {
+    const testCases = [
+        { plaintext: "", description: "Empty string" },
+        { plaintext: "A", description: "Single character" },
+        { plaintext: "Hello, World!", description: "Short string" },
+        {
+            plaintext: "The quick brown fox jumps over the lazy dog.",
+            description: "Longer string",
+        },
+        {
+            plaintext: "A".repeat(1000),
+            description: "Very long string (1000 characters)",
+        },
+    ];
+
+    testCases.forEach(({ plaintext, description }) => {
+        it(`should produce encrypted data of expected length for ${description}`, async () => {
+            const encryptedData = await CryptoUtils.encrypt(plaintext);
+            expect(encryptedData).toBeDefined();
+            expect(typeof encryptedData).toBe("string");
+
+            console.log(
+                `Encrypted length for "${description}": ${encryptedData.length}`
+            );
+        });
+    });
+});

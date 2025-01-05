@@ -1,3 +1,5 @@
+// TODO Replace the algorithm below by a more secure encryption algorithm I designed and developed in the test operation environment.
+
 /**
  * CryptoUtils class provides client-side data encryption and decryption.
  * Implements secure AES-GCM encryption with data-specific random values for key, salt, and IV.
@@ -75,7 +77,7 @@ export class CryptoUtils {
             // Decode the decrypted data to a string
             const decoder = new TextDecoder();
             return decoder.decode(decrypted);
-        } catch (error) {
+        } catch {
             throw new Error(
                 "Decryption failed. Data may have been tampered with."
             );

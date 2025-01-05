@@ -4,7 +4,8 @@
 ├── cspell.json
 ├── dir_structure.txt
 ├── jest.config.ts
-├── jest.setup.ts
+├── jest.setup.jsdom.ts
+├── jest.setup.node.ts
 ├── logs
 │   └── exceptions.log
 ├── next-env.d.ts
@@ -64,19 +65,6 @@
 │   │           ├── authService.test.ts
 │   │           ├── retryService.test.ts
 │   │           └── userService.test.ts
-│   ├── _components
-│   │   ├── ActivityManagerComponent.tsx
-│   │   ├── CreateGoalForm.tsx
-│   │   ├── FileUpload
-│   │   │   ├── AbstractFileUpload.tsx
-│   │   │   ├── DocumentUpload.tsx
-│   │   │   └── ImageUpload.tsx
-│   │   ├── GoalCard.tsx
-│   │   ├── LoginForm.tsx
-│   │   ├── Notifications.tsx
-│   │   ├── RegisterForm.tsx
-│   │   ├── UnitProblemList.tsx
-│   │   └── signout_button.tsx
 │   ├── adapters
 │   │   └── customFirestoreAdapter.ts
 │   ├── app
@@ -135,6 +123,8 @@
 │   │   │   │   └── route.ts
 │   │   │   ├── error
 │   │   │   │   └── page.tsx
+│   │   │   ├── pdf
+│   │   │   │   └── route.ts
 │   │   │   ├── send-verification
 │   │   │   │   └── route.ts
 │   │   │   ├── testFirestoreAdmin
@@ -172,11 +162,24 @@
 │   │   │   │   ├── SortableTrash.tsx
 │   │   │   │   ├── TodoList.tsx
 │   │   │   │   ├── TooList2.tsx
+│   │   │   │   ├── TrashedMemosModal.tsx
 │   │   │   │   ├── mockData.ts
 │   │   │   │   ├── problemHistoryMock.ts
 │   │   │   │   ├── store.ts
 │   │   │   │   └── utils.ts
 │   │   │   └── page.tsx
+│   │   ├── dev
+│   │   │   ├── decryptedMemoList
+│   │   │   │   └── page.tsx
+│   │   │   ├── encryptedMemoList
+│   │   │   │   └── page.tsx
+│   │   │   ├── setupKey
+│   │   │   │   └── page.tsx
+│   │   │   ├── testGpt
+│   │   │   │   ├── test-chat-node.ts
+│   │   │   │   └── test-chat.mjs
+│   │   │   └── testPdfGenerate
+│   │   │       └── page.tsx
 │   │   ├── favicon.ico
 │   │   ├── fonts
 │   │   │   ├── GeistMonoVF.woff
@@ -234,6 +237,20 @@
 │   │           │   ├── HintDisplay.tsx
 │   │           │   └── InputField.tsx
 │   │           └── page.tsx
+│   ├── components
+│   │   ├── ActivityManagerComponent.tsx
+│   │   ├── ClearMemosButton.tsx
+│   │   ├── CreateGoalForm.tsx
+│   │   ├── FileUpload
+│   │   │   ├── AbstractFileUpload.tsx
+│   │   │   ├── DocumentUpload.tsx
+│   │   │   └── ImageUpload.tsx
+│   │   ├── GoalCard.tsx
+│   │   ├── LoginForm.tsx
+│   │   ├── Notifications.tsx
+│   │   ├── RegisterForm.tsx
+│   │   ├── UnitProblemList.tsx
+│   │   └── signout_button.tsx
 │   ├── config
 │   │   ├── constants
 │   │   │   └── retryConfig.ts
@@ -250,6 +267,7 @@
 │   │   │       ├── idbHelpers.ts
 │   │   │       ├── keyPathMap.ts
 │   │   │       └── objectStores.ts
+│   │   ├── cryptoTypes.ts
 │   │   ├── dates.ts
 │   │   ├── dbHub.ts
 │   │   ├── problemTypes.ts
@@ -467,6 +485,7 @@
 │   │   ├── auth.ts
 │   │   ├── customAdapterAccount.ts
 │   │   ├── customUser.ts
+│   │   ├── global.d.ts
 │   │   ├── index.ts
 │   │   └── next-auth.d.ts
 │   └── utils
@@ -487,18 +506,26 @@
 │       │   └── staticAnalyzer.ts
 │       ├── auth.ts
 │       ├── batchOperations.ts
-│       ├── crypto.ts
+│       ├── crypto
+│       │   ├── aesGcmEncryptionStrategy.ts
+│       │   ├── cryptoFactory.ts
+│       │   ├── index.ts
+│       │   ├── keyDerivation.jsdom.test.ts
+│       │   └── keyDerivation.ts
+│       ├── cryptoUtils.jsdom.test.ts
+│       ├── cryptoUtils.ts
 │       ├── customError.ts
+│       ├── encode.ts
 │       ├── env.ts
 │       ├── errorHandler.ts
 │       ├── fileExtensions.ts
 │       ├── fileUtils.ts
 │       ├── filterBadWords.ts
 │       ├── generators
-│       │   ├── dateTimeGenerator.test.ts
+│       │   ├── dateTimeGenerator.node.test.ts
 │       │   ├── dateTimeGenerator.ts
 │       │   ├── idGenerator.ts
-│       │   ├── idManager.test.ts
+│       │   ├── idManager.node.test.ts
 │       │   └── idManager.ts
 │       ├── helpers.ts
 │       ├── isRetryableError.ts
@@ -526,4 +553,4 @@
 ├── unknown-words.txt
 └── utilCommands.md
 
-149 directories, 378 files
+157 directories, 397 files

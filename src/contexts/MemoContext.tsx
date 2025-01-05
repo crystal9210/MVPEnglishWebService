@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 "use client";
 
 import React, {
@@ -13,10 +14,6 @@ import { MemoRepository } from "@/domain/repositories/idb/memoRepository";
 import { IndexedDBManager } from "@/idb/index";
 import { IMemoService } from "@/interfaces/services/clientSide/IMemoService";
 import { toast } from "react-toastify";
-import {
-    EncryptionOptions,
-    DEFAULT_ENCRYPTION_OPTIONS,
-} from "@/constants/cryptoTypes";
 
 /**
  * Interface defining the shape of the Memo context.
@@ -57,31 +54,30 @@ export const MemoProvider: React.FC<{ children: ReactNode }> = ({
     const [memoService, setMemoService] = useState<IMemoService | null>(null);
     const [memoList, setMemoList] = useState<Memo[]>([]);
     const [trashedMemoList, setTrashedMemoList] = useState<Memo[]>([]);
-    const [isLoading, setIsLoading] = useState<boolean>(true); // 初期化時はローディング状態
+    const [isLoading, setIsLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 
     /**
-     * Initializes the encryption strategy with the provided options.
-     * @param options EncryptionOptions including algorithm and passphrase
+     * Initializes the MemoService and loads memos from the repository.
      */
-    const initializeEncryption = async (options: EncryptionOptions) => {
+    const initializeService = async () => {
         setIsLoading(true);
         try {
             // Initialize IndexedDBManager and MemoRepository
             const idbManager = IndexedDBManager.getInstance();
             const memoRepository = new MemoRepository(idbManager);
 
-            // Create MemoService instance using the factory method
-            const service = await MemoService.create(memoRepository, options);
+            // Create MemoService instance using the constructor with encryptTags = true
+            const service = new MemoService(memoRepository, true);
             setMemoService(service);
-            toast.success("Encryption initialized successfully!");
+            toast.success("MemoService initialized successfully!");
 
             // Load memos after initialization
             await loadMemos(service);
         } catch (err) {
-            setError("Failed to initialize encryption.");
+            setError("Failed to initialize MemoService.");
             console.error(err);
-            toast.error("Failed to initialize encryption.");
+            toast.error("Failed to initialize MemoService.");
         } finally {
             setIsLoading(false);
         }
@@ -113,38 +109,12 @@ export const MemoProvider: React.FC<{ children: ReactNode }> = ({
     };
 
     /**
-     * Effect to auto-initialize encryption with default options on mount.
+     * Effect to initialize the MemoService on mount.
      */
     useEffect(() => {
-        const initializeEncryption = async (options: EncryptionOptions) => {
-            setIsLoading(true);
-            try {
-                // Initialize IndexedDBManager and MemoRepository
-                const idbManager = IndexedDBManager.getInstance();
-                const memoRepository = new MemoRepository(idbManager);
-
-                // Create MemoService instance using the factory method
-                const service = await MemoService.create(
-                    memoRepository,
-                    options
-                );
-                setMemoService(service);
-                toast.success("Encryption initialized successfully!");
-
-                // Load memos after initialization
-                await loadMemos(service);
-            } catch (err) {
-                setError("Failed to initialize encryption.");
-                console.error(err);
-                toast.error("Failed to initialize encryption.");
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
         const autoInitialize = async () => {
             try {
-                await initializeEncryption(DEFAULT_ENCRYPTION_OPTIONS);
+                await initializeService();
             } catch (err) {
                 console.error("Auto initialization failed:", err);
             }
@@ -307,7 +277,6 @@ export const MemoProvider: React.FC<{ children: ReactNode }> = ({
 
     /**
      * Clears all memos from the repository.
-     * @returns A promise that resolves when all memos are deleted.
      */
     const clearAllMemos = async () => {
         if (!memoService) {
@@ -319,11 +288,11 @@ export const MemoProvider: React.FC<{ children: ReactNode }> = ({
             await memoService.clearAllMemos();
             setMemoList([]);
             setTrashedMemoList([]);
-            toast.success("全てのメモが削除されました。");
+            toast.success("All memos have been cleared.");
         } catch (err) {
             setError("Failed to clear all memos.");
             console.error(err);
-            toast.error("メモの削除に失敗しました。");
+            toast.error("Failed to clear all memos.");
         }
     };
 
@@ -350,7 +319,7 @@ export const MemoProvider: React.FC<{ children: ReactNode }> = ({
      * Retrieves the list of decrypted memos.
      * @returns A promise that resolves to an array of decrypted memos.
      */
-    const getAllMemos = async (): Promise<Memo[]> => {
+    const getAllMemosList = async (): Promise<Memo[]> => {
         if (!memoService) {
             throw new Error("MemoService not initialized.");
         }
@@ -380,14 +349,14 @@ export const MemoProvider: React.FC<{ children: ReactNode }> = ({
                 error,
                 clearAllMemos,
                 getEncryptedMemoList,
-                getAllMemos,
+                getAllMemos: getAllMemosList, // Mapping to avoid name collision
                 memoService,
             }}
         >
             {isLoading ? (
                 <div className="flex justify-center items-center h-screen">
                     <div className="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-16 w-16"></div>
-                    {/* ローディング用のスピナーのスタイル */}
+                    {/* Loader spinner styles */}
                     <style jsx>{`
                         .loader {
                             border-top-color: #3498db;
@@ -404,7 +373,7 @@ export const MemoProvider: React.FC<{ children: ReactNode }> = ({
             ) : (
                 children
             )}
-            {/* エラーメッセージを表示 */}
+            {/* Display error message */}
             {error && (
                 <div className="fixed bottom-4 right-4 bg-red-500 text-white p-4 rounded">
                     {error}

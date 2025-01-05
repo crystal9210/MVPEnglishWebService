@@ -16,7 +16,7 @@ import React, { useState, useEffect } from "react";
 import { XMarkIcon } from "@heroicons/react/24/solid";
 import { Memo } from "@/schemas/app/_contexts/memoSchemas";
 import { useMemoContext } from "@/contexts/MemoContext";
-import { toast } from "react-toastify"; // 追加
+import { toast } from "react-toastify";
 
 interface MemoModalProps {
     isOpen: boolean;
@@ -52,14 +52,14 @@ const MemoModal: React.FC<MemoModalProps> = ({ isOpen, onClose, memo }) => {
 
         if (content.length > MAX_MEMO_CONTENT_LENGTH) {
             setError(
-                `The length of memo's content is limited with ${MAX_MEMO_CONTENT_LENGTH}, but you input of the memo with length ${content.length}.`
+                `The length of memo's content is limited to ${MAX_MEMO_CONTENT_LENGTH}, but you inputted a memo with length ${content.length}.`
             );
             return;
         }
         for (const tag of tags) {
             if (tag.length > MAX_TAG_LENGTH) {
                 setTagError(
-                    `The length of memo's content is limited with ${MAX_TAG_LENGTH}, but you input of the memo with length ${tag.length}.`
+                    `The length of a tag is limited to ${MAX_TAG_LENGTH} characters, but you inputted a tag with length ${tag.length}.`
                 );
                 return;
             }
@@ -69,31 +69,31 @@ const MemoModal: React.FC<MemoModalProps> = ({ isOpen, onClose, memo }) => {
             // Edit existing memo
             try {
                 await editMemo(memo.id, { content, tags });
-                toast.success("メモを更新しました！");
+                toast.success("Memo updated successfully!");
             } catch (err) {
-                toast.error("メモの更新に失敗しました。");
+                toast.error("Failed to update memo.");
                 console.error(err);
             }
         } else {
             // Add new memo
             try {
                 await addMemo(content, tags);
-                toast.success("メモを追加しました！");
+                toast.success("Memo added successfully!");
             } catch (err) {
-                toast.error("メモの追加に失敗しました。");
+                toast.error("Failed to add memo.");
                 console.error(err);
             }
         }
         onClose();
     };
 
-    // NOTE: タグの仕様として、ユーザが途中に余白を入れる可能性としては低い >> 仮に余白を入れたいみたいな感じの場合は余白ではなく-を中間に入れることで単語を連結したテキストを入力できるようにする
+    // Handle adding a new tag
     const handleAddTag = () => {
         const trimmedTag = tagInput.trim();
         if (!trimmedTag) return;
         if (trimmedTag.length > MAX_TAG_LENGTH) {
             setTagError(
-                `The length of memo's content is limited with ${MAX_TAG_LENGTH}, but you input of the memo with length ${trimmedTag.length}.`
+                `The length of a tag is limited to ${MAX_TAG_LENGTH} characters, but you inputted a tag with length ${trimmedTag.length}.`
             );
             return;
         }
@@ -107,6 +107,7 @@ const MemoModal: React.FC<MemoModalProps> = ({ isOpen, onClose, memo }) => {
         }
     };
 
+    // Handle removing an existing tag
     const handleRemoveTag = (tagToRemove: string) => {
         setTags(tags.filter((tag) => tag !== tagToRemove));
         setTagError("");
@@ -120,12 +121,12 @@ const MemoModal: React.FC<MemoModalProps> = ({ isOpen, onClose, memo }) => {
                 <button
                     onClick={onClose}
                     className="absolute top-4 right-4 text-gray-700 hover:text-gray-900"
-                    aria-label="閉じる"
+                    aria-label="Close"
                 >
                     <XMarkIcon className="h-6 w-6" />
                 </button>
                 <h2 className="text-2xl font-semibold mb-4 text-gray-500">
-                    {memo ? "メモを編集" : "メモを追加"}
+                    {memo ? "Edit Memo" : "Add Memo"}
                 </h2>
                 {error && <p className="text-red-500 mb-2">{error}</p>}
                 {tagError && <p className="text-red-500 mb-2">{tagError}</p>}
@@ -135,7 +136,7 @@ const MemoModal: React.FC<MemoModalProps> = ({ isOpen, onClose, memo }) => {
                             htmlFor="content"
                             className="block text-sm font-medium text-gray-700"
                         >
-                            内容
+                            Content
                         </label>
                         <textarea
                             id="content"
@@ -151,7 +152,7 @@ const MemoModal: React.FC<MemoModalProps> = ({ isOpen, onClose, memo }) => {
                             htmlFor="tags"
                             className="block text-sm font-medium text-gray-700"
                         >
-                            タグ
+                            Tags
                         </label>
                         <div className="flex items-center space-x-2 mt-1">
                             <input
@@ -159,19 +160,19 @@ const MemoModal: React.FC<MemoModalProps> = ({ isOpen, onClose, memo }) => {
                                 id="tags"
                                 value={tagInput}
                                 onChange={(e) => setTagInput(e.target.value)}
-                                placeholder="タグを入力"
+                                placeholder="Enter a tag"
                                 className="block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-700"
                             />
                             <button
                                 type="button"
                                 onClick={handleAddTag}
                                 className="p-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition"
-                                aria-label="タグを追加"
+                                aria-label="Add tag"
                             >
                                 +
                             </button>
                         </div>
-                        {/* タグの表示 */}
+                        {/* Display tags */}
                         {tags.length > 0 && (
                             <div className="flex flex-wrap gap-2 mt-2">
                                 {tags.map((tag, index) => (
@@ -198,7 +199,7 @@ const MemoModal: React.FC<MemoModalProps> = ({ isOpen, onClose, memo }) => {
                             type="submit"
                             className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition"
                         >
-                            {memo ? "更新" : "追加"}
+                            {memo ? "Update" : "Add"}
                         </button>
                     </div>
                 </form>
