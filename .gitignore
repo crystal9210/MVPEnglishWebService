@@ -46,4 +46,4 @@ public.key.base64
 next-env.d.ts
 
 # test files that includes openai api key string (hard coding) for test the function's logic operation.
-src/app/dev/testGpt/*
+src/app/dev/_testGpt/*

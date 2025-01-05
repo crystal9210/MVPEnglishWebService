@@ -1,14 +1,27 @@
-import { EmbeddingDoc } from "@/utils/ai/ragRetriever";
+/* eslint-disable no-unused-vars */
+import { EmbeddingDoc } from "@/schemas/embeddingSchemas";
 
 /**
- * IEmbeddingRepository:
- *   - Interface for EmbeddingRepository.
- *   - Defines methods for accessing EmbeddingDoc entities.
+ * Interface for EmbeddingRepository.
  */
 export interface IEmbeddingRepository {
     /**
-     * Retrieves all embedding documents.
-     * @returns An array of EmbeddingDoc objects.
+     * Retrieves embedding by problem ID.
+     * @param problemId The ID of the problem.
+     * @returns The corresponding EmbeddingDoc or undefined if not found.
      */
-    getAllEmbeddingDocs(): Promise<EmbeddingDoc[]>;
+    getEmbeddingByProblemId(problemId: string): EmbeddingDoc | undefined;
+
+    /**
+     * Retrieves all embeddings.
+     * @returns An array of EmbeddingDoc.
+     */
+    getAllEmbeddingDocs(): EmbeddingDoc[];
+
+    /**
+     * Updates embedding for a specific problem.
+     * @param problemId The ID of the problem.
+     * @param embedding The embedding vector.
+     */
+    updateEmbedding(problemId: string, embedding: number[]): void;
 }

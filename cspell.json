@@ -94,7 +94,19 @@
     "fpasswd",
     "fshadow",
     "fusr",
-    "getenv"
+    "getenv",
+    "AESGCM",
+    "ILLM",
+    "IRAG",
+    "Jqmgq",
+    "QHMA",
+    "TWXC",
+    "VFTFLVCE",
+    "Wcjqzd",
+    "anothersecurepassword",
+    "ciphertexts",
+    "memolist",
+    "securepassword"
   ],
   "ignorePaths": [
     "node_modules/**",

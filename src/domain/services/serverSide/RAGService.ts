@@ -4,6 +4,7 @@ import { LLMService } from "./LLMService";
 import { ragSearchEmbeddings } from "@/utils/ai/ragRetriever";
 // import { EmbeddingDoc } from "@/utils/ai/ragRetriever";
 import type { IEmbeddingRepository } from "@/interfaces/repositories/IEmbeddingRepository";
+import { IRAGService } from "@/interfaces/services/IRAGService";
 
 /**
  * RAGService:
@@ -11,7 +12,7 @@ import type { IEmbeddingRepository } from "@/interfaces/repositories/IEmbeddingR
  *   - Generates an answer using LLMService with the retrieved context.
  */
 @injectable()
-export class RAGService {
+export class RAGService implements IRAGService {
     /**
      * Constructor:
      *   - Injects LLMService and IEmbeddingRepository.
@@ -56,7 +57,6 @@ export class RAGService {
             );
             return answer;
         } catch (error) {
-            // エラーハンドリング
             throw new Error(
                 `RAG retrieve and generate failed: ${
                     error instanceof Error ? error.message : String(error)

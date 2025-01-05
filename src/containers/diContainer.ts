@@ -22,6 +22,9 @@ import type { IUserHistoryRepository } from "@/interfaces/repositories/IUserHist
 import type { ISubscriptionRepository } from "@/interfaces/repositories/ISubscriptionRepository";
 import type { IActivitySessionRepository } from "@/interfaces/repositories/IActivitySessionRepository";
 
+import type { IEmbeddingRepository } from "@/interfaces/repositories/IEmbeddingRepository";
+import type { ILLMService } from "@/interfaces/services/ILLMService";
+import type { IRAGService } from "@/interfaces/services/IRAGService";
 
 // 実装クラス群
 import { AuthService } from "@/domain/services/authService";
@@ -43,9 +46,15 @@ import { SubscriptionRepository } from "@/domain/repositories/subscriptionReposi
 import { AccountRepository } from "@/domain/repositories/accountRepository";
 import { ActivitySessionRepository } from "@/domain/repositories/activitySessionRepository";
 
-
 import { BatchOperations } from "@/utils/batchOperations";
 import { RetryService } from "@/domain/services/retryService";
+
+import { EmbeddingRepository } from "@/domain/repositories/embeddingRepository";
+import {
+    LLMService,
+    LLMServiceOptions,
+} from "@/domain/services/serverSide/LLMService";
+import { RAGService } from "@/domain/services/serverSide/RAGService";
 
 // Utility
 // 最初に他のサービスに依存しないサービスを登録 - tsyringeの仕様
@@ -55,27 +64,84 @@ container.registerSingleton(BatchOperations);
 container.registerSingleton(RetryService);
 
 // Repositories
-container.registerSingleton<IAccountRepository>("IAccountRepository", AccountRepository);
+container.registerSingleton<IAccountRepository>(
+    "IAccountRepository",
+    AccountRepository
+);
 container.registerSingleton<IUserRepository>("IUserRepository", UserRepository);
-container.registerSingleton<IProblemRepository>("IProblemRepository", ProblemRepository);
-container.registerSingleton<IProfileRepository>("IProfileRepository", ProfileRepository);
-container.registerSingleton<IUserHistoryRepository>("IUserHistoryRepository", UserHistoryRepository);
-container.registerSingleton<ISubscriptionRepository>("ISubscriptionRepository", SubscriptionRepository);
-container.registerSingleton<IActivitySessionRepository>("IActivitySessionRepository", ActivitySessionRepository);
+container.registerSingleton<IProblemRepository>(
+    "IProblemRepository",
+    ProblemRepository
+);
+container.registerSingleton<IProfileRepository>(
+    "IProfileRepository",
+    ProfileRepository
+);
+container.registerSingleton<IUserHistoryRepository>(
+    "IUserHistoryRepository",
+    UserHistoryRepository
+);
+container.registerSingleton<ISubscriptionRepository>(
+    "ISubscriptionRepository",
+    SubscriptionRepository
+);
+container.registerSingleton<IActivitySessionRepository>(
+    "IActivitySessionRepository",
+    ActivitySessionRepository
+);
 
 // Services
 container.registerSingleton<IAuthService>("IAuthService", AuthService);
 container.registerSingleton<IUserService>("IUserService", UserService);
-container.registerSingleton<IUserProfileService>("IUserProfileService", UserProfileService);
-container.registerSingleton<IUserHistoryService>("IUserHistoryService", UserHistoryService);
-container.registerSingleton<IUserBookmarkService>("IUserBookmarkService", UserBookmarkService);
+container.registerSingleton<IUserProfileService>(
+    "IUserProfileService",
+    UserProfileService
+);
+container.registerSingleton<IUserHistoryService>(
+    "IUserHistoryService",
+    UserHistoryService
+);
+container.registerSingleton<IUserBookmarkService>(
+    "IUserBookmarkService",
+    UserBookmarkService
+);
 container.registerSingleton<IProblemService>("IProblemService", ProblemService);
-container.registerSingleton<ISubscriptionService>("ISubscriptionService", SubscriptionService);
-container.registerSingleton<IActivityService>("IActivityService", ActivityService);
+container.registerSingleton<ISubscriptionService>(
+    "ISubscriptionService",
+    SubscriptionService
+);
+container.registerSingleton<IActivityService>(
+    "IActivityService",
+    ActivityService
+);
+
+const llmOptions: LLMServiceOptions = {
+    useAzure: false, // Azure OpenAIを使用しない場合
+    openai: {
+        apiKey: process.env.OPENAI_API_KEY || "",
+    },
+};
+
+container.register<LLMServiceOptions>("LLMServiceOptions", {
+    useValue: llmOptions,
+});
+
+// ILLMService の登録
+container.register<ILLMService>("ILLMService", {
+    useClass: LLMService,
+});
+
+// IEmbeddingRepository の登録
+container.register<IEmbeddingRepository>("IEmbeddingRepository", {
+    useClass: EmbeddingRepository,
+});
+
+// IRAGService の登録
+container.register<IRAGService>("IRAGService", {
+    useClass: RAGService,
+});
 
 export { container };
-
-
 
 // --- use case ---
 // -- src/pages/index.tsx --

@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { GoalStatus } from "@/constants/sessions/sessions";
 import { Goal } from "@/schemas/goalSchemas";
 
@@ -24,7 +25,11 @@ export interface IGoalRepository {
      * @param goalId The ID of the goal to update.
      * @param updates The fields to update.
      */
-    updateGoal(userId: string, goalId: string, updates: Partial<Goal>): Promise<void>;
+    updateGoal(
+        userId: string,
+        goalId: string,
+        updates: Partial<Goal>
+    ): Promise<void>;
 
     /**
      * Deletes a goal.

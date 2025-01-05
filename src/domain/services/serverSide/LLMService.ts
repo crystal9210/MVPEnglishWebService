@@ -1,5 +1,30 @@
+import { ILLMService } from "@/interfaces/services/ILLMService";
 import { OpenAI, AzureOpenAI, type OpenAIClient } from "@/lib/openai";
 import { injectable, inject } from "tsyringe";
+
+// ユーザー
+//    |
+//    | (1) 問題選択と質問入力
+//    v
+// UIコンポーネント（React）
+//    |
+//    | (2) POST /api/ask { question, problemId }
+//    v
+// サーバーサイド（Next.js API Route）
+//    |
+//    | (3) データバリデーション
+//    | (4) 問題取得
+//    | (5) 埋め込み確認
+//    | (6) コンテキスト生成
+//    | (7) RAGServiceで関連文書検索
+//    | (8) LLMServiceで回答生成
+//    |
+//    v
+// サーバーサイド
+//    |
+//    | (9) レスポンス送信 { answer }
+//    v
+// ユーザー
 
 /**
  * LLMServiceOptions:
@@ -23,7 +48,7 @@ export interface LLMServiceOptions {
  *   - Provides methods to generate completions and retrieve embeddings.
  */
 @injectable()
-export class LLMService {
+export class LLMService implements ILLMService {
     private client: OpenAIClient;
 
     /**
@@ -81,6 +106,7 @@ export class LLMService {
 
             return response.choices[0]?.message?.content ?? "";
         } catch (error) {
+            // TODO
             // Log error or handle accordingly
             throw new Error(
                 `Chat completion failed: ${

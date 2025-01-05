@@ -1,57 +1,40 @@
-/* eslint-disable no-unused-vars */
-import { injectable, inject } from "tsyringe";
-import { IEmbeddingRepository } from "@/interfaces/repositories/IEmbeddingRepository";
-import { EmbeddingDoc } from "@/utils/ai/ragRetriever";
-import type { IFirebaseAdmin } from "@/interfaces/services/IFirebaseAdmin";
-import type { ILoggerService } from "@/interfaces/services/ILoggerService";
+import { EmbeddingDoc } from "@/schemas/embeddingSchemas";
 
-/**
- * EmbeddingRepository:
- *   - Implements IEmbeddingRepository.
- *   - Manages access to EmbeddingDoc entities.
- */
-@injectable()
-export class EmbeddingRepository implements IEmbeddingRepository {
-    private readonly embeddingsCollection: FirebaseFirestore.CollectionReference;
+export class EmbeddingRepository {
+    private embeddings: Map<string, EmbeddingDoc> = new Map();
 
-    /**
-     * Constructor:
-     *   - Injects FirebaseAdmin and LoggerService.
-     *   - Initializes the Firestore collection reference.
-     * @param firebaseAdmin - Instance of IFirebaseAdmin.
-     * @param logger - Instance of ILoggerService.
-     */
-    constructor(
-        @inject("IFirebaseAdmin")
-        private readonly firebaseAdmin: IFirebaseAdmin,
-        @inject("ILoggerService") private readonly logger: ILoggerService
-    ) {
-        this.embeddingsCollection = this.firebaseAdmin
-            .getFirestore()
-            .collection("embeddings");
+    constructor(initialEmbeddings: EmbeddingDoc[]) {
+        initialEmbeddings.forEach((doc) => {
+            this.embeddings.set(doc.id, doc);
+        });
     }
 
     /**
-     * Retrieves all embedding documents.
-     * @returns An array of EmbeddingDoc objects.
+     * Retrieves embedding by problem ID.
+     * @param problemId The ID of the problem.
+     * @returns The corresponding EmbeddingDoc or undefined if not found.
      */
-    async getAllEmbeddingDocs(): Promise<EmbeddingDoc[]> {
-        try {
-            const querySnap = await this.embeddingsCollection.get();
+    getEmbeddingByProblemId(problemId: string): EmbeddingDoc | undefined {
+        return this.embeddings.get(problemId);
+    }
 
-            return querySnap.docs.map((doc) => {
-                const data = doc.data();
-                return {
-                    id: data.id as string,
-                    text: data.text as string,
-                    embedding: data.embedding as number[],
-                } as EmbeddingDoc;
-            });
-        } catch (error) {
-            this.logger.error("Failed to retrieve embedding documents", {
-                error,
-            });
-            throw error;
+    /**
+     * Retrieves all embeddings.
+     * @returns An array of EmbeddingDoc.
+     */
+    getAllEmbeddingDocs(): EmbeddingDoc[] {
+        return Array.from(this.embeddings.values());
+    }
+
+    /**
+     * Updates embedding for a specific problem.
+     * @param problemId The ID of the problem.
+     * @param embedding The embedding vector.
+     */
+    updateEmbedding(problemId: string, embedding: number[]): void {
+        const doc = this.embeddings.get(problemId);
+        if (doc) {
+            doc.embedding = embedding;
         }
     }
 }

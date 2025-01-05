@@ -34,7 +34,7 @@
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    ".next/types/**/*.ts", "src/utils/makeDevListFromTheNodePackage.mjs", "src/app/dev/testGpt/test-chat.mjs",
+    ".next/types/**/*.ts", "src/utils/makeDevListFromTheNodePackage.mjs", "src/app/dev/_testGpt/test-chat.mjs",
     // "src/types/**/*.d.ts",
   ],
   "exclude": [
