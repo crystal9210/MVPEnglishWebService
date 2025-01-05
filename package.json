@@ -28,7 +28,7 @@
     "jsonwebtoken": "^9.0.2",
     "lru-cache": "^11.0.2",
     "luxon": "^3.5.0",
-    "next": "15.0.2",
+    "next": "^15.1.3",
     "next-auth": "^5.0.0-beta.25",
     "nodemailer": "^6.9.16",
     "openai": "^4.77.0",
@@ -47,6 +47,7 @@
   },
   "devDependencies": {
     "@heroicons/react": "^2.2.0",
+    "@peculiar/webcrypto": "^1.5.0",
     "@types/jest": "^29.5.14",
     "@types/jsdom": "^21.1.7",
     "@types/node": "^20",
@@ -54,8 +55,10 @@
     "@types/react": "^18",
     "@types/react-beautiful-dnd": "^13.1.8",
     "@types/react-dom": "^18",
+    "@types/webcrypto": "^0.0.30",
     "@types/winston-loggly-bulk": "^3.0.6",
     "chart.js": "^4.4.6",
+    "crypto": "^1.0.1",
     "cspell": "^8.16.1",
     "date-fns": "^4.1.0",
     "eslint": "^8",
@@ -71,6 +74,7 @@
     "ts-morph": "^24.0.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.2",
+    "util": "^0.12.5",
     "why": "^0.6.2"
   }
 }

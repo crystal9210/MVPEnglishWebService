@@ -12,6 +12,7 @@ const config: Config = {
             moduleNameMapper: {
                 "^@/(.*)$": "<rootDir>/src/$1", // >> path alias
             },
+            setupFiles: ["<rootDir>/jest.setup.node.ts"],
         },
         {
             displayName: "jsdom-tests", // jsdom environment tests setting
@@ -23,7 +24,8 @@ const config: Config = {
             moduleNameMapper: {
                 "^@/(.*)$": "<rootDir>/src/$1",
             },
-            setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
+            // setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
+            setupFiles: ["<rootDir>/jest.setup.jsdom.ts"],
         },
     ],
     verbose: true, // whether test-results is logged in detail in the shell.

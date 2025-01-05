@@ -1,149 +1,81 @@
-import { INSERT_POSITIONS } from "@/constants/cryptoTypes";
-
 /**
  * CryptoUtils class provides client-side data encryption and decryption.
- * It generates a unique key, salt, and IV for each data entry without using a passphrase.
+ * Implements secure AES-GCM encryption with data-specific random values for key, salt, and IV.
  */
 export class CryptoUtils {
-    // Store the key in memory; it will be lost upon page reload
-    private static key: CryptoKey | null = null;
-
     /**
      * Encrypts the given plaintext.
      * @param plaintext The plain text to encrypt.
-     * @returns A Promise that resolves to the Base64-encoded encrypted data string.
+     * @returns A Promise that resolves to a Base64 string containing concatenated key, IV, and ciphertext.
      */
     public static async encrypt(plaintext: string): Promise<string> {
         const encoder = new TextEncoder();
         const data = encoder.encode(plaintext);
 
         // Generate a random key (256-bit)
-        const keyData = window.crypto.getRandomValues(new Uint8Array(32));
-        const key = await window.crypto.subtle.importKey(
+        const key = globalThis.crypto.getRandomValues(new Uint8Array(32));
+
+        // Generate a random IV (12 bytes for AES-GCM)
+        const iv = globalThis.crypto.getRandomValues(new Uint8Array(12));
+
+        // Import the key for AES-GCM encryption
+        const cryptoKey = await globalThis.crypto.subtle.importKey(
             "raw",
-            keyData,
+            key,
             { name: "AES-GCM" },
             false,
-            ["encrypt", "decrypt"]
+            ["encrypt"]
         );
-        this.key = key; // Store the key in memory
-
-        // Generate a random salt (16 bytes)
-        const salt = window.crypto.getRandomValues(new Uint8Array(16));
-
-        // Derive the key using PBKDF2 with the salt
-        const derivedKey = await this.deriveKey(key, salt);
-
-        // Generate a random IV (12 bytes)
-        const iv = window.crypto.getRandomValues(new Uint8Array(12));
 
         // Encrypt the data using AES-GCM
-        const ciphertext = await window.crypto.subtle.encrypt(
+        const ciphertext = await globalThis.crypto.subtle.encrypt(
             {
                 name: "AES-GCM",
                 iv: iv,
             },
-            derivedKey,
+            cryptoKey,
             data
         );
 
-        // Encode the ciphertext to Base64
-        let ciphertextBase64 = this.arrayBufferToBase64(ciphertext);
-
-        // Encode the salt and IV to Base64
-        const saltBase64 = this.arrayBufferToBase64(salt.buffer);
-        const ivBase64 = this.arrayBufferToBase64(iv.buffer);
-
-        // Note: Embedding the key poses a security risk and is omitted.
-
-        // Insert the salt and IV into specified positions
-        ciphertextBase64 = this.insertDataAtPositions(
-            ciphertextBase64,
-            saltBase64,
-            INSERT_POSITIONS
-        );
-        ciphertextBase64 = this.insertDataAtPositions(
-            ciphertextBase64,
-            ivBase64,
-            INSERT_POSITIONS
-        );
-
-        return ciphertextBase64;
+        // Combine key, IV, and ciphertext as Base64 strings
+        const combinedBase64 = this.concatAndEncodeBase64(key, iv, ciphertext);
+        return combinedBase64;
     }
 
     /**
      * Decrypts the given encrypted data.
-     * @param encryptedData The Base64-encoded encrypted data string.
+     * @param encryptedData The Base64 string containing concatenated key, IV, and ciphertext.
      * @returns A Promise that resolves to the decrypted plain text.
      */
     public static async decrypt(encryptedData: string): Promise<string> {
-        // Calculate the lengths of the Base64-encoded salt and IV
-        const saltBase64Length = this.arrayBufferToBase64(
-            new Uint8Array(16).buffer
-        ).length; // 16-byte salt
-        const ivBase64Length = this.arrayBufferToBase64(
-            new Uint8Array(12).buffer
-        ).length; // 12-byte IV
+        try {
+            // Split the encrypted data into key, IV, and ciphertext
+            const { key, iv, ciphertext } =
+                this.decodeAndSplitBase64(encryptedData);
 
-        // Extract the salt and IV from specified positions
-        let ciphertextBase64 = encryptedData;
-        const extractedSalts: string[] = [];
-        const extractedIVs: string[] = [];
-
-        // Extract and remove the salt and IV from the ciphertext
-        INSERT_POSITIONS.forEach((pos) => {
-            const salt = ciphertextBase64.slice(pos, pos + saltBase64Length);
-            const iv = ciphertextBase64.slice(
-                pos + saltBase64Length,
-                pos + saltBase64Length + ivBase64Length
+            // Import the key for AES-GCM decryption
+            const cryptoKey = await globalThis.crypto.subtle.importKey(
+                "raw",
+                key,
+                { name: "AES-GCM" },
+                false,
+                ["decrypt"]
             );
 
-            extractedSalts.push(salt);
-            extractedIVs.push(iv);
-
-            // Remove the extracted parts from the ciphertext
-            ciphertextBase64 =
-                ciphertextBase64.slice(0, pos) +
-                ciphertextBase64.slice(pos + saltBase64Length + ivBase64Length);
-        });
-
-        // Use the first extracted salt and IV (adjust if multiple insertions are present)
-        const saltBase64 = extractedSalts[0];
-        const ivBase64 = extractedIVs[0];
-
-        // Convert Base64 to ArrayBuffer
-        const salt = new Uint8Array(this.base64ToArrayBuffer(saltBase64));
-        const iv = new Uint8Array(this.base64ToArrayBuffer(ivBase64));
-
-        // Ensure the key exists in memory
-        if (!this.key) {
-            throw new Error("Encryption key not found in memory.");
-        }
-
-        // Derive the key using PBKDF2 with the extracted salt
-        const derivedKey = await this.deriveKey(this.key, salt);
-
-        // Convert the ciphertext from Base64 to ArrayBuffer
-        const ciphertext = this.base64ToArrayBuffer(ciphertextBase64);
-
-        // Decrypt the data using AES-GCM
-        try {
-            const decrypted = await window.crypto.subtle.decrypt(
+            // Decrypt the data
+            const decrypted = await globalThis.crypto.subtle.decrypt(
                 {
                     name: "AES-GCM",
                     iv: iv,
                 },
-                derivedKey,
+                cryptoKey,
                 ciphertext
             );
 
             // Decode the decrypted data to a string
             const decoder = new TextDecoder();
-            const decryptedText = decoder.decode(decrypted);
-
-            return decryptedText;
+            return decoder.decode(decrypted);
         } catch (error) {
-            // Decryption failed (possibly due to tampering)
             throw new Error(
                 "Decryption failed. Data may have been tampered with."
             );
@@ -151,56 +83,48 @@ export class CryptoUtils {
     }
 
     /**
-     * Derives a key using PBKDF2.
-     * @param baseKey The base CryptoKey.
-     * @param salt The salt used for key derivation.
-     * @returns A Promise that resolves to the derived CryptoKey.
+     * Concatenates and encodes the key, IV, and ciphertext as a Base64 string.
+     * @param key The encryption key.
+     * @param iv The initialization vector.
+     * @param ciphertext The encrypted data.
+     * @returns The Base64-encoded string containing key, IV, and ciphertext.
      */
-    private static async deriveKey(
-        baseKey: CryptoKey,
-        salt: Uint8Array
-    ): Promise<CryptoKey> {
-        const derivedKey = await window.crypto.subtle.deriveKey(
-            {
-                name: "PBKDF2",
-                salt: salt,
-                iterations: 200000, // Number of iterations
-                hash: "SHA-512", // Hash algorithm
-            },
-            baseKey,
-            { name: "AES-GCM", length: 256 }, // AES-256 GCM
-            false,
-            ["encrypt", "decrypt"]
+    private static concatAndEncodeBase64(
+        key: Uint8Array,
+        iv: Uint8Array,
+        ciphertext: ArrayBuffer
+    ): string {
+        const combined = new Uint8Array(
+            key.length + iv.length + ciphertext.byteLength
         );
-        return derivedKey;
+        combined.set(key, 0);
+        combined.set(iv, key.length);
+        combined.set(new Uint8Array(ciphertext), key.length + iv.length);
+
+        return this.arrayBufferToBase64(combined.buffer);
     }
 
     /**
-     * Inserts data into specified positions within a Base64 string.
-     * @param base64Str The original Base64 string.
-     * @param data The data to insert.
-     * @param positions The array of positions to insert the data.
-     * @returns The modified Base64 string with inserted data.
+     * Decodes and splits the Base64 string into key, IV, and ciphertext.
+     * @param base64Data The Base64 string containing key, IV, and ciphertext.
+     * @returns An object containing the key, IV, and ciphertext as Uint8Array.
      */
-    private static insertDataAtPositions(
-        base64Str: string,
-        data: string,
-        positions: number[]
-    ): string {
-        let modifiedStr = base64Str;
-        // Filter out positions that exceed the string length
-        const validPositions = positions.filter(
-            (pos) => pos <= modifiedStr.length
+    private static decodeAndSplitBase64(base64Data: string): {
+        key: Uint8Array;
+        iv: Uint8Array;
+        ciphertext: Uint8Array;
+    } {
+        const combined = new Uint8Array(
+            atob(base64Data)
+                .split("")
+                .map((char) => char.charCodeAt(0))
         );
-        // Sort positions in descending order to prevent shifting issues
-        validPositions.sort((a, b) => b - a);
 
-        validPositions.forEach((pos) => {
-            modifiedStr =
-                modifiedStr.slice(0, pos) + data + modifiedStr.slice(pos);
-        });
+        const key = combined.slice(0, 32);
+        const iv = combined.slice(32, 44);
+        const ciphertext = combined.slice(44);
 
-        return modifiedStr;
+        return { key, iv, ciphertext };
     }
 
     /**
@@ -209,7 +133,12 @@ export class CryptoUtils {
      * @returns The Base64-encoded string.
      */
     private static arrayBufferToBase64(buffer: ArrayBuffer): string {
-        const binary = String.fromCharCode(...new Uint8Array(buffer));
+        let binary = "";
+        const bytes = new Uint8Array(buffer);
+        const len = bytes.byteLength;
+        for (let i = 0; i < len; i++) {
+            binary += String.fromCharCode(bytes[i]);
+        }
         return window.btoa(binary);
     }
 
