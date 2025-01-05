@@ -1,5 +1,3 @@
-/* /src/pages/EncryptedMemoListPage.tsx */
-
 "use client";
 
 import React from "react";
