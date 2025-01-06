@@ -116,7 +116,7 @@ container.registerSingleton<IActivityService>(
 );
 
 const llmOptions: LLMServiceOptions = {
-    useAzure: false, // Azure OpenAIを使用しない場合
+    useAzure: false, // >> default settings: not use useAzure.
     openai: {
         apiKey: process.env.OPENAI_API_KEY || "",
     },
@@ -125,21 +125,12 @@ const llmOptions: LLMServiceOptions = {
 container.register<LLMServiceOptions>("LLMServiceOptions", {
     useValue: llmOptions,
 });
-
-// ILLMService の登録
-container.register<ILLMService>("ILLMService", {
-    useClass: LLMService,
-});
-
-// IEmbeddingRepository の登録
-container.register<IEmbeddingRepository>("IEmbeddingRepository", {
-    useClass: EmbeddingRepository,
-});
-
-// IRAGService の登録
-container.register<IRAGService>("IRAGService", {
-    useClass: RAGService,
-});
+container.register<ILLMService>("ILLMService", LLMService);
+container.register<IEmbeddingRepository>(
+    "IEmbeddingRepository",
+    EmbeddingRepository
+);
+container.register<IRAGService>("IRAGService", RAGService);
 
 export { container };
 

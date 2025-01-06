@@ -3,7 +3,7 @@ import { ILLMService } from "@/interfaces/services/ILLMService";
 import { IRAGService } from "@/interfaces/services/IRAGService";
 import { ServiceTypeProblem } from "@/schemas/problemSchemas";
 import { EmbeddingDoc } from "@/schemas/embeddingSchemas";
-import { sampleProblems } from "@/app/dev/testGpt/page";
+import { sampleProblems } from "";
 import { IEmbeddingRepository } from "@/interfaces/repositories/IEmbeddingRepository";
 
 /**

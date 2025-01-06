@@ -121,6 +121,16 @@
 │   │   │   │   └── route.ts
 │   │   │   ├── confirm-registration
 │   │   │   │   └── route.ts
+│   │   │   ├── dev
+│   │   │   │   └── gpt-test
+│   │   │   │       ├── ask
+│   │   │   │       │   └── route.ts
+│   │   │   │       ├── problems
+│   │   │   │       │   ├── [id]
+│   │   │   │       │   │   └── embedding
+│   │   │   │       │   │       └── route.ts
+│   │   │   │       │   └── route.ts
+│   │   │   │       └── route.ts
 │   │   │   ├── error
 │   │   │   │   └── page.tsx
 │   │   │   ├── pdf
@@ -169,6 +179,9 @@
 │   │   │   │   └── utils.ts
 │   │   │   └── page.tsx
 │   │   ├── dev
+│   │   │   ├── _testGpt
+│   │   │   │   ├── test-chat-node.ts
+│   │   │   │   └── test-chat.mjs
 │   │   │   ├── decryptedMemoList
 │   │   │   │   └── page.tsx
 │   │   │   ├── encryptedMemoList
@@ -176,8 +189,7 @@
 │   │   │   ├── setupKey
 │   │   │   │   └── page.tsx
 │   │   │   ├── testGpt
-│   │   │   │   ├── test-chat-node.ts
-│   │   │   │   └── test-chat.mjs
+│   │   │   │   └── page.tsx
 │   │   │   └── testPdfGenerate
 │   │   │       └── page.tsx
 │   │   ├── favicon.ico
@@ -250,6 +262,8 @@
 │   │   ├── Notifications.tsx
 │   │   ├── RegisterForm.tsx
 │   │   ├── UnitProblemList.tsx
+│   │   ├── dev
+│   │   │   └── QuestionForm.tsx
 │   │   └── signout_button.tsx
 │   ├── config
 │   │   ├── constants
@@ -323,6 +337,7 @@
 │   │   │   ├── userProfileRepository.ts
 │   │   │   └── userRepository.ts
 │   │   ├── serviceFactory.ts
+│   │   ├── serviceLayer.ts
 │   │   └── services
 │   │       ├── IdManagerService.ts
 │   │       ├── activityService.ts
@@ -387,9 +402,11 @@
 │   │       ├── IFirebaseAdmin.ts
 │   │       ├── IGoalService.ts
 │   │       ├── IHistoryService.ts
+│   │       ├── ILLMService.ts
 │   │       ├── ILoggerService.ts
 │   │       ├── IProblemResultService.ts
 │   │       ├── IProblemService.ts
+│   │       ├── IRAGService.ts
 │   │       ├── ISubscriptionService.ts
 │   │       ├── IUserBookmarkService.ts
 │   │       ├── IUserHistoryService.ts
@@ -462,6 +479,7 @@
 │   │   ├── bookmarkSchemas.ts
 │   │   ├── customProblemSetSchema.ts
 │   │   ├── customUserSchema.ts
+│   │   ├── embeddingSchemas.ts
 │   │   ├── goalSchemas.ts
 │   │   ├── idb.ts
 │   │   ├── index.ts
@@ -553,4 +571,4 @@
 ├── unknown-words.txt
 └── utilCommands.md
 
-157 directories, 397 files
+165 directories, 407 files
