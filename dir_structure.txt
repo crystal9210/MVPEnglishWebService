@@ -122,14 +122,16 @@
 │   │   │   ├── confirm-registration
 │   │   │   │   └── route.ts
 │   │   │   ├── dev
-│   │   │   │   └── gpt-test
-│   │   │   │       ├── ask
-│   │   │   │       │   └── route.ts
-│   │   │   │       ├── problems
-│   │   │   │       │   ├── [id]
-│   │   │   │       │   │   └── embedding
-│   │   │   │       │   │       └── route.ts
-│   │   │   │       │   └── route.ts
+│   │   │   │   ├── gpt-test
+│   │   │   │   │   ├── ask
+│   │   │   │   │   │   └── route.ts
+│   │   │   │   │   ├── problems
+│   │   │   │   │   │   ├── [id]
+│   │   │   │   │   │   │   └── embedding
+│   │   │   │   │   │   │       └── route.ts
+│   │   │   │   │   │   └── route.ts
+│   │   │   │   │   └── route.ts
+│   │   │   │   └── test-llm
 │   │   │   │       └── route.ts
 │   │   │   ├── error
 │   │   │   │   └── page.tsx
@@ -412,8 +414,12 @@
 │   │       ├── IUserHistoryService.ts
 │   │       ├── IUserProfileService.ts
 │   │       ├── IUserService.ts
-│   │       └── clientSide
-│   │           └── IMemoService.ts
+│   │       ├── clientSide
+│   │       │   └── IMemoService.ts
+│   │       └── openai
+│   │           ├── IChat.ts
+│   │           ├── IEmbeddings.ts
+│   │           └── IOpenAIClient.ts
 │   ├── lib
 │   │   ├── auth.ts
 │   │   ├── authCallbacks.ts
@@ -427,6 +433,7 @@
 │   │   │   ├── core.ts
 │   │   │   ├── error.ts
 │   │   │   ├── index.ts
+│   │   │   ├── options.ts
 │   │   │   └── resources
 │   │   │       ├── chat.ts
 │   │   │       ├── completions.ts
@@ -455,6 +462,8 @@
 │   │   ├── adverbs.json
 │   │   ├── comparatives_and_superlatives.json
 │   │   ├── demonstratives.json
+│   │   ├── testGpt
+│   │   │   └── sampleProblems.ts
 │   │   ├── v1
 │   │   │   ├── activity
 │   │   │   │   └── mockProblemSets1.ts
@@ -571,4 +580,4 @@
 ├── unknown-words.txt
 └── utilCommands.md
 
-165 directories, 407 files
+168 directories, 413 files

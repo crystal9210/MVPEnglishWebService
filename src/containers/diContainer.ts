@@ -55,6 +55,8 @@ import {
     LLMServiceOptions,
 } from "@/domain/services/serverSide/LLMService";
 import { RAGService } from "@/domain/services/serverSide/RAGService";
+import { OpenAI } from "@/lib/openai";
+import { IOpenAIClient } from "@/interfaces/services/openai/IOpenAIClient";
 
 // Utility
 // 最初に他のサービスに依存しないサービスを登録 - tsyringeの仕様
@@ -116,7 +118,6 @@ container.registerSingleton<IActivityService>(
 );
 
 const llmOptions: LLMServiceOptions = {
-    useAzure: false, // >> default settings: not use useAzure.
     openai: {
         apiKey: process.env.OPENAI_API_KEY || "",
     },
@@ -125,6 +126,11 @@ const llmOptions: LLMServiceOptions = {
 container.register<LLMServiceOptions>("LLMServiceOptions", {
     useValue: llmOptions,
 });
+
+container.register<IOpenAIClient>("IOpenAIClient", {
+    useClass: OpenAI,
+});
+
 container.register<ILLMService>("ILLMService", LLMService);
 container.register<IEmbeddingRepository>(
     "IEmbeddingRepository",

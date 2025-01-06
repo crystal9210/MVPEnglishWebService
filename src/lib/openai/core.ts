@@ -8,13 +8,22 @@ export interface RequestOptions {
 
 export type Fetch = typeof fetch;
 
+/**
+ * APIClient:
+ * - Basic HTTP client with JSON body handling.
+ * - Not specific to OpenAI; can be re-used for any REST calls.
+ */
 export class APIClient {
     baseURL: string;
     fetch: Fetch;
+    private apiKey: string;
 
-    constructor(opts: { baseURL: string; fetch?: Fetch }) {
-        this.baseURL = opts.baseURL;
+    constructor(opts: { baseURL: string; fetch?: Fetch; apiKey: string }) {
+        this.baseURL = opts.baseURL.endsWith("/")
+            ? opts.baseURL
+            : `${opts.baseURL}/`;
         this.fetch = opts.fetch ?? (globalThis.fetch as Fetch);
+        this.apiKey = opts.apiKey;
     }
 
     async request<T = unknown>(options: RequestOptions): Promise<T> {
@@ -31,6 +40,7 @@ export class APIClient {
             method: options.method ?? "GET",
             headers: {
                 "Content-Type": "application/json",
+                Authorization: `Bearer ${this.apiKey}`,
                 ...(options.headers ?? {}),
             },
             body: options.body ? JSON.stringify(options.body) : undefined,

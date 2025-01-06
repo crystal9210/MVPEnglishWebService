@@ -1,14 +1,32 @@
-import { APIClient } from "../core";
-import { Completions } from "./completions";
+/* eslint-disable no-unused-vars */
+import type { IChat } from "@/interfaces/services/openai/IChat";
+import type {
+    ChatCompletionsCreateParams,
+    ChatCompletionsCreateResponse,
+} from "./completions";
+import { APIClient, RequestOptions } from "../core";
 
 /**
- * Chat Resource
- * - In Stainless, "chat" often has sub-resources like "completions"
+ * Chat Class
+ * - Implements IChat to handle chat completions.
  */
-export class Chat {
-  completions: Completions;
+export class Chat implements IChat {
+    constructor(private client: APIClient) {}
 
-  constructor(client: APIClient) {
-    this.completions = new Completions(client);
-  }
+    /**
+     * createChatCompletion:
+     * - Creates a chat completion.
+     * @param params - Parameters for chat completion.
+     * @returns The chat completion response.
+     */
+    async createChatCompletion(
+        params: ChatCompletionsCreateParams
+    ): Promise<ChatCompletionsCreateResponse> {
+        const options: RequestOptions = {
+            path: "chat/completions",
+            method: "POST",
+            body: params,
+        };
+        return this.client.request<ChatCompletionsCreateResponse>(options);
+    }
 }

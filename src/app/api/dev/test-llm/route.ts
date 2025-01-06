@@ -32,19 +32,30 @@ import { sampleProblems } from "@/sample_datasets/testGpt/sampleProblems";
  *   ]
  * }
  */
+
+/**
+ * POST /api/test-llm
+ *
+ * Receives selected problem IDs and custom questions, combines them with problem texts,
+ * sends them to the LLM service, and returns the answers.
+ */
 export async function POST(request: Request) {
     try {
-        const { questions } = await request.json();
+        console.log("Received request at /api/test-llm");
 
-        // validate inputs.
+        const { questions } = await request.json();
+        console.log("Parsed questions:", questions);
+
+        // Input validation
         if (!Array.isArray(questions) || questions.length === 0) {
+            console.warn("Invalid questions format.");
             return NextResponse.json(
                 { error: "questions must be a non-empty array." },
                 { status: 400 }
             );
         }
 
-        // validate each question and get the problem.
+        // Validate each question and retrieve the corresponding problem
         const validQuestions = questions.filter((q) => {
             const problem = sampleProblems.find((p) => p.id === q.problemId);
             if (!problem) {
@@ -60,16 +71,21 @@ export async function POST(request: Request) {
             return true;
         });
 
+        console.log("Valid questions:", validQuestions);
+
         if (validQuestions.length === 0) {
+            console.warn("No valid questions provided.");
             return NextResponse.json(
                 { error: "No valid questions provided." },
                 { status: 400 }
             );
         }
 
+        // Resolve ILLMService from the container
         const llmService = container.resolve<ILLMService>("ILLMService");
+        console.log("Resolved LLMService from container.");
 
-        // initialize the array of an object to store the response from the llm.
+        // Initialize the responses array
         const responses: {
             problemId: string;
             question: string;
@@ -77,19 +93,22 @@ export async function POST(request: Request) {
         }[] = [];
 
         for (const q of validQuestions) {
-            const problem = sampleProblems.find((p) => p.id === q.problemId)!; // confirm the question info is valid and exists.
+            const problem = sampleProblems.find((p) => p.id === q.problemId)!; // Already confirmed existence
             const prompt = `${problem.text}\n\nQuestion: ${q.customQuestion}\n\nPlease provide a concise answer in plain text, without any HTML tags, in less than 1000 characters.`;
+            console.log(
+                `Generating completion for Problem ID ${q.problemId}:`,
+                prompt
+            );
 
             try {
-                const llmResponse = await llmService.generateCompletion(
+                const answer = await llmService.generateCompletion(
                     prompt,
                     "gpt-3.5-turbo"
                 );
-                // HTMLタグ削除
-                const cleanResponse = llmResponse.replace(
-                    /<\/?[^>]+(>|$)/g,
-                    ""
-                );
+
+                // Remove HTML tags (just in case)
+                const cleanResponse = answer.replace(/<\/?[^>]+(>|$)/g, "");
+
                 responses.push({
                     problemId: q.problemId,
                     question: q.customQuestion,
@@ -108,12 +127,13 @@ export async function POST(request: Request) {
             }
         }
 
-        // return the response from the llm, which is adjusted to appropriate format for the ui required response.
+        // Return the responses
+        console.log("Returning responses:", responses);
         return NextResponse.json({ responses });
-    } catch (error) {
+    } catch (error: any) {
         console.error("Error in /api/test-llm:", error);
         return NextResponse.json(
-            { error: "Internal Server Error." },
+            { error: error.message || "Internal Server Error." },
             { status: 500 }
         );
     }

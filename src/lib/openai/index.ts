@@ -1,77 +1,31 @@
+import { injectable, inject } from "tsyringe";
 import { APIClient } from "./core";
-import * as Errors from "./error";
-import * as API from "./resources/index";
+import { Chat, Embeddings } from "./resources/index";
+import type { LLMServiceOptions } from "@/domain/services/serverSide/LLMService";
+import type { IOpenAIClient } from "@/interfaces/services/openai/IOpenAIClient";
+import type { IChat } from "@/interfaces/services/openai/IChat";
+import type { IEmbeddings } from "@/interfaces/services/openai/IEmbeddings";
 
-export type OpenAIClient = OpenAI | AzureOpenAI;
+@injectable()
+export class OpenAI extends APIClient implements IOpenAIClient {
+    chat: IChat;
+    embeddings: IEmbeddings;
 
-/**
- * OpenAI Options
- */
-export interface OpenAIOptions {
-    apiKey?: string;
-    baseURL?: string;
-    fetch?: typeof fetch;
-    dangerouslyAllowBrowser?: boolean;
-}
-
-/**
- * OpenAI Client
- */
-export class OpenAI extends APIClient {
-    chat: API.Chat;
-    completions: API.Completions;
-    embeddings: API.Embeddings;
-
-    constructor(opts: OpenAIOptions = {}) {
-        const baseURL = opts.baseURL ?? "https://api.openai.com/v1";
-
-        super({
-            baseURL,
-            fetch: opts.fetch,
-        });
-
-        this.chat = new API.Chat(this);
-        this.completions = new API.Completions(this);
-        this.embeddings = new API.Embeddings(this);
-    }
-}
-
-/**
- * Azure OpenAI Options
- */
-export interface AzureOpenAIOptions extends OpenAIOptions {
-    endpoint?: string;
-    deployment?: string;
-    apiVersion?: string;
-}
-
-/**
- * AzureOpenAI Client
- */
-export class AzureOpenAI extends OpenAI {
-    private _deployment: string | undefined;
-    apiVersion: string = "";
-
-    constructor(opts: AzureOpenAIOptions = {}) {
-        if (!opts.endpoint || !opts.deployment || !opts.apiVersion) {
-            throw new Error(
-                "AzureOpenAI requires endpoint, deployment, and apiVersion."
-            );
+    constructor(@inject("LLMServiceOptions") opts: LLMServiceOptions) {
+        if (!opts.openai?.apiKey) {
+            throw new Error("OpenAI API key is required.");
         }
-
-        const baseURL = opts.baseURL ?? `${opts.endpoint}/openai`;
+        // const baseURL = opts.useAzure
+        //     ? opts.azure!.endpoint
+        //     : "https://api.openai.com/v1";
 
         super({
-            ...opts,
-            baseURL,
+            baseURL: "https://api.openai.com/v1/",
+            apiKey: opts.openai.apiKey,
+            fetch: undefined, // >> configure custom fetch if needed.
         });
 
-        this._deployment = opts.deployment;
-        this.apiVersion = opts.apiVersion;
+        this.chat = new Chat(this);
+        this.embeddings = new Embeddings(this);
     }
-
-    // 必要に応じてデプロイメント固有のメソッドのオーバーライド
 }
-
-// エラークラスのエクスポート
-export { Errors };

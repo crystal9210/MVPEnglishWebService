@@ -1,5 +1,7 @@
 import { ILLMService } from "@/interfaces/services/ILLMService";
-import { OpenAI, AzureOpenAI, type OpenAIClient } from "@/lib/openai";
+import type { IOpenAIClient } from "@/interfaces/services/openai/IOpenAIClient";
+import { ChatCompletionsCreateParams } from "@/lib/openai/resources/completions";
+import { EmbeddingsCreateParams } from "@/lib/openai/resources/embeddings";
 import { injectable, inject } from "tsyringe";
 
 // ユーザー
@@ -28,86 +30,52 @@ import { injectable, inject } from "tsyringe";
 
 /**
  * LLMServiceOptions:
- *   - Configuration options for LLMService.
+ * - Simplified version for only OpenAI usage (no Azure).
  */
 export interface LLMServiceOptions {
-    useAzure?: boolean;
-    azure?: {
-        endpoint?: string;
-        deployment?: string;
-        apiKey?: string;
-        apiVersion?: string;
-    };
-    openai?: {
-        apiKey?: string;
+    openai: {
+        apiKey: string;
     };
 }
 
 /**
- *   - Wraps the OpenAI or AzureOpenAI client.
- *   - Provides methods to generate completions and retrieve embeddings.
+ * LLMService implements ILLMService with OpenAI client only.
  */
 @injectable()
 export class LLMService implements ILLMService {
-    private client: OpenAIClient;
+    private openai: IOpenAIClient;
 
     /**
      * Constructor:
-     *   - Injects OpenAI or AzureOpenAI client based on configuration.
-     * @param opts - Configuration options.
+     * - Injects IOpenAIClient from DI container.
+     * @param openai - The OpenAI client instance.
      */
-    constructor(@inject("LLMServiceOptions") opts: LLMServiceOptions) {
-        if (opts.useAzure) {
-            if (
-                !opts.azure?.apiKey ||
-                !opts.azure?.endpoint ||
-                !opts.azure?.deployment ||
-                !opts.azure?.apiVersion
-            ) {
-                throw new Error("Azure OpenAI configuration is incomplete.");
-            }
-            // Initialize AzureOpenAI client
-            this.client = new AzureOpenAI({
-                endpoint: opts.azure.endpoint,
-                apiKey: opts.azure.apiKey,
-                apiVersion: opts.azure.apiVersion,
-                deployment: opts.azure.deployment,
-                dangerouslyAllowBrowser: false, // Set as per security requirements
-            });
-        } else {
-            if (!opts.openai?.apiKey) {
-                throw new Error("OpenAI API key is required.");
-            }
-            // Initialize OpenAI client
-            this.client = new OpenAI({
-                apiKey: opts.openai.apiKey,
-                dangerouslyAllowBrowser: false, // Set as per security requirements
-            });
-        }
+    constructor(@inject("IOpenAIClient") openai: IOpenAIClient) {
+        this.openai = openai;
     }
 
     /**
      * chatCompletion:
-     *   - Generates a chat completion based on the provided prompt.
-     * @param prompt - The input prompt.
-     * @param model - The model to use (default: 'gpt-3.5-turbo').
-     * @returns The generated completion text.
+     * - Generates chat completions using OpenAI's Chat API.
+     * @param prompt - User's input prompt.
+     * @param model - Model to use (default: 'gpt-3.5-turbo').
+     * @returns Generated answer.
      */
     async chatCompletion(
         prompt: string,
         model: string = "gpt-3.5-turbo"
     ): Promise<string> {
         try {
-            const response = await this.client.chat.completions.create({
+            const params: ChatCompletionsCreateParams = {
                 model,
-                messages: [{ role: "user", content: prompt }],
+                messages: [{ role: "user" as const, content: prompt }],
                 max_tokens: 800,
-            });
-
+            };
+            const response = await this.openai.chat.createChatCompletion(
+                params
+            );
             return response.choices[0]?.message?.content ?? "";
         } catch (error) {
-            // TODO
-            // Log error or handle accordingly
             throw new Error(
                 `Chat completion failed: ${
                     error instanceof Error ? error.message : String(error)
@@ -118,10 +86,10 @@ export class LLMService implements ILLMService {
 
     /**
      * generateCompletion:
-     *   - Alias for chatCompletion.
-     * @param prompt - The input prompt.
-     * @param model - The model to use.
-     * @returns The generated completion text.
+     * - Alias to chatCompletion for convenience.
+     * @param prompt - User's input prompt.
+     * @param model - Model to use.
+     * @returns Generated answer.
      */
     async generateCompletion(
         prompt: string,
@@ -132,29 +100,27 @@ export class LLMService implements ILLMService {
 
     /**
      * getEmbedding:
-     *   - Retrieves the embedding vector for a given text.
-     * @param text - The input text.
-     * @param model - The embedding model to use (default: 'text-embedding-ada-002').
-     * @returns The embedding vector.
+     * - Retrieves embeddings for the given text.
+     * @param text - Text to retrieve embedding for.
+     * @param model - Embedding model to use (default: 'text-embedding-ada-002').
+     * @returns Embedding vector.
      */
     async getEmbedding(
         text: string,
         model: string = "text-embedding-ada-002"
     ): Promise<number[]> {
         try {
-            const response = await this.client.embeddings.create({
+            const params: EmbeddingsCreateParams = {
                 model,
                 input: text,
-            });
-
-            // Assuming response.data is an array with at least one element
+            };
+            const response = await this.openai.embeddings.create(params);
             if (response.data.length > 0 && response.data[0].embedding) {
                 return response.data[0].embedding;
             } else {
-                throw new Error("Failed to get embedding.");
+                throw new Error("Failed to get embedding: empty result.");
             }
         } catch (error) {
-            // Log error or handle accordingly
             throw new Error(
                 `Get embedding failed: ${
                     error instanceof Error ? error.message : String(error)
