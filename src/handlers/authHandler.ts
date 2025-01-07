@@ -1,16 +1,19 @@
 import "@/containers/diContainer";
 import { NextAuthConfig } from "next-auth";
-import GoogleProvider from "@auth/core/providers/google"; // `@auth/core/providers` からインポート
+import GoogleProvider from "@auth/core/providers/google";
 import { container } from "tsyringe";
 import type { ILoggerService } from "@/interfaces/services/ILoggerService";
 import { CustomFirestoreAdapter } from "@/adapters/customFirestoreAdapter";
 
 // カスタムアダプターの初期化とログ出力
-const adapter = CustomFirestoreAdapter();
+const adapter = container.resolve(CustomFirestoreAdapter);
+
+// Optional: Log adapter properties for debugging
 console.log("Adapter keys:", Object.keys(adapter));
 // console.log(`AUTH_SECRET: ${process.env.AUTH_SECRET}`)
 
-export const authOptions: NextAuthConfig = { // `AuthConfig` を使用
+export const authOptions: NextAuthConfig = {
+    // `AuthConfig` を使用
     // debug: true,
     adapter: adapter,
     providers: [
@@ -23,7 +26,8 @@ export const authOptions: NextAuthConfig = { // `AuthConfig` を使用
                     scope: "openid https://mail.google.com/ https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email",
                     access_type: "offline", // リフレッシュトークンを取得
                     prompt: "consent", // ユーザに許可を求める
-                    redirect_uri: "http://localhost:3000/api/auth/callback/google",
+                    redirect_uri:
+                        "http://localhost:3000/api/auth/callback/google",
                 },
             },
         }),
@@ -47,24 +51,32 @@ export const authOptions: NextAuthConfig = { // `AuthConfig` を使用
             try {
                 // Googleプロバイダー以外をブロック
                 if (!account || account.provider !== "google") {
-                    logger.warn("現在、Googleアカウント以外の認証はサポートされていません。");
+                    logger.warn(
+                        "現在、Googleアカウント以外の認証はサポートされていません。"
+                    );
                     return "/signIn?error=unsupportedProvider";
                 }
 
                 // メールアドレスの検証
                 if (!user.email) {
-                    logger.error("サインイン失敗: メールアドレスが提供されていません。");
+                    logger.error(
+                        "サインイン失敗: メールアドレスが提供されていません。"
+                    );
                     return "/signIn?error=noEmail";
                 }
                 if (!user.email.endsWith("@gmail.com")) {
-                    logger.error("サインイン失敗: 許容規格：...@gmail.com 以外のメールアドレスです。");
+                    logger.error(
+                        "サインイン失敗: 許容規格：...@gmail.com 以外のメールアドレスです。"
+                    );
                     return "/signIn?error=invalidEmail";
                 }
 
                 logger.info(`Sign-in allowed for email: ${user.email}`);
                 return true;
             } catch (error) {
-                logger.error("サインイン処理中にエラーが発生しました", { error });
+                logger.error("サインイン処理中にエラーが発生しました", {
+                    error,
+                });
                 return "/signIn?error=serverError"; // エラー時にリダイレクト先を指定
             }
         },

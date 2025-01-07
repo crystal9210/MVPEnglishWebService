@@ -17,7 +17,7 @@ interface EmbeddingData {
 /**
  * EmbeddingResponse
  */
-interface EmbeddingResponse {
+export interface EmbeddingResponse {
     data: EmbeddingData[];
     model: string;
 }

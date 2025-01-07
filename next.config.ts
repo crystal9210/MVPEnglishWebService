@@ -1,44 +1,84 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
-  // webpack: (config) => {
-  //   config.resolve.fallback = {
-  //     ...config.resolve.fallback,
-  //     child_process: false,
-  //     fs: false,
-  //   };
-  //   return config;
-  // },
-  images: {
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "lh3.googleusercontent.com",
-        port: "",
-        pathname: "/**"
-      },
-    ],
-  },
-  async headers() {
-    const isDev = process.env.NODE_ENV === "development";
-    return [
-      {
-        source: "/api/:path*", // >> i.e. the ui paths of `/api/*`
-        headers: [
-          {
-            key: "Set-Cookie",
-            value: `SameSite=Lax; HttpOnly${isDev ? "" : "; Secure"}`, // exclude 'Secure' option in the 'dev' (server's) environment.
-          },
+    /* Other Next.js configuration options can be added here */
+
+    /**
+     * Webpack configuration to modify how modules are resolved and bundled.
+     * Specifically, it excludes 'pdfkit' from the server-side bundle to prevent
+     * path resolution issues related to internal font files like 'Helvetica.afm'.
+     */
+    webpack: (config, { isServer }) => {
+        if (isServer) {
+            // Initialize externals if not already present
+            config.externals = config.externals || [];
+
+            /**
+             * Exclude 'pdfkit' from the server-side bundle.
+             * This prevents Webpack from bundling 'pdfkit' and allows it to be
+             * required at runtime, ensuring internal paths are resolved correctly.
+             */
+            config.externals.push({
+                pdfkit: "commonjs pdfkit",
+            });
+
+            /**
+             * Fallback configurations to prevent bundling of certain Node.js built-in modules.
+             * Setting 'child_process' and 'fs' to false ensures they are not bundled,
+             * which can prevent potential conflicts or unnecessary code inclusion.
+             */
+            config.resolve.fallback = {
+                ...config.resolve.fallback,
+                child_process: false, // Prevent bundling of 'child_process' module
+                fs: false, // Prevent bundling of 'fs' (File System) module
+            };
+        }
+
+        // Return the modified config
+        return config;
+    },
+
+    /**
+     * Configuration for handling remote images.
+     * This allows images from specified remote patterns to be optimized and served.
+     */
+    images: {
+        remotePatterns: [
+            {
+                protocol: "https",
+                hostname: "lh3.googleusercontent.com",
+                port: "",
+                pathname: "/**",
+            },
         ],
-      },
-    ];
-  },
+    },
+
+    /**
+     * Custom HTTP headers configuration.
+     * Specifically, it sets the 'Set-Cookie' header for API routes to enforce security policies.
+     */
+    async headers() {
+        const isDev = process.env.NODE_ENV === "development"; // Check if the environment is development
+
+        return [
+            {
+                // Apply headers to all API routes under '/api/*'
+                source: "/api/:path*",
+                headers: [
+                    {
+                        key: "Set-Cookie",
+                        value: `SameSite=Lax; HttpOnly${
+                            isDev ? "" : "; Secure"
+                        }`,
+                        // In production, add 'Secure' flag to cookies
+                    },
+                ],
+            },
+        ];
+    },
 };
 
 export default nextConfig;
-
-
 
 // --- upgrade sample ---
 // import type { NextConfig } from "next";

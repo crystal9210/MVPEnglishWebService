@@ -1,3 +1,4 @@
+// import "reflect-metadata";
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
