@@ -5,19 +5,26 @@ import { container } from "tsyringe";
 import type { ILoggerService } from "@/interfaces/services/ILoggerService";
 import { CustomFirestoreAdapter } from "@/adapters/customFirestoreAdapter";
 import { TSYRINGE_TOKENS } from "@/constants/tsyringe-tokens";
-import { Adapter } from "next-auth/adapters";
+import { CustomFirestoreAdapterWrapper } from "@/adapters/customFirestoreAdapterWrapper";
 
 const adapter = container.resolve<CustomFirestoreAdapter>(
     TSYRINGE_TOKENS.CustomFirestoreAdapter
 );
 // Optional: Log adapter properties for debugging
+console.log("Adapter instance:", adapter);
 console.log("Adapter keys:", Object.keys(adapter));
-console.log("Adapter prototype:", Object.getPrototypeOf(adapter));
+console.log(
+    "Adapter prototype keys:",
+    Object.getOwnPropertyNames(Object.getPrototypeOf(adapter))
+);
+console.log(adapter.createUser);
+console.log(adapter.getUser);
+console.log(adapter.getUserByAccount);
 // console.log(`AUTH_SECRET: ${process.env.AUTH_SECRET}`)
 
 export const authOptions: NextAuthConfig = {
     // debug: true,
-    adapter: adapter,
+    adapter: CustomFirestoreAdapterWrapper(),
     providers: [
         GoogleProvider({
             clientId: process.env.AUTH_GOOGLE_ID!,
@@ -46,7 +53,9 @@ export const authOptions: NextAuthConfig = {
          */
         async signIn({ user, account }) {
             // コールバック関数内で依存関係を解決
-            const logger = container.resolve<ILoggerService>("ILoggerService");
+            const logger = container.resolve<ILoggerService>(
+                TSYRINGE_TOKENS.ILoggerService
+            );
 
             logger.info("signIn callback started");
 

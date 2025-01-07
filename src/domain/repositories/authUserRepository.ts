@@ -53,7 +53,9 @@ export class AuthUserRepository implements IAuthUserRepository {
                   name: data.name || null,
                   image: data.image || null,
                   emailVerified: data.emailVerified
-                      ? data.emailVerified.toDate()
+                      ? data.emailVerified instanceof Date
+                          ? data.emailVerified
+                          : data.emailVerified.toDate()
                       : null,
               }
             : null;
@@ -69,18 +71,33 @@ export class AuthUserRepository implements IAuthUserRepository {
             .where("email", "==", email)
             .limit(1)
             .get();
+
         if (querySnapshot.empty) return null;
+
         const doc = querySnapshot.docs[0];
         const data = doc.data();
+
+        // check emailVerified type and process properly.
+        let emailVerified: Date | null = null;
+
+        if (data?.emailVerified) {
+            if (typeof data.emailVerified.toDate === "function") {
+                // in case of Firestore's Timestamp type.
+                emailVerified = data.emailVerified.toDate();
+            } else if (typeof data.emailVerified === "string") {
+                emailVerified = new Date(data.emailVerified);
+            } else if (data.emailVerified instanceof Date) {
+                emailVerified = data.emailVerified;
+            }
+        }
+
         return data
             ? {
                   id: doc.id,
                   email: data.email,
                   name: data.name || null,
                   image: data.image || null,
-                  emailVerified: data.emailVerified
-                      ? data.emailVerified.toDate()
-                      : null,
+                  emailVerified,
               }
             : null;
     }
