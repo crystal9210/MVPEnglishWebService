@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 import type { AdapterAuthenticator } from "next-auth/adapters";
 
-export interface IAuthenticatorService {
+export interface IAuthenticatorRepository {
     /**
      * Retrieves an authenticator by its credentialID.
      * @param credentialID - The credential ID.

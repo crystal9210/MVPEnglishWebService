@@ -1,7 +1,7 @@
 import * as admin from "firebase-admin";
 import { injectable, inject } from "tsyringe";
 import { LoggerService } from "@/domain/services/loggerService";
-import { Firestore } from "firebase-admin/firestore";
+import { Firestore, FieldValue } from "firebase-admin/firestore";
 import { IFirebaseAdmin } from "@/interfaces/services/IFirebaseAdmin";
 
 @injectable()
@@ -9,10 +9,7 @@ export class FirebaseAdmin implements IFirebaseAdmin {
     private authInstance: admin.auth.Auth;
     private firestoreInstance: Firestore;
 
-    constructor(
-        // eslint-disable-next-line no-unused-vars
-        @inject(LoggerService) private logger: LoggerService
-    ) {
+    constructor(@inject(LoggerService) private logger: LoggerService) {
         try {
             if (!admin.apps.length) {
                 const projectId = process.env.FIREBASE_PROJECT_ID;
@@ -20,8 +17,12 @@ export class FirebaseAdmin implements IFirebaseAdmin {
                 let privateKey = process.env.FIREBASE_PRIVATE_KEY;
 
                 if (!projectId || !clientEmail || !privateKey) {
-                    this.logger.error("Firebase environment variables are not set properly.");
-                    throw new Error("Firebase environment variables are missing.");
+                    this.logger.error(
+                        "Firebase environment variables are not set properly."
+                    );
+                    throw new Error(
+                        "Firebase environment variables are missing."
+                    );
                 }
 
                 privateKey = privateKey.replace(/\\n/g, "\n");
@@ -41,17 +42,34 @@ export class FirebaseAdmin implements IFirebaseAdmin {
             this.authInstance = admin.auth();
             this.firestoreInstance = admin.firestore();
         } catch (error) {
-            this.logger.error("Failed to initialize Firebase Admin SDK.", { error });
+            this.logger.error("Failed to initialize Firebase Admin SDK.", {
+                error,
+            });
             throw new Error("Firebase initialization failed.");
         }
     }
 
-    // IFirebaseAdminインターフェースで要求されるメソッドを実装
+    /**
+     * Retrieves the Firebase Authentication instance.
+     * @returns The Firebase Authentication instance.
+     */
     getAuth(): admin.auth.Auth {
         return this.authInstance;
     }
 
+    /**
+     * Retrieves the Firestore database instance.
+     * @returns The Firestore database instance.
+     */
     getFirestore(): Firestore {
         return this.firestoreInstance;
+    }
+
+    /**
+     * Retrieves Firestore FieldValue for serverTimestamp.
+     * @returns The Firestore FieldValue.
+     */
+    getFieldValue(): typeof FieldValue {
+        return FieldValue;
     }
 }

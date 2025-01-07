@@ -1,5 +1,5 @@
 import type { Auth } from "firebase-admin/auth";
-import type { Firestore } from "firebase-admin/firestore";
+import type { Firestore, FieldValue } from "firebase-admin/firestore";
 
 export interface IFirebaseAdmin {
     /**
@@ -13,4 +13,10 @@ export interface IFirebaseAdmin {
      * @returns The Firestore database instance.
      */
     getFirestore(): Firestore;
+
+    /**
+     * Retrieves Firestore FieldValue for serverTimestamp.
+     * @returns The Firestore FieldValue.
+     */
+    getFieldValue(): typeof FieldValue;
 }

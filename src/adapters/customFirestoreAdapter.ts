@@ -1,5 +1,4 @@
-// src/adapters/customFirestoreAdapter.ts
-
+import "reflect-metadata";
 import { injectable, inject } from "tsyringe";
 import {
     Adapter,
@@ -7,39 +6,32 @@ import {
     AdapterAccount,
     AdapterSession,
     VerificationToken,
+    AdapterAuthenticator,
 } from "next-auth/adapters";
 import { TSYRINGE_TOKENS } from "@/constants/tsyringe-tokens";
 
-import type { IFirebaseAdmin } from "@/interfaces/services/IFirebaseAdmin";
 import type { ILoggerService } from "@/interfaces/services/ILoggerService";
-import type { IAuthService } from "@/interfaces/services/IAuthService";
-import type {
-    IAuthenticatorService,
-    IAuthenticator,
-} from "@/interfaces/services/IAuthenticatorService";
-import { FieldValue } from "firebase-admin/firestore";
+import type { IAuthUserService } from "@/interfaces/services/IAuthUserService";
+import type { IAuthAccountService } from "@/interfaces/services/IAuthAccountService";
+import type { IAuthSessionService } from "@/interfaces/services/IAuthSessionService";
+import type { IAuthVerificationTokenService } from "@/interfaces/services/IAuthVerificationTokenService";
+import type { IAuthenticatorService } from "@/interfaces/services/IAuthenticatorService";
 
 @injectable()
 export class CustomFirestoreAdapter implements Adapter {
-    private firebaseAdmin: IFirebaseAdmin;
-    private logger: ILoggerService;
-    private authService: IAuthService;
-    private authenticatorService: IAuthenticatorService;
-    private firestore: ReturnType<IFirebaseAdmin["getFirestore"]>;
-
     constructor(
-        @inject(TSYRINGE_TOKENS.IFirebaseAdmin) firebaseAdmin: IFirebaseAdmin,
-        @inject(TSYRINGE_TOKENS.ILoggerService) logger: ILoggerService,
-        @inject(TSYRINGE_TOKENS.IAuthService) authService: IAuthService,
+        @inject(TSYRINGE_TOKENS.ILoggerService) private logger: ILoggerService,
+        @inject(TSYRINGE_TOKENS.IAuthUserService)
+        private userService: IAuthUserService,
+        @inject(TSYRINGE_TOKENS.IAuthAccountService)
+        private accountService: IAuthAccountService,
+        @inject(TSYRINGE_TOKENS.IAuthSessionService)
+        private sessionService: IAuthSessionService,
+        @inject(TSYRINGE_TOKENS.IAuthVerificationTokenService)
+        private verificationTokenService: IAuthVerificationTokenService,
         @inject(TSYRINGE_TOKENS.IAuthenticatorService)
-        authenticatorService: IAuthenticatorService
-    ) {
-        this.firebaseAdmin = firebaseAdmin;
-        this.logger = logger;
-        this.authService = authService;
-        this.authenticatorService = authenticatorService;
-        this.firestore = this.firebaseAdmin.getFirestore();
-    }
+        private authenticatorService: IAuthenticatorService
+    ) {}
 
     /**
      * Creates a new user in Firestore and Firebase Auth if they don't exist.
@@ -47,38 +39,14 @@ export class CustomFirestoreAdapter implements Adapter {
      * @returns The created AdapterUser.
      */
     async createUser(user: AdapterUser): Promise<AdapterUser> {
-        const { email, name, image } = user;
-
-        let firebaseUser = await this.authService.getUserByEmail(email!);
-        if (!firebaseUser) {
-            firebaseUser = await this.authService.createUser(
-                email!,
-                name || undefined,
-                image || undefined
-            );
+        this.logger.info("Creating user", { user });
+        try {
+            const createdUser = await this.userService.createUser(user);
+            return createdUser;
+        } catch (error) {
+            this.logger.error("Failed to create user", { error });
+            throw error;
         }
-
-        const userDocRef = this.firestore
-            .collection("users")
-            .doc(firebaseUser.uid);
-        await userDocRef.set({
-            email: firebaseUser.email,
-            name: firebaseUser.displayName || name,
-            image: firebaseUser.photoURL || image,
-            emailVerified: firebaseUser.emailVerified,
-            createdAt: FieldValue.serverTimestamp(),
-            updatedAt: FieldValue.serverTimestamp(),
-        });
-
-        return {
-            id: firebaseUser.uid,
-            email: firebaseUser.email,
-            name: firebaseUser.displayName || name,
-            image: firebaseUser.photoURL || image,
-            emailVerified: firebaseUser.emailVerified
-                ? new Date(firebaseUser.metadata?.lastSignInTime ?? Date.now())
-                : null,
-        } as AdapterUser;
     }
 
     /**
@@ -87,19 +55,13 @@ export class CustomFirestoreAdapter implements Adapter {
      * @returns The AdapterUser or null if not found.
      */
     async getUser(id: string): Promise<AdapterUser | null> {
-        const userDoc = await this.firestore.collection("users").doc(id).get();
-        if (!userDoc.exists) return null;
-
-        const data = userDoc.data()!;
-        return {
-            id,
-            email: data.email,
-            name: data.name,
-            image: data.image,
-            emailVerified: data.emailVerified
-                ? new Date(data.emailVerified.seconds * 1000)
-                : null,
-        } as AdapterUser;
+        this.logger.info("Getting user by ID", { id });
+        try {
+            return await this.userService.getUserById(id);
+        } catch (error) {
+            this.logger.error(`Failed to get user with ID ${id}`, { error });
+            throw error;
+        }
     }
 
     /**
@@ -108,25 +70,15 @@ export class CustomFirestoreAdapter implements Adapter {
      * @returns The AdapterUser or null if not found.
      */
     async getUserByEmail(email: string): Promise<AdapterUser | null> {
-        const userCollection = this.firestore.collection("users");
-        const userQuerySnapshot = await userCollection
-            .where("email", "==", email)
-            .limit(1)
-            .get();
-
-        if (userQuerySnapshot.empty) return null;
-
-        const userDoc = userQuerySnapshot.docs[0];
-        const userData = userDoc.data();
-        return {
-            id: userDoc.id,
-            email: userData.email,
-            name: userData.name,
-            image: userData.image,
-            emailVerified: userData.emailVerified
-                ? new Date(userData.emailVerified.seconds * 1000)
-                : null,
-        } as AdapterUser;
+        this.logger.info("Getting user by email", { email });
+        try {
+            return await this.userService.getUserByEmail(email);
+        } catch (error) {
+            this.logger.error(`Failed to get user by email ${email}`, {
+                error,
+            });
+            throw error;
+        }
     }
 
     /**
@@ -141,22 +93,24 @@ export class CustomFirestoreAdapter implements Adapter {
         provider: string;
         providerAccountId: string;
     }): Promise<AdapterUser | null> {
-        const accountsCollection = this.firestore.collection("accounts");
-        const accountQuerySnapshot = await accountsCollection
-            .where("provider", "==", provider)
-            .where("providerAccountId", "==", providerAccountId)
-            .limit(1)
-            .get();
-
-        if (accountQuerySnapshot.empty) return null;
-
-        const accountData = accountQuerySnapshot.docs[0].data();
-        if (!accountData.userId) {
-            throw new Error("Account data does not contain a valid userId.");
+        this.logger.info("Getting user by account", {
+            provider,
+            providerAccountId,
+        });
+        try {
+            return await this.accountService
+                .getAccount(provider, providerAccountId)
+                .then((account) => {
+                    if (!account) return null;
+                    return this.userService.getUserById(account.userId);
+                });
+        } catch (error) {
+            this.logger.error(
+                `Failed to get user by account ${provider}/${providerAccountId}`,
+                { error }
+            );
+            throw error;
         }
-
-        const user = await this.getUser(accountData.userId);
-        return user;
     }
 
     /**
@@ -167,35 +121,15 @@ export class CustomFirestoreAdapter implements Adapter {
     async updateUser(
         user: Partial<AdapterUser> & Pick<AdapterUser, "id">
     ): Promise<AdapterUser> {
-        const userDocRef = this.firestore.collection("users").doc(user.id);
-
-        await userDocRef.update({
-            ...(user.name && { name: user.name }),
-            ...(user.image && { image: user.image }),
-            ...(user.emailVerified !== undefined && {
-                emailVerified: user.emailVerified,
-            }),
-            updatedAt: FieldValue.serverTimestamp(),
-        });
-
-        const updatedDoc = await userDocRef.get();
-        const data = updatedDoc.data();
-
-        if (!data) {
-            throw new Error(
-                `Failed to fetch updated user data for id: ${user.id}`
-            );
+        this.logger.info("Updating user", { user });
+        try {
+            return await this.userService.updateUser(user);
+        } catch (error) {
+            this.logger.error(`Failed to update user with ID ${user.id}`, {
+                error,
+            });
+            throw error;
         }
-
-        return {
-            id: user.id,
-            email: data.email || "",
-            name: data.name || null,
-            image: data.image || null,
-            emailVerified: data.emailVerified
-                ? new Date(data.emailVerified.seconds * 1000)
-                : null,
-        } as AdapterUser;
     }
 
     /**
@@ -203,13 +137,11 @@ export class CustomFirestoreAdapter implements Adapter {
      * @param userId The ID of the user to delete.
      */
     async deleteUser(userId: string): Promise<void> {
+        this.logger.info("Deleting user", { userId });
         try {
-            await this.authService.deleteUser(userId);
-
-            const userDocRef = this.firestore.collection("users").doc(userId);
-            await userDocRef.delete();
+            await this.userService.deleteUser(userId);
         } catch (error) {
-            this.logger.error(`Error deleting user with ID: ${userId}`, {
+            this.logger.error(`Failed to delete user with ID: ${userId}`, {
                 error,
             });
             throw error;
@@ -221,26 +153,9 @@ export class CustomFirestoreAdapter implements Adapter {
      * @param account The account information to link.
      */
     async linkAccount(account: AdapterAccount): Promise<void> {
+        this.logger.info("Linking account", { account });
         try {
-            const accountsCollection = this.firestore.collection("accounts");
-            const accountDocRef = accountsCollection.doc(
-                `${account.provider}-${account.providerAccountId}`
-            );
-
-            await accountDocRef.set({
-                userId: account.userId,
-                type: account.type,
-                provider: account.provider,
-                providerAccountId: account.providerAccountId,
-                access_token: account.access_token || null,
-                refresh_token: account.refresh_token || null,
-                expires_at: account.expires_at || null,
-                token_type: account.token_type || null,
-                scope: account.scope || null,
-                id_token: account.id_token || null,
-                createdAt: FieldValue.serverTimestamp(),
-                updatedAt: FieldValue.serverTimestamp(),
-            });
+            await this.accountService.linkAccount(account);
         } catch (error) {
             this.logger.error("Failed to link account", { error });
             throw error;
@@ -258,13 +173,12 @@ export class CustomFirestoreAdapter implements Adapter {
         provider: string;
         providerAccountId: string;
     }): Promise<void> {
+        this.logger.info("Unlinking account", { provider, providerAccountId });
         try {
-            const accountsCollection = this.firestore.collection("accounts");
-            const accountDocRef = accountsCollection.doc(
-                `${provider}-${providerAccountId}`
-            );
-
-            await accountDocRef.delete();
+            await this.accountService.unlinkAccount({
+                provider,
+                providerAccountId,
+            });
         } catch (error) {
             this.logger.error("Failed to unlink account", { error });
             throw error;
@@ -277,18 +191,9 @@ export class CustomFirestoreAdapter implements Adapter {
      * @returns The created AdapterSession.
      */
     async createSession(session: AdapterSession): Promise<AdapterSession> {
+        this.logger.info("Creating session", { session });
         try {
-            const sessionsCollection = this.firestore.collection("sessions");
-            const sessionDocRef = sessionsCollection.doc(session.sessionToken);
-
-            await sessionDocRef.set({
-                sessionToken: session.sessionToken,
-                userId: session.userId,
-                expires: session.expires,
-                createdAt: FieldValue.serverTimestamp(),
-                updatedAt: FieldValue.serverTimestamp(),
-            });
-
+            await this.sessionService.createSession(session);
             return session;
         } catch (error) {
             this.logger.error("Failed to create session", { error });
@@ -304,23 +209,18 @@ export class CustomFirestoreAdapter implements Adapter {
     async getSessionAndUser(
         sessionToken: string
     ): Promise<{ session: AdapterSession; user: AdapterUser } | null> {
+        this.logger.info("Getting session and user", { sessionToken });
         try {
-            const sessionsCollection = this.firestore.collection("sessions");
-            const sessionDoc = await sessionsCollection.doc(sessionToken).get();
-
-            if (!sessionDoc.exists) return null;
-
-            const sessionData = sessionDoc.data()!;
-            const user = await this.getUser(sessionData.userId);
-
+            const sessionData = await this.sessionService.getSessionAndUser(
+                sessionToken
+            );
+            if (!sessionData) return null;
+            const user = await this.userService.getUserById(
+                sessionData.user.id
+            );
             if (!user) return null;
-
             return {
-                session: {
-                    sessionToken: sessionData.sessionToken,
-                    userId: sessionData.userId,
-                    expires: sessionData.expires.toDate(),
-                },
+                session: sessionData.session,
                 user,
             };
         } catch (error) {
@@ -336,26 +236,10 @@ export class CustomFirestoreAdapter implements Adapter {
      */
     async updateSession(
         session: Partial<AdapterSession> & Pick<AdapterSession, "sessionToken">
-    ): Promise<AdapterSession | null | undefined> {
+    ): Promise<AdapterSession | null> {
+        this.logger.info("Updating session", { session });
         try {
-            const sessionsCollection = this.firestore.collection("sessions");
-            const sessionDocRef = sessionsCollection.doc(session.sessionToken);
-
-            await sessionDocRef.update({
-                ...(session.userId && { userId: session.userId }),
-                ...(session.expires && { expires: session.expires }),
-                updatedAt: FieldValue.serverTimestamp(),
-            });
-
-            const updatedDoc = await sessionDocRef.get();
-            if (!updatedDoc.exists) return null;
-
-            const data = updatedDoc.data()!;
-            return {
-                sessionToken: data.sessionToken,
-                userId: data.userId,
-                expires: data.expires.toDate(),
-            } as AdapterSession;
+            return await this.sessionService.updateSession(session);
         } catch (error) {
             this.logger.error("Failed to update session", { error });
             throw error;
@@ -367,11 +251,9 @@ export class CustomFirestoreAdapter implements Adapter {
      * @param sessionToken The session token to delete.
      */
     async deleteSession(sessionToken: string): Promise<void> {
+        this.logger.info("Deleting session", { sessionToken });
         try {
-            const sessionsCollection = this.firestore.collection("sessions");
-            const sessionDocRef = sessionsCollection.doc(sessionToken);
-
-            await sessionDocRef.delete();
+            await this.sessionService.deleteSession(sessionToken);
         } catch (error) {
             this.logger.error("Failed to delete session", { error });
             throw error;
@@ -385,24 +267,12 @@ export class CustomFirestoreAdapter implements Adapter {
      */
     async createVerificationToken(
         verificationToken: VerificationToken
-    ): Promise<VerificationToken | null | undefined> {
+    ): Promise<VerificationToken> {
+        this.logger.info("Creating verification token", { verificationToken });
         try {
-            const verificationRequestsCollection = this.firestore.collection(
-                "verificationRequests"
+            return await this.verificationTokenService.createVerificationToken(
+                verificationToken
             );
-            const verificationDocRef = verificationRequestsCollection.doc(
-                verificationToken.identifier
-            );
-
-            await verificationDocRef.set({
-                identifier: verificationToken.identifier,
-                token: verificationToken.token,
-                expires: verificationToken.expires,
-                createdAt: FieldValue.serverTimestamp(),
-                updatedAt: FieldValue.serverTimestamp(),
-            });
-
-            return verificationToken;
         } catch (error) {
             this.logger.error("Failed to create verification token", { error });
             throw error;
@@ -418,26 +288,11 @@ export class CustomFirestoreAdapter implements Adapter {
         identifier: string;
         token: string;
     }): Promise<VerificationToken | null> {
+        this.logger.info("Using verification token", { params });
         try {
-            const verificationRequestsCollection = this.firestore.collection(
-                "verificationRequests"
+            return await this.verificationTokenService.useVerificationToken(
+                params
             );
-            const verificationDoc = await verificationRequestsCollection
-                .doc(params.identifier)
-                .get();
-
-            if (!verificationDoc.exists) return null;
-
-            const verificationData = verificationDoc.data()!;
-            if (verificationData.token !== params.token) return null;
-            if (verificationData.expires.toDate() < new Date()) return null;
-
-            // Delete the verification token after use
-            await verificationRequestsCollection
-                .doc(params.identifier)
-                .delete();
-
-            return verificationData as VerificationToken;
         } catch (error) {
             this.logger.error("Failed to use verification token", { error });
             throw error;
@@ -454,29 +309,12 @@ export class CustomFirestoreAdapter implements Adapter {
         providerAccountId: string,
         provider: string
     ): Promise<AdapterAccount | null> {
+        this.logger.info("Getting account", { provider, providerAccountId });
         try {
-            const accountsCollection = this.firestore.collection("accounts");
-            const accountDoc = await accountsCollection
-                .doc(`${provider}-${providerAccountId}`)
-                .get();
-
-            if (!accountDoc.exists) return null;
-
-            const accountData = accountDoc.data()!;
-            if (accountData.provider !== provider) return null;
-
-            return {
-                type: accountData.type,
-                provider: accountData.provider,
-                providerAccountId: accountData.providerAccountId,
-                userId: accountData.userId,
-                access_token: accountData.access_token || null,
-                refresh_token: accountData.refresh_token || null,
-                expires_at: accountData.expires_at || null,
-                token_type: accountData.token_type || null,
-                scope: accountData.scope || null,
-                id_token: accountData.id_token || null,
-            } as AdapterAccount;
+            return await this.accountService.getAccount(
+                provider,
+                providerAccountId
+            );
         } catch (error) {
             this.logger.error("Failed to get account", { error });
             throw error;
@@ -484,53 +322,86 @@ export class CustomFirestoreAdapter implements Adapter {
     }
 
     /**
-     * Retrieves an authenticator by its credential ID.
+     * Retrieves an authenticator by its credentialID.
      * @param credentialID The credential ID.
-     * @returns The IAuthenticator or null if not found.
+     * @returns The AdapterAuthenticator or null if not found.
      */
     async getAuthenticator(
         credentialID: string
-    ): Promise<IAuthenticator | null> {
-        return this.authenticatorService.getAuthenticator(credentialID);
+    ): Promise<AdapterAuthenticator | null> {
+        this.logger.info("Getting authenticator", { credentialID });
+        try {
+            return await this.authenticatorService.getAuthenticator(
+                credentialID
+            );
+        } catch (error) {
+            this.logger.error("Failed to get authenticator", { error });
+            throw error;
+        }
     }
 
     /**
      * Creates a new authenticator.
      * @param authenticator The authenticator to create.
-     * @returns The created IAuthenticator.
+     * @returns The created AdapterAuthenticator.
      */
     async createAuthenticator(
-        authenticator: Omit<IAuthenticator, "id">
-    ): Promise<IAuthenticator> {
-        return this.authenticatorService.createAuthenticator(authenticator);
+        authenticator: AdapterAuthenticator
+    ): Promise<AdapterAuthenticator> {
+        this.logger.info("Creating authenticator", { authenticator });
+        try {
+            return await this.authenticatorService.createAuthenticator(
+                authenticator
+            );
+        } catch (error) {
+            this.logger.error("Failed to create authenticator", { error });
+            throw error;
+        }
     }
 
     /**
      * Lists all authenticators associated with a user ID.
      * @param userId The user ID.
-     * @returns An array of IAuthenticator.
+     * @returns An array of AdapterAuthenticator.
      */
     async listAuthenticatorsByUserId(
         userId: string
-    ): Promise<IAuthenticator[]> {
-        return this.authenticatorService.listAuthenticatorsByUserId(userId);
+    ): Promise<AdapterAuthenticator[]> {
+        this.logger.info("Listing authenticators by user ID", { userId });
+        try {
+            return await this.authenticatorService.listAuthenticatorsByUserId(
+                userId
+            );
+        } catch (error) {
+            this.logger.error("Failed to list authenticators", { error });
+            throw error;
+        }
     }
 
     /**
-     * Updates the counter for a specific authenticator.
+     * Updates an authenticator's counter.
      * @param credentialID The credential ID.
      * @param newCounter The new counter value.
-     * @returns The updated IAuthenticator or null if not found.
+     * @returns The updated AdapterAuthenticator.
      */
     async updateAuthenticatorCounter(
         credentialID: string,
         newCounter: number
-    ): Promise<IAuthenticator | null> {
-        return this.authenticatorService.updateAuthenticatorCounter(
+    ): Promise<AdapterAuthenticator> {
+        this.logger.info("Updating authenticator counter", {
             credentialID,
-            newCounter
-        );
+            newCounter,
+        });
+        try {
+            return await this.authenticatorService.updateAuthenticatorCounter(
+                credentialID,
+                newCounter
+            );
+        } catch (error) {
+            this.logger.error("Failed to update authenticator counter", {
+                error,
+            });
+            throw error;
+        }
     }
-
-    // Implement other methods as needed with proper types and comments
 }

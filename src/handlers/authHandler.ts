@@ -4,16 +4,18 @@ import GoogleProvider from "@auth/core/providers/google";
 import { container } from "tsyringe";
 import type { ILoggerService } from "@/interfaces/services/ILoggerService";
 import { CustomFirestoreAdapter } from "@/adapters/customFirestoreAdapter";
+import { TSYRINGE_TOKENS } from "@/constants/tsyringe-tokens";
+import { Adapter } from "next-auth/adapters";
 
-// カスタムアダプターの初期化とログ出力
-const adapter = container.resolve(CustomFirestoreAdapter);
-
+const adapter = container.resolve<CustomFirestoreAdapter>(
+    TSYRINGE_TOKENS.CustomFirestoreAdapter
+);
 // Optional: Log adapter properties for debugging
 console.log("Adapter keys:", Object.keys(adapter));
+console.log("Adapter prototype:", Object.getPrototypeOf(adapter));
 // console.log(`AUTH_SECRET: ${process.env.AUTH_SECRET}`)
 
 export const authOptions: NextAuthConfig = {
-    // `AuthConfig` を使用
     // debug: true,
     adapter: adapter,
     providers: [

@@ -1,73 +1,52 @@
-import { injectable } from "tsyringe";
-import {
-    IAuthenticatorService,
-    IAuthenticator,
-} from "@/interfaces/services/IAuthenticatorService";
-import { firestore } from "@/lib/firebaseAdmin"; // TODO >> ensure this exports the initialized Firestore
-import { FieldValue } from "firebase-admin/firestore";
+import { injectable, inject } from "tsyringe";
+import { IAuthenticatorService } from "@/interfaces/services/IAuthenticatorService";
+import type { IAuthenticatorRepository } from "@/interfaces/repositories/IAuthenticatorRepository";
+import { AdapterAuthenticator } from "next-auth/adapters";
+import { TSYRINGE_TOKENS } from "@/constants/tsyringe-tokens";
 
 @injectable()
 export class AuthenticatorService implements IAuthenticatorService {
+    constructor(
+        @inject(TSYRINGE_TOKENS.IAuthenticatorRepository)
+        private authenticatorRepository: IAuthenticatorRepository
+    ) {}
+
     /**
      * Retrieves an authenticator by its credential ID.
      * @param credentialID The credential ID.
-     * @returns The IAuthenticator or null if not found.
+     * @returns The AdapterAuthenticator or null if not found.
      */
     async getAuthenticator(
         credentialID: string
-    ): Promise<IAuthenticator | null> {
-        const authDoc = await firestore
-            .collection("authenticators")
-            .doc(credentialID)
-            .get();
-        if (!authDoc.exists) return null;
-
-        return {
-            id: authDoc.id,
-            ...(authDoc.data() as Omit<IAuthenticator, "id">),
-        } as IAuthenticator;
+    ): Promise<AdapterAuthenticator | null> {
+        return await this.authenticatorRepository.getAuthenticator(
+            credentialID
+        );
     }
 
     /**
      * Creates a new authenticator.
-     * @param authenticator The authenticator to create (excluding id).
-     * @returns The created IAuthenticator.
+     * @param authenticator The authenticator to create.
+     * @returns The created AdapterAuthenticator.
      */
     async createAuthenticator(
-        authenticator: Omit<IAuthenticator, "id">
-    ): Promise<IAuthenticator> {
-        const authDocRef = firestore.collection("authenticators").doc();
-        await authDocRef.set({
-            ...authenticator,
-            createdAt: FieldValue.serverTimestamp(),
-            updatedAt: FieldValue.serverTimestamp(),
-        });
-
-        const createdDoc = await authDocRef.get();
-        return {
-            id: createdDoc.id,
-            ...(createdDoc.data() as Omit<IAuthenticator, "id">),
-        } as IAuthenticator;
+        authenticator: Omit<AdapterAuthenticator, "id"> & { userId: string }
+    ): Promise<AdapterAuthenticator> {
+        return await this.authenticatorRepository.createAuthenticator(
+            authenticator
+        );
     }
 
     /**
      * Lists all authenticators associated with a user ID.
      * @param userId The user ID.
-     * @returns An array of IAuthenticator.
+     * @returns An array of AdapterAuthenticator.
      */
     async listAuthenticatorsByUserId(
         userId: string
-    ): Promise<IAuthenticator[]> {
-        const authQuerySnapshot = await firestore
-            .collection("authenticators")
-            .where("userId", "==", userId)
-            .get();
-        return authQuerySnapshot.docs.map(
-            (doc) =>
-                ({
-                    id: doc.id,
-                    ...(doc.data() as Omit<IAuthenticator, "id">),
-                } as IAuthenticator)
+    ): Promise<AdapterAuthenticator[]> {
+        return await this.authenticatorRepository.listAuthenticatorsByUserId(
+            userId
         );
     }
 
@@ -75,26 +54,15 @@ export class AuthenticatorService implements IAuthenticatorService {
      * Updates the counter for a specific authenticator.
      * @param credentialID The credential ID.
      * @param newCounter The new counter value.
-     * @returns The updated IAuthenticator or null if not found.
+     * @returns The updated AdapterAuthenticator.
      */
     async updateAuthenticatorCounter(
         credentialID: string,
         newCounter: number
-    ): Promise<IAuthenticator | null> {
-        const authDocRef = firestore
-            .collection("authenticators")
-            .doc(credentialID);
-        await authDocRef.update({
-            counter: newCounter,
-            updatedAt: FieldValue.serverTimestamp(),
-        });
-
-        const updatedDoc = await authDocRef.get();
-        if (!updatedDoc.exists) return null;
-
-        return {
-            id: updatedDoc.id,
-            ...(updatedDoc.data() as Omit<IAuthenticator, "id">),
-        } as IAuthenticator;
+    ): Promise<AdapterAuthenticator> {
+        return await this.authenticatorRepository.updateAuthenticatorCounter(
+            credentialID,
+            newCounter
+        );
     }
 }

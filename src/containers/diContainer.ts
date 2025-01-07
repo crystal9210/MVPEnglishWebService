@@ -1,3 +1,4 @@
+/* src/containers/diContainer.ts */
 // インターフェース群 (type importでdecoratorエラー回避)
 import "reflect-metadata";
 import { container } from "tsyringe";
@@ -14,7 +15,7 @@ import type { IProblemService } from "@/interfaces/services/IProblemService";
 import type { ISubscriptionService } from "@/interfaces/services/ISubscriptionService";
 import type { IActivityService } from "@/interfaces/services/IActivityService";
 
-import type { IAccountRepository } from "@/interfaces/repositories/IAccountRepository";
+import type { IAuthAccountRepository } from "@/interfaces/repositories/IAuthAccountRepository";
 import type { IUserRepository } from "@/interfaces/repositories/IUserRepository";
 import type { IProblemRepository } from "@/interfaces/repositories/IProblemRepository";
 import type { IProfileRepository } from "@/interfaces/repositories/IProfileRepository";
@@ -43,7 +44,6 @@ import { ProblemRepository } from "@/domain/repositories/problemRepository";
 import { ProfileRepository } from "@/domain/repositories/userProfileRepository";
 import { UserHistoryRepository } from "@/domain/repositories/userHistoryRepository";
 import { SubscriptionRepository } from "@/domain/repositories/subscriptionRepository";
-import { AccountRepository } from "@/domain/repositories/accountRepository";
 import { ActivitySessionRepository } from "@/domain/repositories/activitySessionRepository";
 
 import { BatchOperations } from "@/utils/batchOperations";
@@ -57,86 +57,174 @@ import {
 import { RAGService } from "@/domain/services/serverSide/RAGService";
 import { OpenAI } from "@/lib/openai";
 import { IOpenAIClient } from "@/interfaces/services/openai/IOpenAIClient";
+import { AuthAccountRepository } from "@/domain/repositories/authAccountRepository";
+import { IAuthAccountService } from "@/interfaces/services/IAuthAccountService";
+import { AuthAccountService } from "@/domain/services/authAccountService";
+import { Adapter } from "next-auth/adapters";
+import { CustomFirestoreAdapter } from "@/adapters/customFirestoreAdapter";
+import { IAuthUserRepository } from "@/interfaces/repositories/IAuthUserRepository";
+import { AuthUserRepository } from "@/domain/repositories/authUserRepository";
+import { IAuthVerificationTokenRepository } from "@/interfaces/repositories/IAuthVerificationTokenRepository";
+import { AuthVerificationTokenRepository } from "@/domain/repositories/authVerificationTokenRepository";
+import { IAuthSessionRepository } from "@/interfaces/repositories/IAuthSessionRepository";
+import { AuthSessionRepository } from "@/domain/repositories/authSessionRepository";
+import { IAuthenticatorRepository } from "@/interfaces/repositories/IAuthenticatorRepository";
+import { AuthenticatorRepository } from "@/domain/repositories/authenticatorRepository";
+import { IAuthenticatorService } from "@/interfaces/services/IAuthenticatorService";
+import { AuthenticatorService } from "@/domain/services/authenticatorService";
+import { IAuthUserService } from "@/interfaces/services/IAuthUserService";
+import { AuthUserService } from "@/domain/services/authUserService";
+import { IAuthVerificationTokenService } from "@/interfaces/services/IAuthVerificationTokenService";
+import { IAuthSessionService } from "@/interfaces/services/IAuthSessionService";
+import { AuthSessionService } from "@/domain/services/authSessionService";
+import { AuthVerificationTokenService } from "@/domain/services/authVerificationTokenService";
+
+// トークン定義のインポート
+import { TSYRINGE_TOKENS } from "@/constants/tsyringe-tokens";
 
 // Utility
 // 最初に他のサービスに依存しないサービスを登録 - tsyringeの仕様
-container.registerSingleton<ILoggerService>("ILoggerService", LoggerService);
-container.registerSingleton<IFirebaseAdmin>("IFirebaseAdmin", FirebaseAdmin);
+container.registerSingleton<ILoggerService>(
+    TSYRINGE_TOKENS.ILoggerService,
+    LoggerService
+);
+container.registerSingleton<IFirebaseAdmin>(
+    TSYRINGE_TOKENS.IFirebaseAdmin,
+    FirebaseAdmin
+);
 container.registerSingleton(BatchOperations);
 container.registerSingleton(RetryService);
 
 // Repositories
-container.registerSingleton<IAccountRepository>(
-    "IAccountRepository",
-    AccountRepository
+container.registerSingleton<IUserRepository>(
+    TSYRINGE_TOKENS.IUserRepository,
+    UserRepository
 );
-container.registerSingleton<IUserRepository>("IUserRepository", UserRepository);
 container.registerSingleton<IProblemRepository>(
-    "IProblemRepository",
+    TSYRINGE_TOKENS.IProblemRepository,
     ProblemRepository
 );
 container.registerSingleton<IProfileRepository>(
-    "IProfileRepository",
+    TSYRINGE_TOKENS.IProfileRepository,
     ProfileRepository
 );
 container.registerSingleton<IUserHistoryRepository>(
-    "IUserHistoryRepository",
+    TSYRINGE_TOKENS.IUserHistoryRepository,
     UserHistoryRepository
 );
 container.registerSingleton<ISubscriptionRepository>(
-    "ISubscriptionRepository",
+    TSYRINGE_TOKENS.ISubscriptionRepository,
     SubscriptionRepository
 );
 container.registerSingleton<IActivitySessionRepository>(
-    "IActivitySessionRepository",
+    TSYRINGE_TOKENS.IActivitySessionRepository,
     ActivitySessionRepository
 );
 
 // Services
-container.registerSingleton<IAuthService>("IAuthService", AuthService);
-container.registerSingleton<IUserService>("IUserService", UserService);
+container.registerSingleton<IAuthService>(
+    TSYRINGE_TOKENS.IAuthService,
+    AuthService
+);
+container.registerSingleton<IUserService>(
+    TSYRINGE_TOKENS.IUserService,
+    UserService
+);
 container.registerSingleton<IUserProfileService>(
-    "IUserProfileService",
+    TSYRINGE_TOKENS.IUserProfileService,
     UserProfileService
 );
 container.registerSingleton<IUserHistoryService>(
-    "IUserHistoryService",
+    TSYRINGE_TOKENS.IUserHistoryService,
     UserHistoryService
 );
 container.registerSingleton<IUserBookmarkService>(
-    "IUserBookmarkService",
+    TSYRINGE_TOKENS.IUserBookmarkService,
     UserBookmarkService
 );
-container.registerSingleton<IProblemService>("IProblemService", ProblemService);
+container.registerSingleton<IProblemService>(
+    TSYRINGE_TOKENS.IProblemService,
+    ProblemService
+);
 container.registerSingleton<ISubscriptionService>(
-    "ISubscriptionService",
+    TSYRINGE_TOKENS.ISubscriptionService,
     SubscriptionService
 );
 container.registerSingleton<IActivityService>(
-    "IActivityService",
+    TSYRINGE_TOKENS.IActivityService,
     ActivityService
 );
 
+// Register existing services
 const llmOptions: LLMServiceOptions = {
     openai: {
         apiKey: process.env.OPENAI_API_KEY || "",
     },
 };
 
-container.register<LLMServiceOptions>("LLMServiceOptions", {
+container.register<LLMServiceOptions>(TSYRINGE_TOKENS.LLMServiceOptions, {
     useValue: llmOptions,
 });
 
-container.register<IOpenAIClient>("IOpenAIClient", {
+container.register<IOpenAIClient>(TSYRINGE_TOKENS.IOpenAIClient, {
     useClass: OpenAI,
 });
 
-container.register<ILLMService>("ILLMService", LLMService);
+container.register<ILLMService>(TSYRINGE_TOKENS.ILLMService, LLMService);
 container.register<IEmbeddingRepository>(
-    "IEmbeddingRepository",
+    TSYRINGE_TOKENS.IEmbeddingRepository,
     EmbeddingRepository
 );
-container.register<IRAGService>("IRAGService", RAGService);
+container.register<IRAGService>(TSYRINGE_TOKENS.IRAGService, RAGService);
+
+// auth系サービス・リポジトリ登録
+container.registerSingleton<IAuthenticatorRepository>(
+    TSYRINGE_TOKENS.IAuthenticatorRepository,
+    AuthenticatorRepository
+);
+container.registerSingleton<IAuthUserRepository>(
+    TSYRINGE_TOKENS.IAuthUserRepository,
+    AuthUserRepository
+);
+container.registerSingleton<IAuthAccountRepository>(
+    TSYRINGE_TOKENS.IAuthAccountRepository,
+    AuthAccountRepository
+);
+container.registerSingleton<IAuthVerificationTokenRepository>(
+    TSYRINGE_TOKENS.IAuthVerificationTokenRepository,
+    AuthVerificationTokenRepository
+);
+container.registerSingleton<IAuthSessionRepository>(
+    TSYRINGE_TOKENS.IAuthSessionRepository,
+    AuthSessionRepository
+);
+
+container.registerSingleton<IAuthAccountService>(
+    TSYRINGE_TOKENS.IAuthAccountService,
+    AuthAccountService
+);
+container.registerSingleton<IAuthenticatorService>(
+    TSYRINGE_TOKENS.IAuthenticatorService,
+    AuthenticatorService
+);
+container.registerSingleton<IAuthUserService>(
+    TSYRINGE_TOKENS.IAuthUserService,
+    AuthUserService
+);
+container.registerSingleton<IAuthVerificationTokenService>(
+    TSYRINGE_TOKENS.IAuthVerificationTokenService,
+    AuthVerificationTokenService
+);
+container.registerSingleton<IAuthSessionService>(
+    TSYRINGE_TOKENS.IAuthSessionService,
+    AuthSessionService
+);
+
+// CustomFirestoreAdapter登録
+container.registerSingleton<CustomFirestoreAdapter>(
+    TSYRINGE_TOKENS.CustomFirestoreAdapter,
+    CustomFirestoreAdapter
+);
 
 export { container };
 
