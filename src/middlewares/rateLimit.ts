@@ -3,6 +3,7 @@
  * - Uses a combination of IP, user ID, and fingerprint for caching.
  * - Detects suspicious patterns like rapid changes in IPs or fingerprints.
  */
+/* eslint-disable no-unused-vars */
 import { NextRequest, NextResponse } from "next/server";
 import { LRUCache } from "lru-cache";
 import { createHash } from "crypto";
