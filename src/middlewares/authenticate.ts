@@ -1,33 +1,37 @@
-import { NextResponse, NextRequest } from 'next/server';
-import { getToken } from 'next-auth/jwt';
+import { NextRequest, NextResponse } from "next/server";
+import { getToken } from "next-auth/jwt";
+import { isDev } from "@/config/envConfig";
+import { getClientIp } from "./utils";
 
 /**
- * 認証ミドルウェア
- * @param req NextRequest
- * @returns NextResponse | undefined
+ * 認証ミドルウェア: next-auth で発行されたJWTを検証
  */
 export async function authenticateMiddleware(req: NextRequest) {
-    const token = await getToken({ req, secret: process.env.AUTH_SECRET! });
-    console.log(`debugging token in middleware: ${JSON.stringify(token, null, 2)}`);
-    const { pathname } = req.nextUrl;
-    console.log(`debugging pathname in middleware: ${pathname}`);
+    // デバッグ：クライアントIP
+    if (isDev) {
+        console.log("[authenticateMiddleware] client IP=", getClientIp(req));
+    }
 
-    // 認証不要なパス
-    const publicPaths = ['/api/auth', '/register', '/signIn'];
-    if (publicPaths.some(path => pathname.startsWith(path))) {
+    // トークン取得
+    const token = await getToken({ req, secret: process.env.AUTH_SECRET! });
+
+    // 認証不要パスはスキップ
+    const publicPaths = ["/api/auth", "/register", "/signIn"];
+    if (publicPaths.some((path) => req.nextUrl.pathname.startsWith(path))) {
         return NextResponse.next();
     }
 
-    // TODO sub調査・調整、token詳細設計反映
-    if (!token || !token.sub) { // 'sub' は標準的なJWTクレーム
-        const signInUrl = new URL('/signIn', req.url);
-        return NextResponse.redirect(signInUrl);
+    // トークンが無い or token.sub が無ければ未認証
+    if (!token || !token.sub) {
+        return NextResponse.redirect(new URL("/signIn", req.url));
     }
 
-    // ユーザーIDをヘッダーに添付
-    const userId = token.sub as string;
-    if (userId) {
-        req.headers.set('x-user-id', userId);
+    // 認証済み >> ユーザーIDをヘッダーにセット
+    req.headers.set("x-user-id", token.sub);
+
+    // ログ: tokenの中身を出したい場合
+    if (isDev) {
+        console.log("[authenticateMiddleware] token:", token);
     }
 
     return NextResponse.next();

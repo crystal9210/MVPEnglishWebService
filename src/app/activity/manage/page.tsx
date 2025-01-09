@@ -5,7 +5,7 @@
 // import { ClientActivitySessionType } from "@/schemas/activity/clientSide/clientActivitySessionSchema";
 // import { ClientActivitySessionHistoryItem } from "@/domain/entities/clientSide/activitySessionHistoryItem";
 
-// interface ClientActivitySession extends ClientActivitySessionType{}
+// interface ClientActivitySession extends ClientActivitySessionType {}
 
 // const ManageActivityPage = () => {
 //     const {
@@ -14,10 +14,16 @@
 //         updateSession,
 //         getAllHistory,
 //         deleteHistoryItem,
-//         updateHistoryItem
+//         updateHistoryItem,
 //     } = useActivity();
 //     const [sessions, setSessions] = useState<ClientActivitySession[]>([]);
-//     const [history, setHistory] = useState<{ id: number; sessionId: string; historyItem: ClientActivitySessionHistoryItem }[]>([]);
+//     const [history, setHistory] = useState<
+//         {
+//             id: number;
+//             sessionId: string;
+//             historyItem: ClientActivitySessionHistoryItem;
+//         }[]
+//     >([]);
 //     const [loading, setLoading] = useState<boolean>(true);
 //     const [error, setError] = useState<string | null>(null);
 
@@ -42,7 +48,9 @@
 //         if (confirm(`セッションID ${sessionId} を本当に削除しますか？`)) {
 //             try {
 //                 await deleteSession(sessionId);
-//                 setSessions(prev => prev.filter(session => session.sessionId !== sessionId));
+//                 setSessions((prev) =>
+//                     prev.filter((session) => session.sessionId !== sessionId)
+//                 );
 //                 alert("セッションを削除しました。");
 //             } catch (err) {
 //                 console.error(err);
@@ -55,17 +63,19 @@
 //         const newGoal = prompt("新しいゴールを入力してください:");
 //         if (newGoal) {
 //             try {
-//                 const session = sessions.find(s => s.sessionId === sessionId);
+//                 const session = sessions.find((s) => s.sessionId === sessionId);
 //                 if (!session) {
 //                     throw new Error("セッションが見つかりません。");
 //                 }
 //                 const updatedProblemSet = {
 //                     ...session.problemSet,
-//                     goal: newGoal
+//                     goal: newGoal,
 //                 };
-//                 await updateSession(sessionId, { problemSet: updatedProblemSet });
-//                 setSessions(prev =>
-//                     prev.map(session =>
+//                 await updateSession(sessionId, {
+//                     problemSet: updatedProblemSet,
+//                 });
+//                 setSessions((prev) =>
+//                     prev.map((session) =>
 //                         session.sessionId === sessionId
 //                             ? { ...session, problemSet: updatedProblemSet }
 //                             : session
@@ -83,7 +93,7 @@
 //         if (confirm(`履歴ID ${id} を本当に削除しますか？`)) {
 //             try {
 //                 await deleteHistoryItem(id);
-//                 setHistory(prev => prev.filter(item => item.id !== id));
+//                 setHistory((prev) => prev.filter((item) => item.id !== id));
 //                 alert("履歴を削除しました。");
 //             } catch (err) {
 //                 console.error(err);
@@ -93,14 +103,25 @@
 //     };
 
 //     const handleUpdateHistoryItem = async (id: number) => {
-//         const newResult = prompt("結果を 'correct' または 'incorrect' に更新してください:");
-//         if (newResult && (newResult === "correct" || newResult === "incorrect")) {
+//         const newResult = prompt(
+//             "結果を 'correct' または 'incorrect' に更新してください:"
+//         );
+//         if (
+//             newResult &&
+//             (newResult === "correct" || newResult === "incorrect")
+//         ) {
 //             try {
 //                 await updateHistoryItem(id, { result: newResult });
-//                 setHistory(prev =>
-//                     prev.map(item =>
+//                 setHistory((prev) =>
+//                     prev.map((item) =>
 //                         item.id === id
-//                             ? { ...item, historyItem: { ...item.historyItem, result: newResult } }
+//                             ? {
+//                                   ...item,
+//                                   historyItem: {
+//                                       ...item.historyItem,
+//                                       result: newResult,
+//                                   },
+//                               }
 //                             : item
 //                     )
 //                 );
@@ -129,27 +150,47 @@
 //                     <table className="min-w-full bg-white">
 //                         <thead>
 //                             <tr>
-//                                 <th className="py-2 px-4 border-b">Session ID</th>
-//                                 <th className="py-2 px-4 border-b">Started At</th>
+//                                 <th className="py-2 px-4 border-b">
+//                                     Session ID
+//                                 </th>
+//                                 <th className="py-2 px-4 border-b">
+//                                     Started At
+//                                 </th>
 //                                 <th className="py-2 px-4 border-b">Goal</th>
 //                                 <th className="py-2 px-4 border-b">Actions</th>
 //                             </tr>
 //                         </thead>
 //                         <tbody>
-//                             {sessions.map(session => (
+//                             {sessions.map((session) => (
 //                                 <tr key={session.sessionId}>
-//                                     <td className="py-2 px-4 border-b">{session.sessionId}</td>
-//                                     <td className="py-2 px-4 border-b">{new Date(session.startedAt).toLocaleString()}</td>
-//                                     <td className="py-2 px-4 border-b">{session.problemSet.goal}</td>
+//                                     <td className="py-2 px-4 border-b">
+//                                         {session.sessionId}
+//                                     </td>
+//                                     <td className="py-2 px-4 border-b">
+//                                         {new Date(
+//                                             session.startedAt
+//                                         ).toLocaleString()}
+//                                     </td>
+//                                     <td className="py-2 px-4 border-b">
+//                                         {session.problemSet.goal}
+//                                     </td>
 //                                     <td className="py-2 px-4 border-b">
 //                                         <button
-//                                             onClick={() => handleUpdateSession(session.sessionId)}
+//                                             onClick={() =>
+//                                                 handleUpdateSession(
+//                                                     session.sessionId
+//                                                 )
+//                                             }
 //                                             className="bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 rounded mr-2"
 //                                         >
 //                                             更新
 //                                         </button>
 //                                         <button
-//                                             onClick={() => handleDeleteSession(session.sessionId)}
+//                                             onClick={() =>
+//                                                 handleDeleteSession(
+//                                                     session.sessionId
+//                                                 )
+//                                             }
 //                                             className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded"
 //                                         >
 //                                             削除
@@ -170,33 +211,59 @@
 //                     <table className="min-w-full bg-white">
 //                         <thead>
 //                             <tr>
-//                                 <th className="py-2 px-4 border-b">History ID</th>
-//                                 <th className="py-2 px-4 border-b">Session ID</th>
-//                                 <th className="py-2 px-4 border-b">Problem ID</th>
+//                                 <th className="py-2 px-4 border-b">
+//                                     History ID
+//                                 </th>
+//                                 <th className="py-2 px-4 border-b">
+//                                     Session ID
+//                                 </th>
+//                                 <th className="py-2 px-4 border-b">
+//                                     Problem ID
+//                                 </th>
 //                                 <th className="py-2 px-4 border-b">Result</th>
 //                                 <th className="py-2 px-4 border-b">Attempts</th>
-//                                 <th className="py-2 px-4 border-b">Last Attempt</th>
+//                                 <th className="py-2 px-4 border-b">
+//                                     Last Attempt
+//                                 </th>
 //                                 <th className="py-2 px-4 border-b">Actions</th>
 //                             </tr>
 //                         </thead>
 //                         <tbody>
-//                             {history.map(item => (
+//                             {history.map((item) => (
 //                                 <tr key={item.id}>
-//                                     <td className="py-2 px-4 border-b">{item.id}</td>
-//                                     <td className="py-2 px-4 border-b">{item.sessionId}</td>
-//                                     <td className="py-2 px-4 border-b">{item.historyItem.problemId}</td>
-//                                     <td className="py-2 px-4 border-b">{item.historyItem.result}</td>
-//                                     <td className="py-2 px-4 border-b">{item.historyItem.attempts}</td>
-//                                     <td className="py-2 px-4 border-b">{new Date(item.historyItem.lastAttemptAt).toLocaleString()}</td>
+//                                     <td className="py-2 px-4 border-b">
+//                                         {item.id}
+//                                     </td>
+//                                     <td className="py-2 px-4 border-b">
+//                                         {item.sessionId}
+//                                     </td>
+//                                     <td className="py-2 px-4 border-b">
+//                                         {item.historyItem.problemId}
+//                                     </td>
+//                                     <td className="py-2 px-4 border-b">
+//                                         {item.historyItem.result}
+//                                     </td>
+//                                     <td className="py-2 px-4 border-b">
+//                                         {item.historyItem.attempts}
+//                                     </td>
+//                                     <td className="py-2 px-4 border-b">
+//                                         {new Date(
+//                                             item.historyItem.lastAttemptAt
+//                                         ).toLocaleString()}
+//                                     </td>
 //                                     <td className="py-2 px-4 border-b">
 //                                         <button
-//                                             onClick={() => handleUpdateHistoryItem(item.id)}
+//                                             onClick={() =>
+//                                                 handleUpdateHistoryItem(item.id)
+//                                             }
 //                                             className="bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 rounded mr-2"
 //                                         >
 //                                             更新
 //                                         </button>
 //                                         <button
-//                                             onClick={() => handleDeleteHistoryItem(item.id)}
+//                                             onClick={() =>
+//                                                 handleDeleteHistoryItem(item.id)
+//                                             }
 //                                             className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded"
 //                                         >
 //                                             削除

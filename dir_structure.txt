@@ -19,6 +19,9 @@
 ├── private.key.base64
 ├── public
 │   ├── file.svg
+│   ├── fonts
+│   │   ├── Arial.ttf
+│   │   └── Roboto-Regular.ttf
 │   ├── globe.svg
 │   ├── images
 │   │   └── basis
@@ -66,7 +69,8 @@
 │   │           ├── retryService.test.ts
 │   │           └── userService.test.ts
 │   ├── adapters
-│   │   └── customFirestoreAdapter.ts
+│   │   ├── customFirestoreAdapter.ts
+│   │   └── customFirestoreAdapterWrapper.ts
 │   ├── app
 │   │   ├── _components
 │   │   │   ├── activity
@@ -122,6 +126,12 @@
 │   │   │   ├── confirm-registration
 │   │   │   │   └── route.ts
 │   │   │   ├── dev
+│   │   │   │   ├── generate-pdf
+│   │   │   │   │   ├── answers-memos
+│   │   │   │   │   │   └── route.ts
+│   │   │   │   │   ├── combined
+│   │   │   │   │   │   └── route.ts
+│   │   │   │   │   └── route.ts
 │   │   │   │   ├── gpt-test
 │   │   │   │   │   ├── ask
 │   │   │   │   │   │   └── route.ts
@@ -188,6 +198,9 @@
 │   │   │   │   └── page.tsx
 │   │   │   ├── encryptedMemoList
 │   │   │   │   └── page.tsx
+│   │   │   ├── pdf
+│   │   │   │   └── download-problem-set
+│   │   │   │       └── page.tsx
 │   │   │   ├── setupKey
 │   │   │   │   └── page.tsx
 │   │   │   ├── testGpt
@@ -294,6 +307,7 @@
 │   │   ├── serviceIds.ts
 │   │   ├── sessions
 │   │   │   └── sessions.ts
+│   │   ├── tsyringe-tokens.ts
 │   │   └── userStatisticTypes.ts
 │   ├── containers
 │   │   └── diContainer.ts
@@ -321,8 +335,12 @@
 │   │   │   ├── userHistoryItem.ts
 │   │   │   └── userProfile.ts
 │   │   ├── repositories
-│   │   │   ├── accountRepository.ts
 │   │   │   ├── activitySessionRepository.ts
+│   │   │   ├── authAccountRepository.ts
+│   │   │   ├── authSessionRepository.ts
+│   │   │   ├── authUserRepository.ts
+│   │   │   ├── authVerificationTokenRepository.ts
+│   │   │   ├── authenticatorRepository.ts
 │   │   │   ├── embeddingRepository.ts
 │   │   │   ├── goalRepository.ts
 │   │   │   ├── idb
@@ -343,7 +361,12 @@
 │   │   └── services
 │   │       ├── IdManagerService.ts
 │   │       ├── activityService.ts
+│   │       ├── authAccountService.ts
 │   │       ├── authService.ts
+│   │       ├── authSessionService.ts
+│   │       ├── authUserService.ts
+│   │       ├── authVerificationTokenService.ts
+│   │       ├── authenticatorService.ts
 │   │       ├── clientSide
 │   │       │   ├── apiService.ts
 │   │       │   └── memoService.ts
@@ -351,6 +374,7 @@
 │   │       ├── firebaseClient.ts
 │   │       ├── goalService.ts
 │   │       ├── loggerService.ts
+│   │       ├── pdfGeneratorService.ts
 │   │       ├── problemResultService.ts
 │   │       ├── problemService.ts
 │   │       ├── retryService.ts
@@ -386,8 +410,12 @@
 │   │   │       └── managers
 │   │   │           └── IIndexedDBManager.ts
 │   │   ├── repositories
-│   │   │   ├── IAccountRepository.ts
 │   │   │   ├── IActivitySessionRepository.ts
+│   │   │   ├── IAuthAccountRepository.ts
+│   │   │   ├── IAuthSessionRepository.ts
+│   │   │   ├── IAuthUserRepository.ts
+│   │   │   ├── IAuthVerificationTokenRepository.ts
+│   │   │   ├── IAuthenticatorRepository.ts
 │   │   │   ├── IEmbeddingRepository.ts
 │   │   │   ├── IGoalRepository.ts
 │   │   │   ├── IProblemRepository.ts
@@ -400,7 +428,12 @@
 │   │   │   └── IdStorage.ts
 │   │   └── services
 │   │       ├── IActivityService.ts
+│   │       ├── IAuthAccountService.ts
 │   │       ├── IAuthService.ts
+│   │       ├── IAuthSessionService.ts
+│   │       ├── IAuthUserService.ts
+│   │       ├── IAuthVerificationTokenService.ts
+│   │       ├── IAuthenticatorService.ts
 │   │       ├── IFirebaseAdmin.ts
 │   │       ├── IGoalService.ts
 │   │       ├── IHistoryService.ts
@@ -580,4 +613,4 @@
 ├── unknown-words.txt
 └── utilCommands.md
 
-168 directories, 413 files
+174 directories, 440 files

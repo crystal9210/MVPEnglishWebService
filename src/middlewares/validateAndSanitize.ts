@@ -1,7 +1,7 @@
-import { NextResponse } from 'next/server';
-import { ZodSchema, ZodError } from 'zod';
-import DOMPurify from 'dompurify';
-import { JSDOM } from 'jsdom';
+import { NextResponse } from "next/server";
+import { ZodSchema, ZodError } from "zod";
+import DOMPurify from "dompurify";
+import { JSDOM } from "jsdom";
 
 /**
  * Zodスキーマを用いたバリデーション関数
@@ -20,7 +20,7 @@ export function validate<T>(schema: ZodSchema<T>, data: unknown): T {
  */
 const getSanitizer = () => {
     if (typeof window === "undefined") {
-        const window = new JSDOM('').window;
+        const window = new JSDOM("").window;
         return DOMPurify(window);
     }
     return null; // クライアントサイド用の DOMPurify を別途用意する場合はここに追加
@@ -35,9 +35,9 @@ const getSanitizer = () => {
 export function sanitize<T>(data: T, fields: (keyof T)[]): T {
     const purify = getSanitizer();
 
-    fields.forEach(field => {
+    fields.forEach((field) => {
         const value = data[field];
-        if (purify && typeof value === 'string') {
+        if (purify && typeof value === "string") {
             (data as any)[field] = purify.sanitize(value);
         }
     });
@@ -53,7 +53,10 @@ export function sanitize<T>(data: T, fields: (keyof T)[]): T {
  * @returns 新しいAPIハンドラー関数
  */
 export function withValidationAndSanitization<T>(
-    handler: (req: Request, context: { params: any, validatedBody: T }) => Promise<Response>,
+    handler: (
+        req: Request,
+        context: { params: any; validatedBody: T }
+    ) => Promise<Response>,
     schema?: ZodSchema<T>,
     sanitizeFields?: (keyof T)[]
 ) {
@@ -61,12 +64,12 @@ export function withValidationAndSanitization<T>(
         let data: T | undefined;
 
         // リクエストボディの取得
-        if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
+        if (["POST", "PUT", "PATCH"].includes(req.method)) {
             try {
                 data = await req.json();
             } catch (error) {
                 return NextResponse.json(
-                    { error: 'Invalid JSON' },
+                    { error: "Invalid JSON" },
                     { status: 400 }
                 );
             }
@@ -78,12 +81,15 @@ export function withValidationAndSanitization<T>(
                 } catch (error) {
                     if (error instanceof ZodError) {
                         return NextResponse.json(
-                            { error: 'Validation Error', details: error.errors },
+                            {
+                                error: "Validation Error",
+                                details: error.errors,
+                            },
                             { status: 400 }
                         );
                     }
                     return NextResponse.json(
-                        { error: 'Internal Server Error' },
+                        { error: "Internal Server Error" },
                         { status: 500 }
                     );
                 }
@@ -96,7 +102,7 @@ export function withValidationAndSanitization<T>(
                     data = sanitize(data, sanitizeFields);
                 } catch (error) {
                     return NextResponse.json(
-                        { error: 'Sanitization Error' },
+                        { error: "Sanitization Error" },
                         { status: 400 }
                     );
                 }

@@ -1,8 +1,6 @@
-import retryConfig from '@/config/constants/retryConfig';
-import authConfig from './constants/authConfig';
+import retryConfig from "@/config/constants/retryConfig";
 
 export default {
     retryConfig,
-    authConfig,
     // 他設定
 };
