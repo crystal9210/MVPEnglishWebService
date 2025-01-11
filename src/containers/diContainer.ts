@@ -60,7 +60,6 @@ import { IOpenAIClient } from "@/interfaces/services/openai/IOpenAIClient";
 import { AuthAccountRepository } from "@/domain/repositories/authAccountRepository";
 import { IAuthAccountService } from "@/interfaces/services/IAuthAccountService";
 import { AuthAccountService } from "@/domain/services/authAccountService";
-import { Adapter } from "next-auth/adapters";
 import { CustomFirestoreAdapter } from "@/adapters/customFirestoreAdapter";
 import { IAuthUserRepository } from "@/interfaces/repositories/IAuthUserRepository";
 import { AuthUserRepository } from "@/domain/repositories/authUserRepository";

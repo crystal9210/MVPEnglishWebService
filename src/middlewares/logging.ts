@@ -1,33 +1,30 @@
-// TODO
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getClientIp } from "./utils";
+import { logger } from "@/config/logger";
 
 /**
- * ログ記録ミドルウェア
- * @param req NextRequest
- * @returns NextResponse
+ * Logging middleware.
+ *
+ * Logs request details and user information.
+ *
+ * @param {NextRequest} req - The incoming request object.
+ * @returns {NextResponse} - The response to proceed to the next handler.
  */
-export async function loggingMiddleware(req: NextRequest) {
-    // メソッドとURLを取得
-    const { method, url } = req;
+export async function loggingMiddleware(
+    req: NextRequest
+): Promise<NextResponse> {
+    const ip = getClientIp(req) || "unknown";
+    logger.info("Request received", { method: req.method, url: req.url, ip });
 
-    // IPを共通関数で取得
-    const ip = getClientIp(req);
-
-    console.log(`[Request] ${method} ${url} - IP: ${ip}`);
-    // (1) リクエストヘッダーをコンソール出力したい場合
-    // 大量ログになる恐れがあるので開発環境限定にするなど要検討
-    req.headers.forEach((val, key) => {
-        console.log(`[loggingMiddleware] Request header: ${key} = ${val}`);
+    req.headers.forEach((value, key) => {
+        logger.info("Request header", { header: key, value });
     });
 
-    // セッション情報やその他の識別情報をログに記録する場合は、適切にフィルタリング
-    // 例: ユーザーIDや役割
     const userId = req.headers.get("x-user-id");
     const userRole = req.headers.get("x-user-role");
-    if (userId) {
-        console.log(`User ID: ${userId}, Role: ${userRole}`);
+    if (userId && userRole) {
+        logger.info("User information", { userId, userRole });
     }
 
-    return undefined;
+    return NextResponse.next();
 }

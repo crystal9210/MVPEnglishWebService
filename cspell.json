@@ -106,7 +106,17 @@
     "anothersecurepassword",
     "ciphertexts",
     "memolist",
-    "securepassword"
+    "securepassword",
+    "Fingerprinter",
+    "HSTS",
+    "clickjacking",
+    "devnonce",
+    "fingerprinter",
+    "invalidnonce",
+    "misissued",
+    "missingpath",
+    "superadmin",
+    "testnonce"
   ],
   "ignorePaths": [
     "node_modules/**",

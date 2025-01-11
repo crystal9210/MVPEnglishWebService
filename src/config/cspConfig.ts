@@ -1,27 +1,34 @@
 import { isDev } from "./envConfig";
 
-// 本番(secure)で使うCSP: 'unsafe-inline'を排除し、nonceやhash導入が望ましい
-const CSP_PROD = [
-    "default-src 'self';",
-    "script-src 'self';", // TODO nonce='xxx' や 'sha256-xxxx' を入れるのがベスト
-    "style-src 'self';", // inlineを許可しない
-    "img-src 'self' data:;",
-    "connect-src 'self';",
-    "font-src 'self';",
-    "frame-src 'none';",
-].join(" ");
+/**
+ * Generates the Content Security Policy (CSP) string based on the environment.
+ *
+ * @returns {string} - The appropriate CSP string.
+ */
+export function generateCspString(nonce: string): string {
+    // CSP for production: excludes 'unsafe-inline' and recommends using nonce or hash
+    const CSP_PROD = [
+        "default-src 'self';",
+        `script-src 'self' 'nonce-${nonce}';`, // Use nonce for scripts
+        `style-src 'self' 'nonce-${nonce}';`, // Use nonce for styles
+        "img-src 'self' data:;",
+        "connect-src 'self';",
+        "font-src 'self';",
+        "frame-src 'none';",
+        "report-uri /csp-report-endpoint;", // Report URI for CSP violations
+    ].join(" ");
 
-// 開発用CSP: 'unsafe-inline' を許可する等、便利さ重視
-const CSP_DEV = [
-    "default-src 'self';",
-    "script-src 'self';",
-    // ↑ devツールなどにあわせてinline許可したい場合:
-    // "script-src 'self' 'unsafe-inline' 'unsafe-eval';"
-    "style-src 'self' 'unsafe-inline';",
-    "img-src 'self' data:;",
-    "connect-src 'self';",
-    "font-src 'self';",
-    "frame-src 'none';",
-].join(" ");
+    // CSP for development: allows 'unsafe-inline' for convenience
+    const CSP_DEV = [
+        "default-src 'self';",
+        `script-src 'self' 'nonce-${nonce}';`, // Use nonce even in development
+        `style-src 'self' 'nonce-${nonce}' 'unsafe-inline';`, // Allow 'unsafe-inline' styles
+        "img-src 'self' data:;",
+        "connect-src 'self';",
+        "font-src 'self';",
+        "frame-src 'none';",
+        "report-uri /csp-report-endpoint;", // Report URI for CSP violations
+    ].join(" ");
 
-export const cspString = isDev ? CSP_DEV : CSP_PROD;
+    return isDev() ? CSP_DEV : CSP_PROD;
+}

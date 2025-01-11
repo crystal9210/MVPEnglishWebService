@@ -7,6 +7,7 @@
 ├── jest.setup.jsdom.ts
 ├── jest.setup.node.ts
 ├── logs
+│   ├── combined.log
 │   └── exceptions.log
 ├── next-env.d.ts
 ├── next.config.ts
@@ -149,6 +150,9 @@
 │   │   │   │   └── route.ts
 │   │   │   ├── send-verification
 │   │   │   │   └── route.ts
+│   │   │   ├── stripe
+│   │   │   │   └── webhook
+│   │   │   │       └── route.ts
 │   │   │   ├── testFirestoreAdmin
 │   │   │   │   └── route.ts
 │   │   │   ├── testGmailApi
@@ -281,9 +285,15 @@
 │   │   │   └── QuestionForm.tsx
 │   │   └── signout_button.tsx
 │   ├── config
+│   │   ├── __tests__
+│   │   │   ├── cspConfig.node.test.ts
+│   │   │   └── envConfig.node.test.ts
 │   │   ├── constants
 │   │   │   └── retryConfig.ts
-│   │   └── index.ts
+│   │   ├── cspConfig.ts
+│   │   ├── envConfig.ts
+│   │   ├── index.ts
+│   │   └── logger.ts
 │   ├── config.ts
 │   ├── constants
 │   │   ├── clientSide
@@ -477,7 +487,12 @@
 │   ├── middleware.ts
 │   ├── middlewares
 │   │   ├── __tests__
-│   │   │   └── authenticate.test.ts
+│   │   │   ├── authenticate.node.test.ts
+│   │   │   ├── authorize.node.test.ts
+│   │   │   ├── logging.node.test.ts
+│   │   │   ├── mockNextRequest.ts
+│   │   │   ├── rateLimit.node.test.ts
+│   │   │   └── securityHeaders.node.test.ts
 │   │   ├── authenticate.ts
 │   │   ├── authorize.ts
 │   │   ├── bandwidthLimit.ts
@@ -488,9 +503,11 @@
 │   │   ├── rateLimit.ts
 │   │   ├── sanitize.ts
 │   │   ├── securityHeaders.ts
+│   │   ├── trash
+│   │   │   └── withMiddleware.ts
+│   │   ├── utils.ts
 │   │   ├── validate.ts
-│   │   ├── validateAndSanitize.ts
-│   │   └── withMiddleware.ts
+│   │   └── validateAndSanitize.ts
 │   ├── sample_datasets
 │   │   ├── adverbs.json
 │   │   ├── comparatives_and_superlatives.json
@@ -613,4 +630,4 @@
 ├── unknown-words.txt
 └── utilCommands.md
 
-174 directories, 440 files
+178 directories, 453 files

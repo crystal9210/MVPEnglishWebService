@@ -1,14 +1,27 @@
-import { createLogger, transports, format, Logger as WinstonLogger } from "winston";
+import {
+    createLogger,
+    transports,
+    format,
+    Logger as WinstonLogger,
+} from "winston";
 import { Loggly } from "winston-loggly-bulk";
-import { injectable } from 'tsyringe';
-import dotenv from 'dotenv';
+import { injectable } from "tsyringe";
+import dotenv from "dotenv";
 import { ILoggerService } from "@/interfaces/services/ILoggerService";
+
 dotenv.config();
 
+/**
+ * LoggerService implements ILoggerService using Winston.
+ * Provides logging capabilities with support for console, file, and Loggly transports.
+ */
 @injectable()
 export class LoggerService implements ILoggerService {
     private logger: WinstonLogger;
 
+    /**
+     * Initializes the LoggerService with configured transports and formats.
+     */
     constructor() {
         const logLevel = process.env.LOG_LEVEL || "info";
         const logFormat = format.combine(
@@ -21,28 +34,28 @@ export class LoggerService implements ILoggerService {
         const loggerTransports = [
             new transports.Console({
                 level: logLevel,
-                format: format.combine(
-                    format.colorize(),
-                    format.simple()
-                ),
+                format: format.combine(format.colorize(), format.simple()),
             }),
-            // ファイルへのログ出力を環境変数で制御
+            // Conditional file logging based on environment variable
             ...(process.env.LOG_TO_FILE === "true"
                 ? [
-                    new transports.File({ filename: "logs/error.log", level: "error" }),
-                    new transports.File({ filename: "logs/combined.log" }),
-                ]
+                      new transports.File({
+                          filename: "logs/error.log",
+                          level: "error",
+                      }),
+                      new transports.File({ filename: "logs/combined.log" }),
+                  ]
                 : []),
-            // Logglyなどの外部サービスへのログ出力
+            // Conditional Loggly logging based on environment variables
             ...(process.env.LOGGLY_TOKEN && process.env.LOGGLY_SUBDOMAIN
                 ? [
-                    new Loggly({
-                        token: process.env.LOGGLY_TOKEN!,
-                        subdomain: process.env.LOGGLY_SUBDOMAIN!,
-                        tags: ["Winston-NodeJS"],
-                        json: true,
-                    }),
-                ]
+                      new Loggly({
+                          token: process.env.LOGGLY_TOKEN!,
+                          subdomain: process.env.LOGGLY_SUBDOMAIN!,
+                          tags: ["Winston-NodeJS"],
+                          json: true,
+                      }),
+                  ]
                 : []),
         ];
 
@@ -53,27 +66,50 @@ export class LoggerService implements ILoggerService {
             exceptionHandlers: [
                 new transports.File({ filename: "logs/exceptions.log" }),
             ],
-            exitOnError: false, // 例外発生時にプロセスを終了しない
+            exitOnError: false, // Do not exit on handled exceptions
         });
     }
 
+    /**
+     * Logs an informational message.
+     *
+     * @param message - The message to log.
+     * @param meta - Optional metadata to include with the log.
+     */
     info(message: string, meta?: Record<string, unknown>) {
         this.logger.info(message, meta);
     }
 
+    /**
+     * Logs a warning message.
+     *
+     * @param message - The message to log.
+     * @param meta - Optional metadata to include with the log.
+     */
     warn(message: string, meta?: Record<string, unknown>) {
         this.logger.warn(message, meta);
     }
 
+    /**
+     * Logs an error message.
+     *
+     * @param message - The message to log.
+     * @param meta - Optional metadata to include with the log.
+     */
     error(message: string, meta?: Record<string, unknown>) {
         this.logger.error(message, meta);
     }
 
+    /**
+     * Logs a debug message.
+     *
+     * @param message - The message to log.
+     * @param meta - Optional metadata to include with the log.
+     */
     debug(message: string, meta?: Record<string, unknown>) {
         this.logger.debug(message, meta);
     }
 }
-
 
 // --- a sample code for upgrades ---
 // import { createLogger, format, transports } from 'winston';
