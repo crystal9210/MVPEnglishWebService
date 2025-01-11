@@ -1,35 +1,103 @@
 import { NextResponse, NextRequest } from "next/server";
 
 /**
- * Middleware which checks Content-Type header.
+ * Middleware to check Content-Type and Content-Length headers.
  * @param req NextRequest
+ * @param options Middleware configuration options
  * @returns NextResponse | undefined
  */
-export function contentTypeCheckMiddleware(req: NextRequest) {
-    const allowedContentTypes = ["application/json"];
+export function contentTypeCheckMiddleware(
+    req: NextRequest,
+    options: {
+        allowedContentTypes?: string[];
+        restrictedMethods?: string[];
+        maxBodyContentLength?: number;
+    } = {}
+) {
+    const allowedContentTypes = options.allowedContentTypes || [
+        "application/json",
+    ];
+    const restrictedMethods = options.restrictedMethods || [
+        "GET",
+        "HEAD",
+        "DELETE",
+    ];
+    const maxBodyContentLength = options.maxBodyContentLength || 0;
+
+    // Validate all headers
+    const encoder = new TextEncoder();
+    for (const [key, value] of req.headers.entries()) {
+        if (encoder.encode(value).length > 2048) {
+            return createErrorResponse(
+                400,
+                "Invalid header: Value is too long"
+            );
+        }
+    }
+
+    // Check for unsupported HTTP methods
+    if (
+        !["GET", "HEAD", "DELETE", "POST", "PUT", "PATCH"].includes(req.method)
+    ) {
+        return createErrorResponse(405, "Method Not Allowed");
+    }
+
     const contentType = req.headers.get("content-type");
 
+    // Dynamic Content-Type Validation
     if (["POST", "PUT", "PATCH"].includes(req.method) && contentType) {
         const isAllowed = allowedContentTypes.some((type) =>
             contentType.includes(type)
         );
         if (!isAllowed) {
-            return NextResponse.json(
-                { error: "Unsupported Media Type" },
-                { status: 415 }
+            return createErrorResponse(
+                415,
+                `Unsupported Media Type: ${contentType}`,
+                { allowedTypes: allowedContentTypes }
             );
         }
     }
 
-    if (["GET", "HEAD", "DELETE"].includes(req.method) && contentType) {
+    // Dynamic Content-Length Validation
+    if (restrictedMethods.includes(req.method)) {
         const length = req.headers.get("content-length");
-        if (length && parseInt(length, 10) > 0) {
-            return NextResponse.json(
-                { error: "GET, HEAD, DELETE with body not allowed" },
-                { status: 400 }
-            );
+        if (length) {
+            const contentLength = parseInt(length, 10);
+
+            if (isNaN(contentLength) || contentLength < 0) {
+                return createErrorResponse(
+                    400,
+                    `Invalid Content-Length header: ${length}`
+                );
+            }
+
+            if (contentLength > maxBodyContentLength) {
+                return createErrorResponse(
+                    400,
+                    `${req.method} requests with a body are not allowed`,
+                    { maxBodyContentLength }
+                );
+            }
         }
     }
 
     return NextResponse.next();
+}
+
+/**
+ * Helper to create standardized error responses.
+ * @param status HTTP status code
+ * @param message Error message
+ * @param details Additional details for debugging (optional)
+ * @returns NextResponse
+ */
+function createErrorResponse(
+    status: number,
+    message: string,
+    details?: Record<string, unknown>
+) {
+    return NextResponse.json(
+        { error: message, ...(details && { details }) },
+        { status }
+    );
 }
