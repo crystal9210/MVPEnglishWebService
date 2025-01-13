@@ -12,7 +12,7 @@ import {
     LRUCacheAdapter,
     Fingerprinter,
 } from "@/utils/middleware";
-import { getClientIp } from "./utils";
+import { getClientIp } from "../utils/getClientIp";
 
 /**
  * Configuration for rate limiting.

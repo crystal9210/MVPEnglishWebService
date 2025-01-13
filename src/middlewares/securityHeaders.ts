@@ -1,8 +1,10 @@
+/* eslint-disable no-unused-vars */
 import { generateCspString } from "@/config/cspConfig";
 import { isDev, isHttpForDev } from "@/config/envConfig";
 import { NextResponse, NextRequest } from "next/server";
 import crypto from "crypto";
 import { logger } from "@/config/logger";
+import { getClientIp } from "@/utils/getClientIp";
 
 /**
  * Type definition for security headers used in the middleware.
@@ -86,9 +88,9 @@ export function securityHeadersMiddleware(req: NextRequest): NextResponse {
         if (!allowedMethods.includes(req.method)) {
             const res = NextResponse.json(
                 { error: "Method Not Allowed" },
-                { status: 405 } // >> 405: Method Not Allowed
+                { status: 405 } // 405: Method Not Allowed
             );
-            applySecurityHeaders(res, "default-src 'none';"); // Should response with security headers applied
+            applySecurityHeaders(res, "default-src 'none';"); // Apply security headers
             return res;
         }
 
@@ -96,9 +98,9 @@ export function securityHeadersMiddleware(req: NextRequest): NextResponse {
         if (req.nextUrl.href.length > 2048) {
             const res = NextResponse.json(
                 { error: "URL length exceeds maximum allowed limit" },
-                { status: 414 } // >> 414: Request-URI Too Long
+                { status: 414 } // 414: Request-URI Too Long
             );
-            applySecurityHeaders(res, "default-src 'none';");
+            applySecurityHeaders(res, "default-src 'none';"); // Apply security headers
             return res;
         }
 
@@ -113,8 +115,7 @@ export function securityHeadersMiddleware(req: NextRequest): NextResponse {
             throw new Error("Invalid CSP configuration: Missing 'report-uri'");
         }
 
-        // Call "NextResponse.next()" to pass processing to the next handler,
-        // while generating a "response object with modified headers"
+        // Pass processing to the next handler with modified headers
         const res = NextResponse.next({
             request: {
                 headers: req.headers,
@@ -128,15 +129,18 @@ export function securityHeadersMiddleware(req: NextRequest): NextResponse {
          * Uncomment the following lines if you need to add a nonce to CSP.
          * This allows specific inline scripts and styles by using the generated nonce.
          */
-        // const nonce = crypto.randomBytes(16).toString("base64");
         // res.headers.set("Content-Security-Policy", `script-src 'self' 'nonce-${nonce}'; style-src 'self' 'nonce-${nonce}'; ${otherDirectives}`);
 
         /**
          * If you want to debug by outputting the response headers to the console (development environment only)
          */
         if (isDev()) {
+            const requestIp = getClientIp(req); // getClientIp 関数を使用
+            const timestamp = new Date().toISOString();
             logger.info("Setting Security Headers", {
                 headers: Array.from(res.headers.entries()),
+                requestIp,
+                timestamp,
             });
         }
 
@@ -147,7 +151,7 @@ export function securityHeadersMiddleware(req: NextRequest): NextResponse {
         const errorMessage = "Error in securityHeadersMiddleware:";
 
         if (error instanceof SyntaxError) {
-            logger.error(`${errorMessage} Syntax Error`, error);
+            logger.error(`${errorMessage} Syntax Error`, { error });
             return NextResponse.json(
                 { error: "Invalid request syntax" },
                 { status: 400 }
@@ -159,13 +163,13 @@ export function securityHeadersMiddleware(req: NextRequest): NextResponse {
             typeof error.message === "string" &&
             error.message.startsWith("Invalid header value")
         ) {
-            logger.error(errorMessage, error);
+            logger.error(errorMessage, { error });
             return NextResponse.json(
                 { error: "Invalid request" },
                 { status: 400 }
             );
         } else {
-            logger.error(errorMessage, error);
+            logger.error(errorMessage, { error });
             return NextResponse.json(
                 { error: "Internal Server Error" },
                 { status: 500 }
@@ -208,7 +212,6 @@ function applySecurityHeaders(res: NextResponse, cspString: string) {
      * 9) Expect-CT
      *    → Enforces Certificate Transparency to detect misissued certificates
      */
-
     const headersToSet: SecurityHeaders = {
         "Content-Security-Policy": cspString,
         "X-Content-Type-Options": "nosniff",
@@ -230,14 +233,14 @@ function applySecurityHeaders(res: NextResponse, cspString: string) {
     for (const [key, value] of Object.entries(headersToSet)) {
         const existingHeader = res.headers.get(key);
 
-        // ヘッダーが既に存在し、値が異なる場合はエラーを記録して拒否
+        // If the header already exists with a different value, log an error and throw
         if (existingHeader && existingHeader !== value) {
             const errorMsg = `Security rule violation: Header "${key}" has an unexpected value "${existingHeader}". Expected: "${value}".`;
-            logger.error(errorMsg);
+            logger.error(errorMsg, { expected: value, actual: existingHeader });
             throw new Error(errorMsg);
         }
 
-        // ヘッダーが存在しない場合のみ設定
+        // Only set the header if it does not already exist
         if (!existingHeader) {
             res.headers.set(key, value);
         }
@@ -257,45 +260,114 @@ const ALLOWED_HEADERS = [
     "accept-language",
     "cache-control",
     "pragma",
+    "sec-fetch-site",
+    "sec-fetch-mode",
+    "sec-fetch-dest",
+    "sec-fetch-user",
+    "upgrade-insecure-requests",
+    "x-csrftoken",
+    "x-xsrf-token",
+    "dnt",
+    "content-length",
+    "access-control-allow-origin",
+    "accept-encoding",
     // Add other allowed headers here
 ];
 
 // Header validation rules
 const HEADER_VALIDATION_RULES: { [key: string]: (value: string) => boolean } = {
     "content-type": (value: string) =>
-        /^application\/(json|xml)|text\/plain/.test(value),
-    authorization: (value: string) => value.startsWith("Bearer "),
+        /^application\/(json|xml)|text\/plain$/.test(value),
+    authorization: (value: string) =>
+        /^Bearer\s[A-Za-z0-9\-._~+/]+=*$/.test(value),
     "accept-language": (value: string) => /^[a-zA-Z\- ,]+$/.test(value),
     "cache-control": (value: string) => /^[a-zA-Z0-9\- ,]+$/.test(value),
     pragma: (value: string) => /^[a-zA-Z0-9\- ,]+$/.test(value),
+    "x-requested-with": (value: string) => /^XMLHttpRequest$/.test(value),
+    accept: (value: string) =>
+        /^([a-zA-Z]+\/[a-zA-Z0-9\-\+\.]+)(,\s*[a-zA-Z]+\/[a-zA-Z0-9\-\+\.]+)*$/.test(
+            value
+        ),
+    "user-agent": (value: string) => value.length > 0 && value.length <= 512,
+    referer: (value: string) => isValidUrl(value),
+    origin: (value: string) => isValidUrl(value),
+    cookie: (value: string) =>
+        /^([a-zA-Z0-9\-]+=[^;]+)(;\s*[a-zA-Z0-9\-]+=[^;]+)*$/.test(value),
+    "sec-fetch-site": (value: string) =>
+        ["none", "same-origin", "same-site", "cross-site"].includes(value),
+    "sec-fetch-mode": (value: string) =>
+        ["navigate", "no-cors", "cors", "same-origin"].includes(value),
+    "sec-fetch-dest": (value: string) =>
+        [
+            "document",
+            "iframe",
+            "image",
+            "script",
+            "style",
+            "font",
+            "media",
+            "worker",
+            "nested-processor",
+            "report",
+        ].includes(value),
+    "sec-fetch-user": (value: string) => value === "?1",
+    "upgrade-insecure-requests": (value: string) => value === "1",
+    "x-csrftoken": (value: string) => /^[a-zA-Z0-9\-_]+$/.test(value),
+    "x-xsrf-token": (value: string) => /^[a-zA-Z0-9\-_]+$/.test(value),
+    dnt: (value: string) => ["1", "0"].includes(value),
+    "content-length": (value: string) =>
+        /^\d+$/.test(value) && parseInt(value, 10) <= 1000000, // Example: max size == 1MB
+    "access-control-allow-origin": (value: string) =>
+        /^https?:\/\/[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,}$/.test(value) ||
+        value === "*",
+    "accept-encoding": (value: string) => /^gzip|deflate|br$/.test(value),
     // Add validation rules for other headers here
 };
+
 /**
  * Validate headers to ensure there are no invalid header values.
  * Throws an error if any invalid header value is detected.
  */
 export function validateHeaders(headers: Headers) {
     for (const [key, value] of headers.entries()) {
-        // 1. ヘッダー名がホワイトリストに存在しない場合はエラーをスロー
-        if (!ALLOWED_HEADERS.includes(key.toLowerCase())) {
+        const lowerKey = key.toLowerCase();
+
+        // 1. If the header name is not in the whitelist, throw an error
+        if (!ALLOWED_HEADERS.includes(lowerKey)) {
             const errorMsg = `Invalid header name: ${key}`;
-            logger.error(errorMsg);
+            logger.error(errorMsg, { header: key, value });
             throw new Error(errorMsg);
         }
 
-        // 2. ヘッダー値が空またはヌル文字を含む場合はエラーをスロー
+        // 2. If the header value is empty or contains null characters, throw an error
         if (!value || value.includes("\u0000")) {
             const errorMsg = `Invalid header value for ${key}`;
-            logger.error(errorMsg);
+            logger.error(errorMsg, { header: key, value });
             throw new Error(errorMsg);
         }
 
-        // 3. 特定のヘッダーに対してバリデーションルールを適用
-        const validationRule = HEADER_VALIDATION_RULES[key.toLowerCase()];
+        // 3. Apply specific validation rules for certain headers
+        const validationRule = HEADER_VALIDATION_RULES[lowerKey];
         if (validationRule && !validationRule(value)) {
             const errorMsg = `Invalid header value for ${key}: ${value}`;
-            logger.error(errorMsg);
+            logger.error(errorMsg, { header: key, value });
             throw new Error(errorMsg);
         }
+    }
+}
+
+/**
+ * Utility function to validate URLs.
+ *
+ * @param {string} url - The URL string to validate.
+ * @returns {boolean} - True if the URL is valid and uses allowed protocols, false otherwise.
+ */
+function isValidUrl(url: string): boolean {
+    try {
+        const parsedUrl = new URL(url);
+        // Allow only http and https protocols
+        return ["http:", "https:"].includes(parsedUrl.protocol);
+    } catch {
+        return false;
     }
 }

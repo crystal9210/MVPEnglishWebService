@@ -3,7 +3,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { loggingMiddleware } from "../logging";
-import * as utils from "../utils";
+import * as utils from "../../utils/getClientIp";
 import { logger } from "@/config/logger";
 
 jest.mock("@/config/logger", () => ({

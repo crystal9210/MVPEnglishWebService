@@ -1,7 +1,7 @@
 /**
- * Confirmed all tests have passed at 2025/01/12.
+ * Confirmed all tests have passed at 2025/01/13.
  */
-import { getClientIp } from "../utils";
+import { getClientIp } from "../getClientIp";
 import { NextRequest } from "next/server";
 
 describe("getClientIp", () => {

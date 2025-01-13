@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { isDev } from "../config/envConfig";
-import { getClientIp } from "./utils";
+import { getClientIp } from "../utils/getClientIp";
 
 /**
  * Authenticate middleware to verify JWT tokens issued by NextAuth.js.

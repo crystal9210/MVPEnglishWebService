@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getClientIp } from "./utils";
+import { getClientIp } from "../utils/getClientIp";
 import { logger } from "@/config/logger";
 
 /**
