@@ -1,3 +1,6 @@
+/**
+ * Confirmed all tests have passed at 2025/01/13.
+ */
 import { NextRequest, NextResponse } from "next/server";
 import {
     rateLimitMiddleware,
@@ -7,10 +10,9 @@ import {
     SuspiciousBehaviorDetector,
     AnonymousUserRateLimiter,
     AuthenticatedUserRateLimiter,
-    LRUCacheAdapter,
-    CacheEntry,
     detector,
 } from "../rateLimit";
+import { LRUCacheAdapter, CacheEntry } from "@/utils/middleware";
 import { createHash } from "crypto";
 
 // Helper function to create a NextRequest with optional headers and IP

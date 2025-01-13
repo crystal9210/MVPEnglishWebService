@@ -8,6 +8,11 @@ import {
     authenticateMiddleware,
     authorizeMiddleware,
     errorHandlerMiddleware,
+    corsMiddleware,
+    cachingMiddleware,
+    tracingMiddleware,
+    sessionMiddleware,
+    timeoutMiddleware,
 } from "./middlewares";
 
 /**
@@ -15,7 +20,7 @@ import {
  *
  * This middleware orchestrates the execution of individual middleware functions
  * in a specific order to handle logging, security, rate limiting, authentication,
- * authorization, and error handling.
+ * authorization, CORS, caching, tracing, session management, and error handling.
  *
  * @param {NextRequest} req - The incoming request object.
  * @returns {Promise<NextResponse>} - The final response after processing all middleware.
@@ -25,44 +30,69 @@ export async function middleware(req: NextRequest): Promise<NextResponse> {
         // 1) Logging (highest priority)
         const logResponse = loggingMiddleware(req);
         if (logResponse) {
-            // If logging middleware returns a response, terminate further processing
             return logResponse;
         }
 
-        // 2) Security Headers
+        // 2) CORS Handling
+        const corsResponse = corsMiddleware(req);
+        if (corsResponse) {
+            return corsResponse;
+        }
+
+        // 3) Security Headers
         const securityResponse = securityHeadersMiddleware(req);
         if (securityResponse) {
             // Continue processing with security headers applied
-            // Typically, securityHeadersMiddleware returns NextResponse.next()
-            // So, no need to terminate processing
         }
 
-        // 3) Bandwidth Limiting
+        // 4) Tracing
+        const tracingResponse = tracingMiddleware(req);
+        if (tracingResponse) {
+            // Continue processing with tracing headers applied
+        }
+
+        // 5) Bandwidth Limiting
         const bandwidthResponse = bandwidthLimitMiddleware(req);
         if (bandwidthResponse) return bandwidthResponse;
 
-        // 4) Content-Type Checking
+        // 6) Content-Type Checking
         const contentTypeResponse = contentTypeCheckMiddleware(req);
         if (contentTypeResponse) return contentTypeResponse;
 
-        // 5) Rate Limiting
+        // 7) Caching Control
+        const cachingResponse = cachingMiddleware(req);
+        if (cachingResponse) {
+            // Continue processing with caching headers applied
+        }
+
+        // 8) Rate Limiting
         const rateLimitResponse = rateLimitMiddleware(req);
         if (rateLimitResponse) return rateLimitResponse;
 
-        // 6) Authentication
+        // 9) Session Management
+        const sessionResponse = sessionMiddleware(req);
+        if (sessionResponse) {
+            // Continue processing with session cookies set
+        }
+
+        // 10) Request Timeout
+        const timeoutResponse = await timeoutMiddleware(req);
+        if (timeoutResponse) return timeoutResponse;
+
+        // 11) Authentication
         const authResponse = await authenticateMiddleware(req);
         if (authResponse) return authResponse;
 
-        // 7) Authorization (only for /admin paths)
+        // 12) Authorization (only for /admin paths)
         if (req.nextUrl.pathname.startsWith("/admin")) {
             const authorizeResponse = authorizeMiddleware(req, ["admin"]);
             if (authorizeResponse) return authorizeResponse;
         }
 
-        // 8) Proceed to the next middleware or route handler
+        // 13) Proceed to the next middleware or route handler
         return NextResponse.next();
     } catch (error) {
-        // 9) Error Handling
+        // 14) Error Handling
         return errorHandlerMiddleware(error as Error);
     }
 }

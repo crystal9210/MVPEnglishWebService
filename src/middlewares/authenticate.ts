@@ -17,7 +17,7 @@ export const authenticateMiddleware = async (
 ): Promise<NextResponse | undefined> => {
     try {
         // Log client IP in development mode
-        if (isDev) {
+        if (isDev()) {
             console.log(
                 "[authenticateMiddleware] client IP =",
                 getClientIp(req)
@@ -53,7 +53,7 @@ export const authenticateMiddleware = async (
         req.headers.set("x-user-id", token.sub);
 
         // Optionally log token details in development mode
-        if (isDev) {
+        if (isDev()) {
             console.log("[authenticateMiddleware] token:", token);
         }
 

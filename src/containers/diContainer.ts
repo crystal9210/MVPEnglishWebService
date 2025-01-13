@@ -78,7 +78,6 @@ import { IAuthSessionService } from "@/interfaces/services/IAuthSessionService";
 import { AuthSessionService } from "@/domain/services/authSessionService";
 import { AuthVerificationTokenService } from "@/domain/services/authVerificationTokenService";
 
-// トークン定義のインポート
 import { TSYRINGE_TOKENS } from "@/constants/tsyringe-tokens";
 
 // Utility

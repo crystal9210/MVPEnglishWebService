@@ -6,3 +6,8 @@ export { rateLimitMiddleware } from "./rateLimit";
 export { authenticateMiddleware } from "./authenticate";
 export { authorizeMiddleware } from "./authorize";
 export { errorHandlerMiddleware } from "./errorHandler";
+export { timeoutMiddleware } from "./timeout";
+export { cachingMiddleware } from "./caching";
+export { corsMiddleware } from "./cors";
+export { tracingMiddleware } from "./tracing";
+export { sessionMiddleware } from "./session";
