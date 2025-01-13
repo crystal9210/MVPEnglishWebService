@@ -332,21 +332,21 @@ export function validateHeaders(headers: Headers) {
     for (const [key, value] of headers.entries()) {
         const lowerKey = key.toLowerCase();
 
-        // 1. If the header name is not in the whitelist, throw an error
+        // If the header name is not in the whitelist, throw an error
         if (!ALLOWED_HEADERS.includes(lowerKey)) {
             const errorMsg = `Invalid header name: ${key}`;
             logger.error(errorMsg, { header: key, value });
             throw new Error(errorMsg);
         }
 
-        // 2. If the header value is empty or contains null characters, throw an error
+        // If the header value is empty or contains null characters, throw an error
         if (!value || value.includes("\u0000")) {
             const errorMsg = `Invalid header value for ${key}`;
             logger.error(errorMsg, { header: key, value });
             throw new Error(errorMsg);
         }
 
-        // 3. Apply specific validation rules for certain headers
+        // Apply specific validation rules for certain headers
         const validationRule = HEADER_VALIDATION_RULES[lowerKey];
         if (validationRule && !validationRule(value)) {
             const errorMsg = `Invalid header value for ${key}: ${value}`;

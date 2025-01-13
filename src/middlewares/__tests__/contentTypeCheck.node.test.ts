@@ -2,10 +2,67 @@
  * All tests have passed at 2025/01/12.
  */
 
+/**
+ * Test suites for contentTypeCheckMiddleware
+ *
+ * This test suite validates the behavior of the contentTypeCheckMiddleware,
+ * ensuring it handles all edge cases, normal operations, and error scenarios correctly.
+ *
+ * === Test Summary ===
+ *
+ * 1. General Content-Length Validation
+ *    ✓ should reject GET requests with Content-Length near the upper limit
+ *    ✓ should reject HEAD requests with Content-Length near the upper limit
+ *    ✓ should reject DELETE requests with Content-Length near the upper limit
+ *    ✓ should reject GET requests with negative Content-Length
+ *    ✓ should reject HEAD requests with negative Content-Length
+ *    ✓ should reject DELETE requests with negative Content-Length
+ *
+ * 2. Header Validation
+ *    ✓ should reject requests with non-ASCII header names
+ *    ✓ should reject requests with extremely long header values
+ *    ✓ should allow POST requests with empty body when Content-Length is 0
+ *    ✓ should allow PUT requests with empty body when Content-Length is 0
+ *    ✓ should allow requests with header value at the exact 2048 bytes limit
+ *    ✓ should reject requests with header value exceeding 2048 bytes
+ *    ✓ should reject requests with header names containing special characters
+ *
+ * 3. POST, PUT, PATCH Requests
+ *    ✓ should allow POST requests with valid Content-Type
+ *    ✓ should allow PUT requests with valid Content-Type
+ *    ✓ should allow PATCH requests with valid Content-Type
+ *    ✓ should reject POST requests with unsupported Content-Type
+ *    ✓ should reject PUT requests with unsupported Content-Type
+ *    ✓ should reject PATCH requests with unsupported Content-Type
+ *
+ * 4. GET, HEAD, DELETE Requests
+ *    ✓ should reject GET requests with Content-Length > 0
+ *    ✓ should reject HEAD requests with Content-Length > 0
+ *    ✓ should reject DELETE requests with Content-Length > 0
+ *    ✓ should reject GET requests with invalid Content-Length
+ *    ✓ should reject HEAD requests with invalid Content-Length
+ *    ✓ should reject DELETE requests with invalid Content-Length
+ *    ✓ should allow GET requests without Content-Length or Content-Type
+ *    ✓ should allow HEAD requests without Content-Length or Content-Type
+ *    ✓ should allow DELETE requests without Content-Length or Content-Type
+ *
+ * 5. Configurable Behavior
+ *    ✓ should reject POST requests with invalid Content-Type when customized
+ *    ✓ should allow DELETE requests with valid Content-Type when restriction is disabled
+ *    ✓ should reject unknown HTTP methods with proper response 1
+ *    ✓ should reject unknown HTTP methods with proper response 2
+ */
+
 import { contentTypeCheckMiddleware } from "../contentTypeCheck";
 import { NextRequest, NextResponse } from "next/server";
 
 describe("contentTypeCheckMiddleware", () => {
+    /**
+     * Validates header names to ensure they contain only ASCII characters.
+     * Non-ASCII header names are rejected to maintain compatibility with standards.
+     * @param headers - The request headers to validate.
+     * @throws Error if any header name contains non-ASCII characters.
+     */
     function validateHeaders(headers: Record<string, string>): void {
         for (const key of Object.keys(headers)) {
             if (!/^[\x00-\x7F]+$/.test(key)) {
@@ -17,10 +74,10 @@ describe("contentTypeCheckMiddleware", () => {
     }
 
     /**
-     * Utility function to create mock NextRequest objects.
-     * @param method - HTTP method
-     * @param headers - Request headers
-     * @returns NextRequest
+     * Utility function to create mock NextRequest objects for testing.
+     * @param method - The HTTP method of the request (e.g., POST, GET).
+     * @param headers - The request headers.
+     * @returns A mock NextRequest object.
      */
     const createMockRequest = (
         method: string,
@@ -35,9 +92,9 @@ describe("contentTypeCheckMiddleware", () => {
     };
 
     /**
-     * Utility function to parse the JSON body from NextResponse.
-     * @param res NextResponse
-     * @returns Parsed JSON object or null
+     * Utility function to parse the JSON body from a NextResponse.
+     * @param res - The NextResponse object.
+     * @returns Parsed JSON object or null if no body exists.
      */
     async function getResponseJson(res: NextResponse): Promise<any> {
         const reader = res.body?.getReader();

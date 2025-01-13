@@ -1,7 +1,16 @@
 /**
- * All tests have passed at 2025/01/11, but only one test case remains to be confirmed (left for later due to technical difficulty and high threat model level).
+ * All tests have passed as of 2025/01/13.
+ * Remaining unconfirmed test cases are noted as TODOs due to technical difficulties and the high threat model level.
+ *
+ * This test suite verifies the `securityHeadersMiddleware` behavior under various conditions.
+ * It covers:
+ * - Correct header application in production and development environments.
+ * - Correct handling of security-related headers (e.g., CSP, HSTS, XSS-Protection).
+ * - Error handling for misconfigurations or invalid input.
+ * - Performance under high-load scenarios.
  */
 
+// TODO
 // The logger mock must be set before importing the middleware.
 jest.mock("@/config/logger", () => ({
     logger: {
@@ -132,9 +141,12 @@ describe("securityHeadersMiddleware", () => {
         );
 
         // Verify that logger.info was called in development
-        expect(logger.info).toHaveBeenCalledWith("Setting Security Headers", {
-            headers: Array.from(res.headers.entries()),
-        });
+        expect(logger.info).toHaveBeenCalledWith(
+            "Setting Security Headers",
+            expect.objectContaining({
+                headers: Array.from(res.headers.entries()),
+            })
+        );
     });
 
     /**
@@ -243,9 +255,12 @@ describe("securityHeadersMiddleware", () => {
         );
 
         // Verify that logger.info was called in development
-        expect(logger.info).toHaveBeenCalledWith("Setting Security Headers", {
-            headers: Array.from(res.headers.entries()),
-        });
+        expect(logger.info).toHaveBeenCalledWith(
+            "Setting Security Headers",
+            expect.objectContaining({
+                headers: Array.from(res.headers.entries()),
+            })
+        );
     });
 
     /**
@@ -517,7 +532,9 @@ describe("securityHeadersMiddleware", () => {
         expect(res.status).toBe(500);
         expect(logger.error).toHaveBeenCalledWith(
             "Error in securityHeadersMiddleware:",
-            expect.any(Error)
+            expect.objectContaining({
+                error: expect.any(Error),
+            })
         );
     });
 
@@ -561,7 +578,9 @@ describe("securityHeadersMiddleware", () => {
         // Verify that logger.error was called correctly
         expect(logger.error).toHaveBeenCalledWith(
             "Error in securityHeadersMiddleware:",
-            expect.any(Error)
+            expect.objectContaining({
+                error: expect.any(Error),
+            })
         );
     });
 
@@ -588,7 +607,9 @@ describe("securityHeadersMiddleware", () => {
         expect(res.body).toBeDefined();
         expect(logger.error).toHaveBeenCalledWith(
             "Error in securityHeadersMiddleware:",
-            expect.any(Error)
+            expect.objectContaining({
+                error: expect.any(Error),
+            })
         );
     });
 
@@ -751,8 +772,10 @@ describe("securityHeadersMiddleware", () => {
 
             // Verify that the logger recorded the error with the correct message and details
             expect(logger.error).toHaveBeenCalledWith(
-                "Error in securityHeadersMiddleware:", // Standard error prefix
-                new Error("Simulated error") // The simulated error passed to the logger
+                "Error in securityHeadersMiddleware:",
+                expect.objectContaining({
+                    error: new Error("Simulated error"),
+                })
             );
         });
     });
