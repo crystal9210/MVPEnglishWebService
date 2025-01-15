@@ -40,10 +40,10 @@ export async function middleware(req: NextRequest): Promise<NextResponse> {
         }
 
         // 3) Security Headers
-        const securityResponse = securityHeadersMiddleware(req);
-        if (securityResponse) {
-            // Continue processing with security headers applied
-        }
+        // const securityResponse = securityHeadersMiddleware(req);
+        // if (securityResponse) {
+        //     // Continue processing with security headers applied
+        // }
 
         // 4) Tracing
         const tracingResponse = tracingMiddleware(req);

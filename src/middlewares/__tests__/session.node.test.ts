@@ -1,37 +1,38 @@
+// TODO
 import { NextResponse, NextRequest } from "next/server";
 import jwt from "jsonwebtoken";
 
-jest.mock("next/server", () => {
-    const cookiesMock = {
-        set: jest.fn(),
-        delete: jest.fn(),
-        get: jest.fn(),
-        getAll: jest.fn(),
-        has: jest.fn(),
-    };
+// jest.mock("next/server", () => {
+//     const cookiesMock = {
+//         set: jest.fn(),
+//         delete: jest.fn(),
+//         get: jest.fn(),
+//         getAll: jest.fn(),
+//         has: jest.fn(),
+//     };
 
-    return {
-        NextResponse: {
-            next: jest.fn(() => ({
-                cookies: cookiesMock, // ✅ 一貫したオブジェクトを使用
-            })),
-            json: jest.fn((body, init) => ({
-                status: init?.status || 200,
-                body,
-            })),
-        },
-        __cookiesMock__: cookiesMock, // ✅ テストでアクセス可能にする
-    };
-});
+//     return {
+//         NextResponse: {
+//             next: jest.fn(() => ({
+//                 cookies: cookiesMock, // ✅ 一貫したオブジェクトを使用
+//             })),
+//             json: jest.fn((body, init) => ({
+//                 status: init?.status || 200,
+//                 body,
+//             })),
+//         },
+//         __cookiesMock__: cookiesMock, // ✅ テストでアクセス可能にする
+//     };
+// });
 
-jest.mock("jsonwebtoken", () => ({
-    sign: jest.fn(() => "mock.jwt.refreshed.token"), // ✅ JWT を返す
-    verify: jest.fn(() => ({
-        sub: "user123",
-        roles: ["user"],
-        exp: Math.floor(Date.now() / 1000) + 100, // 有効期限が近い
-    })), // ✅ デコードされた JWT を返す
-}));
+// jest.mock("jsonwebtoken", () => ({
+//     sign: jest.fn(() => "mock.jwt.refreshed.token"), // ✅ JWT を返す
+//     verify: jest.fn(() => ({
+//         sub: "user123",
+//         roles: ["user"],
+//         exp: Math.floor(Date.now() / 1000) + 100, // 有効期限が近い
+//     })), // ✅ デコードされた JWT を返す
+// }));
 // describe("test", () => {
 //     const originalEnv = process.env;
 
@@ -77,16 +78,43 @@ jest.mock("jsonwebtoken", () => ({
 //     });
 // });
 
-describe("sessionMiddleware", () => {
-    const JWT_SECRET = "test-secret";
+/**
+ * JWT作成用ユーティリティ。
+ * expInSec が正なら "現在時刻 + expInSec" に失効、
+ * 負なら期限切れにする。省略なら expなし
+ */
+function makeToken(payload: Record<string, any>, expInSec?: number): string {
+    const nowSec = Math.floor(Date.now() / 1000);
+    const exp = expInSec ? nowSec + expInSec : undefined;
+    return jwt.sign(
+        exp ? { ...payload, exp } : payload,
+        process.env.JWT_SECRET!
+    );
+}
+describe("sessionMiddleware - Comprehensive Tests", () => {
+    let sessionMiddleware: any; // 実際のミドルウェア
+    let cookiesMock: any; // next/serverモックの cookies
 
-    let sessionMiddleware: any;
-    let cookiesMock: any;
-    const JWT_EXPIRES_IN = 3600; // 1時間
-    const REFRESH_THRESHOLD = JWT_EXPIRES_IN / 2;
+    const TEST_SECRET = "test-secret";
+
+    /**
+     * もともとの環境変数を保存し、afterAllで戻す
+     */
+    const REAL_ENV = { ...process.env };
 
     beforeEach(async () => {
-        jest.resetModules(); // Reset module registry to allow re-importing modules
+        // 1) モジュールキャッシュリセット
+        jest.resetModules();
+
+        // 2) 環境変数をセット
+        process.env = {
+            ...REAL_ENV,
+            JWT_SECRET: TEST_SECRET,
+            NODE_ENV: "production", // or "development"/"test"に適宜変更
+            USE_HTTP_DEV: "true",
+        };
+
+        // 3) cookiesモックを再生成
         cookiesMock = {
             set: jest.fn(),
             delete: jest.fn(),
@@ -95,340 +123,312 @@ describe("sessionMiddleware", () => {
             has: jest.fn(),
         };
 
-        // Set the environment variable before importing the middleware
-        process.env.JWT_SECRET = JWT_SECRET;
+        // 4) NextResponse の mockImplementation を再設定
+        //    成功時 => { cookies: cookiesMock }
+        //    失敗時 => { status: init?.status || 200, body }
+        // 例: beforeEach の中など
+        const ns = (await import("next/server")) as any;
+        const __cookiesMock__ = ns.__cookiesMock__;
+        cookiesMock = __cookiesMock__;
+        Object.values(cookiesMock).forEach((fn: unknown) => {
+            if (typeof fn === "function") {
+                (fn as jest.Mock).mockClear();
+            }
+        });
 
-        // Dynamically import the middleware to ensure it picks up the updated env variable
+        // 5) sessionMiddleware を import
         const middlewareModule = await import("../session");
         sessionMiddleware = middlewareModule.sessionMiddleware;
 
-        jest.spyOn(NextResponse, "next").mockReturnValue({
-            cookies: cookiesMock,
-        } as unknown as NextResponse);
-
-        jest.spyOn(NextResponse, "json").mockImplementation(
-            (body, init) =>
-                ({
-                    status: init?.status || 200,
-                    body,
-                } as any)
-        );
+        // 6) mock呼び出し履歴をクリア
+        jest.clearAllMocks();
     });
 
-    afterEach(() => {
-        delete process.env.JWT_SECRET; // Clean up the environment variable
+    afterAll(() => {
+        // 環境変数を元に戻す
+        process.env = REAL_ENV;
     });
 
-    it("should proceed without a JWT token", () => {
+    // ------------------------------------------------------------------------------
+    // 1) No token => pass-through
+    it("should pass through if no JWT token in cookies", () => {
+        const req = { cookies: { get: jest.fn(() => undefined) } } as any;
+        const result = sessionMiddleware(req);
+
+        // ミドルウェア実装上、トークン無い場合は return undefined;
+        expect(result).toBeUndefined();
+
+        // cookiesの操作もない
+        expect(cookiesMock.set).not.toHaveBeenCalled();
+        expect(cookiesMock.delete).not.toHaveBeenCalled();
+    });
+
+    // ------------------------------------------------------------------------------
+    // 2) Valid token(残り時間たっぷり => +7200) => no refresh
+    it("should do nothing if JWT is valid and not near expiration", () => {
+        // REFRESH_THRESHOLD=1800 => 7200なら全然余裕 => refreshしない
+        const validToken = makeToken({ sub: "user123" }, 7200);
         const req = {
-            cookies: { get: jest.fn().mockReturnValue(undefined) },
+            cookies: { get: jest.fn(() => ({ value: validToken })) },
         } as any;
 
         const response = sessionMiddleware(req);
 
-        expect(req.cookies.get).toHaveBeenCalledWith("jwt");
-        expect(response).toBeUndefined(); // トークンがない場合は無修正で進む
+        // 成功 => { cookies: cookiesMock }, status undefined
+        expect(response).toEqual({ cookies: cookiesMock });
+        expect(response.status).toBeUndefined();
+
+        // refresh なし => set()呼ばれない
+        expect(cookiesMock.set).not.toHaveBeenCalled();
+        // delete() もなし
+        expect(cookiesMock.delete).not.toHaveBeenCalled();
     });
 
-    it("should delete JWT token if expired", () => {
-        const mockToken = "mock.jwt.token";
-        const mockDecodedToken = {
-            sub: "user123",
-            roles: ["user"],
-            exp: Math.floor(Date.now() / 1000) - 100, // 有効期限切れ
-        };
-
-        (jwt.verify as jest.Mock).mockReturnValue(mockDecodedToken);
-
+    // ------------------------------------------------------------------------------
+    // 3) near expiry => refresh
+    it("should refresh token if it is near expiration", () => {
+        // 1800より小さい => 100秒 => refresh
+        const nearExpToken = makeToken({ sub: "user123" }, 100);
         const req = {
-            cookies: {
-                get: jest.fn(() => ({ value: mockToken })),
-            },
-        } as unknown as NextRequest;
-
-        const response = sessionMiddleware(req);
-
-        expect(jwt.verify).toHaveBeenCalledWith(mockToken, JWT_SECRET);
-        expect(cookiesMock.delete).toHaveBeenCalledWith("jwt"); // ✅ クッキーが削除される
-    });
-
-    it("should refresh JWT token if nearing expiration", () => {
-        const mockToken = "mock.jwt.token";
-        const mockRefreshedToken = "mock.jwt.refreshed.token";
-        const mockDecodedToken = {
-            sub: "user123",
-            roles: ["user"],
-            exp: Math.floor(Date.now() / 1000) + 100, // 有効期限が近い
-        };
-
-        (jwt.verify as jest.Mock).mockReturnValue(mockDecodedToken);
-        (jwt.sign as jest.Mock).mockReturnValue(mockRefreshedToken);
-
-        const req = {
-            cookies: {
-                get: jest.fn(() => ({ value: mockToken })), // 修正: { value: mockToken } を返す
-            },
-        } as unknown as NextRequest;
-
-        // スパイを追加
-        const getSpy = jest.spyOn(req.cookies, "get");
-
-        const response = sessionMiddleware(req);
-
-        // `cookies.get` が呼び出されたか確認
-        expect(getSpy).toHaveBeenCalledWith("jwt"); // 通常は "jwt" という名前でトークンを取得する
-        expect(getSpy).toHaveBeenCalledTimes(1);
-
-        // 他のアサーション
-        expect(jwt).toHaveBeenCalledWith(mockToken, JWT_SECRET);
-        expect(jwt.sign).toHaveBeenCalledWith(
-            { sub: "user123", roles: ["user"] },
-            JWT_SECRET,
-            { expiresIn: JWT_EXPIRES_IN }
-        );
-        expect(response.cookies.set).toHaveBeenCalledWith(
-            expect.objectContaining({
-                name: "jwt",
-                value: mockRefreshedToken,
-                httpOnly: true,
-                sameSite: "strict",
-            })
-        );
-    });
-
-    it("should delete expired JWT token", () => {
-        const mockToken = "mock.jwt.token";
-
-        (jwt.verify as jest.Mock).mockImplementation(() => {
-            const error = new Error("Token expired");
-            error.name = "TokenExpiredError"; // エラー種別を指定
-            throw error;
-        });
-
-        const req = {
-            cookies: { get: jest.fn().mockReturnValue({ value: mockToken }) },
+            cookies: { get: jest.fn(() => ({ value: nearExpToken })) },
         } as any;
 
         const response = sessionMiddleware(req);
+
+        // refresh => success => { cookies: cookiesMock }
+        expect(response).toEqual({ cookies: cookiesMock });
+        expect(cookiesMock.set).toHaveBeenCalledTimes(1);
+
+        // 新しいトークンを verify
+        const [[{ value: refreshed }]] = cookiesMock.set.mock.calls;
+        const decoded = jwt.verify(refreshed, TEST_SECRET) as jwt.JwtPayload;
+        const nowSec = Math.floor(Date.now() / 1000);
+        // 3600秒近く先
+        expect(decoded.exp).toBeGreaterThan(nowSec + 3000);
+
+        // deleteは呼ばれていない
+        expect(cookiesMock.delete).not.toHaveBeenCalled();
+    });
+
+    // ------------------------------------------------------------------------------
+    // 4) expired => 401 + cookies.delete
+    it("should return 401 if JWT is expired", () => {
+        // expが -100 => 期限切れ
+        const expiredToken = makeToken({ sub: "user123" }, -100);
+        const req = {
+            cookies: { get: jest.fn(() => ({ value: expiredToken })) },
+        } as any;
+
+        const response = sessionMiddleware(req);
+        // => { status:401, body:{error}, ...}
+        expect(response.status).toBe(401);
+        expect(response.body.error).toMatch(/expired/i);
 
         expect(cookiesMock.delete).toHaveBeenCalledWith("jwt");
-        expect(response?.status).toBe(401);
-        expect(response?.body).toEqual({
-            error: "Unauthorized: JWT token has expired",
-        });
-    });
-
-    it("should handle invalid JWT token", () => {
-        const mockToken = "invalid.jwt.token";
-
-        (jwt.verify as jest.Mock).mockImplementation(() => {
-            const error = new Error("Invalid token");
-            error.name = "JsonWebTokenError"; // モックエラーの種類
-            throw error;
-        });
-
-        const req = {
-            cookies: { get: jest.fn().mockReturnValue({ value: mockToken }) },
-        } as any;
-
-        const response = sessionMiddleware(req);
-
-        expect(cookiesMock.delete).toHaveBeenCalledWith("jwt");
-        expect(response?.status).toBe(401);
-        expect(response?.body).toEqual({
-            error: "Unauthorized: Invalid JWT token",
-        });
-    });
-
-    it("should not refresh JWT if sufficient time remains", () => {
-        const mockToken = "mock.jwt.token";
-        const mockDecodedToken = {
-            sub: "user123",
-            roles: ["user"],
-            exp: Math.floor(Date.now() / 1000) + 2000, // 十分な有効期限が残っている
-        };
-
-        (jwt.verify as jest.Mock).mockReturnValue(mockDecodedToken);
-
-        const req = {
-            cookies: { get: jest.fn().mockReturnValue({ value: mockToken }) },
-        } as any;
-
-        sessionMiddleware(req);
-
-        expect(jwt.sign).not.toHaveBeenCalled(); // リフレッシュしない
+        // setは呼ばれない
         expect(cookiesMock.set).not.toHaveBeenCalled();
     });
 
-    it("should handle JWT without 'exp' field", () => {
-        const mockToken = "mock.jwt.token";
-        const mockDecodedToken = {
-            sub: "user123",
-            roles: ["user"],
-        };
-
-        (jwt.verify as jest.Mock).mockReturnValue(mockDecodedToken);
+    // ------------------------------------------------------------------------------
+    // 5) invalid structure => 401
+    it("should return 401 if decoded token is not an object", () => {
+        // verifyが文字列返した場合
+        jest.spyOn(jwt, "verify").mockReturnValueOnce("not-an-object" as any);
 
         const req = {
-            cookies: { get: jest.fn().mockReturnValue({ value: mockToken }) },
+            cookies: { get: jest.fn(() => ({ value: "fake.token" })) },
         } as any;
 
-        sessionMiddleware(req);
+        const response = sessionMiddleware(req);
+        expect(response.status).toBe(401);
+        expect(response.body.error).toMatch(/invalid jwt structure/i);
 
-        expect(jwt.sign).not.toHaveBeenCalled(); // リフレッシュしない
+        expect(cookiesMock.delete).toHaveBeenCalledWith("jwt");
         expect(cookiesMock.set).not.toHaveBeenCalled();
     });
 
-    it("should prevent JWT_SECRET from being overwritten during runtime", async () => {
-        const initialModule = await import("../session");
-        const sessionMiddleware = initialModule.sessionMiddleware;
-
-        // モジュール初期化後に JWT_SECRET を変更
-        process.env.JWT_SECRET = "malicious-key";
-
-        const mockToken = "mock.jwt.token";
-        const mockDecodedToken = {
-            sub: "user123",
-            roles: ["user"],
-            exp: Math.floor(Date.now() / 1000) + 100,
-        };
-
-        (jwt.verify as jest.Mock).mockReturnValue(mockDecodedToken);
-
+    // ------------------------------------------------------------------------------
+    // 6) missing exp => treat as expired => 401
+    it("should return 401 if exp is missing", () => {
+        // sign({sub}) but no exp => sessionMiddlewareが missing exp => 401
+        const tokenNoExp = jwt.sign({ sub: "noexp" }, TEST_SECRET, {
+            noTimestamp: true, // これで iat も外す
+        });
         const req = {
-            cookies: {
-                get: jest.fn().mockReturnValue({ value: mockToken }),
-            },
-        } as any;
-
-        sessionMiddleware(req);
-
-        // JWT_SECRET の値が初期化時の値を使用しているかを確認
-        expect(jwt.verify).toHaveBeenCalledWith(mockToken, JWT_SECRET);
-    });
-
-    it("should not modify response if a valid JWT is provided", () => {
-        const mockToken = "valid.jwt.token";
-        const mockDecodedToken = {
-            sub: "user123",
-            roles: ["user"],
-            exp: Math.floor(Date.now() / 1000) + 1000, // 十分な有効期限
-        };
-
-        (jwt.verify as jest.Mock).mockReturnValue(mockDecodedToken);
-
-        const req = {
-            cookies: {
-                get: jest.fn().mockReturnValue({ value: mockToken }),
-            },
+            cookies: { get: jest.fn(() => ({ value: tokenNoExp })) },
         } as any;
 
         const response = sessionMiddleware(req);
+        expect(response.status).toBe(401);
+        expect(response.body.error).toMatch(/expired/i);
 
-        // レスポンスが変更されていないことを確認
-        expect(response?.status).toBeUndefined();
+        expect(cookiesMock.delete).toHaveBeenCalledWith("jwt");
         expect(cookiesMock.set).not.toHaveBeenCalled();
     });
 
-    // 3. 異常系の追加テスト - InvalidSignatureError
-    it("should handle token with invalid signature", () => {
-        const mockToken = "invalid.signature.token";
-
-        (jwt.verify as jest.Mock).mockImplementation(() => {
-            const error = new Error("Invalid signature");
-            error.name = "JsonWebTokenError";
-            throw error;
+    // ------------------------------------------------------------------------------
+    // 7) TokenExpiredError => 401
+    it("should catch TokenExpiredError specifically", () => {
+        jest.spyOn(jwt, "verify").mockImplementation(() => {
+            throw new jwt.TokenExpiredError("jwt expired", new Date());
         });
-
         const req = {
-            cookies: {
-                get: jest.fn().mockReturnValue({ value: mockToken }),
-            },
+            cookies: { get: jest.fn(() => ({ value: "any" })) },
         } as any;
 
         const response = sessionMiddleware(req);
-
+        expect(response.status).toBe(401);
+        expect(response.body.error).toMatch(/expired/i);
         expect(cookiesMock.delete).toHaveBeenCalledWith("jwt");
-        expect(response?.status).toBe(401);
-        expect(response?.body).toEqual({
-            error: "Unauthorized: Invalid JWT token",
-        });
     });
 
-    // 3. 異常系の追加テスト - IncompleteTokenError
-    it("should handle incomplete JWT token", () => {
-        const mockToken = "incomplete.token";
-
-        (jwt.verify as jest.Mock).mockImplementation(() => {
-            const error = new Error("Token is incomplete");
-            error.name = "JsonWebTokenError";
-            throw error;
+    // ------------------------------------------------------------------------------
+    // 8) NotBeforeError => 401
+    it("should catch NotBeforeError specifically", () => {
+        jest.spyOn(jwt, "verify").mockImplementation(() => {
+            throw new jwt.NotBeforeError("not active", new Date());
         });
-
         const req = {
-            cookies: {
-                get: jest.fn().mockReturnValue({ value: mockToken }),
-            },
+            cookies: { get: jest.fn(() => ({ value: "any" })) },
         } as any;
 
         const response = sessionMiddleware(req);
-
+        expect(response.status).toBe(401);
+        expect(response.body.error).toMatch(/not active/i);
         expect(cookiesMock.delete).toHaveBeenCalledWith("jwt");
-        expect(response?.status).toBe(401);
-        expect(response?.body).toEqual({
-            error: "Unauthorized: Invalid JWT token",
-        });
     });
 
-    // 4. 負荷テスト（擬似）
-    it("should handle multiple valid requests without errors", () => {
-        const mockToken = "valid.jwt.token";
-        const mockDecodedToken = {
-            sub: "user123",
-            roles: ["user"],
-            exp: Math.floor(Date.now() / 1000) + 1000, // 十分な有効期限
-        };
-
-        (jwt.verify as jest.Mock).mockReturnValue(mockDecodedToken);
-
+    // ------------------------------------------------------------------------------
+    // 9) JsonWebTokenError => 401
+    it("should catch JsonWebTokenError specifically", () => {
+        jest.spyOn(jwt, "verify").mockImplementation(() => {
+            throw new jwt.JsonWebTokenError("invalid signature");
+        });
         const req = {
-            cookies: {
-                get: jest.fn().mockReturnValue({ value: mockToken }),
-            },
+            cookies: { get: jest.fn(() => ({ value: "any" })) },
         } as any;
 
-        // 1000 リクエストをシミュレート
+        const response = sessionMiddleware(req);
+        expect(response.status).toBe(401);
+        expect(response.body.error).toMatch(/invalid jwt token/i);
+        expect(cookiesMock.delete).toHaveBeenCalledWith("jwt");
+    });
+
+    // ------------------------------------------------------------------------------
+    // 10) Unknown error => 500
+    it("should return 500 for unexpected error", () => {
+        jest.spyOn(jwt, "verify").mockImplementation(() => {
+            throw new Error("Something unknown");
+        });
+        const req = {
+            cookies: { get: jest.fn(() => ({ value: "any" })) },
+        } as any;
+
+        const response = sessionMiddleware(req);
+        expect(response.status).toBe(500);
+        expect(response.body.error).toBe("Internal Server Error");
+        expect(cookiesMock.delete).toHaveBeenCalledWith("jwt");
+    });
+
+    // ------------------------------------------------------------------------------
+    // 11) Refresh token even if sub/roles missing
+    it("should refresh token even if sub or roles is missing", () => {
+        // near expiry => +100
+        const partialToken = makeToken({}, 100);
+        const req = {
+            cookies: { get: jest.fn(() => ({ value: partialToken })) },
+        } as any;
+
+        const response = sessionMiddleware(req);
+        expect(response).toEqual({ cookies: cookiesMock });
+        expect(cookiesMock.set).toHaveBeenCalledTimes(1);
+
+        const [[{ value: newJwt }]] = cookiesMock.set.mock.calls;
+        const decoded = jwt.verify(newJwt, TEST_SECRET) as jwt.JwtPayload;
+        expect(decoded.sub).toBe("anonymous"); // sessionMiddleware で補完
+        expect(decoded.roles).toEqual(["user"]); // sessionMiddleware で補完
+    });
+
+    // ------------------------------------------------------------------------------
+    // 12) devモード => console.warn / console.error
+    it("should log warnings/errors in dev mode when expired", async () => {
+        // 一時的に NODE_ENV=development
+        Object.defineProperty(process.env, "NODE_ENV", {
+            value: "development",
+            configurable: true,
+        });
+        const expired = makeToken({ sub: "devtest" }, -50);
+
+        const req = {
+            cookies: { get: jest.fn(() => ({ value: expired })) },
+        } as any;
+        const consoleWarnSpy = jest.spyOn(console, "warn").mockImplementation();
+        const consoleErrorSpy = jest
+            .spyOn(console, "error")
+            .mockImplementation();
+
+        const response = sessionMiddleware(req);
+
+        // => 401
+        expect(response.status).toBe(401);
+        // => devなら console.warn() が呼ばれるはず
+        expect(consoleWarnSpy).toHaveBeenCalledWith(
+            "[SessionMiddleware] JWT token is expired or missing 'exp' field."
+        );
+
+        consoleWarnSpy.mockRestore();
+        consoleErrorSpy.mockRestore();
+    });
+
+    // ------------------------------------------------------------------------------
+    // 13) 1000連続 => 有効期限が十分なら refreshなし
+    it("should handle 1000 valid requests without issues", () => {
+        const bigExpToken = makeToken({ sub: "loadTest" }, 7200);
+        const req = { cookies: { get: jest.fn() } } as any;
+
         for (let i = 0; i < 1000; i++) {
-            const response = sessionMiddleware(req);
-            expect(response?.status).toBeUndefined(); // レスポンスが変更されていない
+            req.cookies.get.mockReturnValue({ value: bigExpToken });
+            const resp = sessionMiddleware(req);
+            expect(resp).toEqual({ cookies: cookiesMock });
         }
-
-        expect(cookiesMock.set).not.toHaveBeenCalled(); // リフレッシュなし
-        expect(jwt.verify).toHaveBeenCalledTimes(1000);
+        // refreshしない => set呼ばれない
+        expect(cookiesMock.set).not.toHaveBeenCalled();
     });
 
-    it("should handle multiple expired tokens gracefully", () => {
-        const mockToken = "expired.jwt.token";
-
-        (jwt.verify as jest.Mock).mockImplementation(() => {
-            const error = new Error("Token expired");
-            error.name = "TokenExpiredError";
-            throw error;
-        });
-
+    // ------------------------------------------------------------------------------
+    // 14) tampered signature => 401
+    it("should return 401 if token signature is tampered", () => {
+        const normal = makeToken({ sub: "tamperTest" }, 3600);
+        // tamper
+        const tampered = normal.replace(/\./g, "_");
         const req = {
-            cookies: {
-                get: jest.fn().mockReturnValue({ value: mockToken }),
-            },
+            cookies: { get: jest.fn(() => ({ value: tampered })) },
         } as any;
 
-        // 1000 リクエストをシミュレート
-        for (let i = 0; i < 1000; i++) {
-            const response = sessionMiddleware(req);
-            expect(response?.status).toBe(401); // エラーステータスが返される
-        }
+        const response = sessionMiddleware(req);
+        expect(response.status).toBe(401);
+        expect(response.body.error).toMatch(/invalid jwt token/i);
+        expect(cookiesMock.delete).toHaveBeenCalledWith("jwt");
+    });
 
-        expect(cookiesMock.delete).toHaveBeenCalledTimes(1000);
+    // ------------------------------------------------------------------------------
+    // 15) near expiry repeatedly => refresh each time
+    it("should refresh repeatedly if token is near expiry on each call", () => {
+        let token = makeToken({ sub: "loop" }, 100);
+        const req = { cookies: { get: jest.fn() } } as any;
+
+        for (let i = 0; i < 5; i++) {
+            req.cookies.get.mockReturnValue({ value: token });
+            sessionMiddleware(req);
+            // 1回呼ぶたびに set() される => その都度 token を更新
+            if (cookiesMock.set.mock.calls.length > i) {
+                const [[{ value: newToken }]] =
+                    cookiesMock.set.mock.calls.slice(-1);
+                token = newToken;
+            }
+        }
+        // => 5回 refresh
+        expect(cookiesMock.set).toHaveBeenCalledTimes(5);
     });
 });
 

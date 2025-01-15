@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
+import jwt, {
+    TokenExpiredError,
+    JsonWebTokenError,
+    NotBeforeError,
+} from "jsonwebtoken";
+import { isDev, shouldEnforceHttps } from "@/config/envConfig";
 
 const JWT_EXPIRES_IN = 3600; // 1 hour
-const REFRESH_THRESHOLD = JWT_EXPIRES_IN / 2; // Refresh threshold: 50% of the token's lifetime
+const REFRESH_THRESHOLD = JWT_EXPIRES_IN / 2; // 30 min
 
+// 環境変数からJWT_SECRETを取得
 const JWT_SECRET = (() => {
     const secret = process.env.JWT_SECRET;
     if (!secret) {
@@ -19,26 +25,38 @@ const JWT_SECRET = (() => {
  * Compatible with NextAuth's "jwt" session strategy.
  *
  * @param {NextRequest} req - The incoming request object from Next.js.
- * @returns {NextResponse} - The modified response object.
+ * @returns {NextResponse | undefined} - The modified response object or undefined if pass-through.
  */
 export function sessionMiddleware(req: NextRequest): NextResponse | undefined {
-    const secure = process.env.NODE_ENV !== "development"; // Secure cookies in production
+    // Decide if we should use secure cookies
+    // "shouldEnforceHttps()" → true なら secure=true, falseなら secure=false
+    // さらに isDev() ならコンソールに詳細ログを出すイメージ
+    const secure = shouldEnforceHttps();
+
+    // Start with next() so we can mutate cookies if needed
     const response = NextResponse.next();
 
     try {
-        // Retrieve JWT token from cookies
+        // 1) Retrieve JWT token
         const jwtToken = req.cookies.get("jwt")?.value;
-
         if (!jwtToken) {
-            console.warn("No JWT token found in cookies.");
-            return undefined; // Proceed without token
+            if (isDev()) {
+                console.warn(
+                    "[SessionMiddleware] No JWT token found in cookies. Passing through..."
+                );
+            }
+            return undefined; // pass through
         }
 
-        // Verify the JWT token
+        // 2) Verify the JWT token
         const decoded = jwt.verify(jwtToken, JWT_SECRET) as jwt.JwtPayload;
-
         if (!decoded || typeof decoded !== "object") {
-            console.error("Invalid JWT payload structure.");
+            if (isDev()) {
+                console.error(
+                    "[SessionMiddleware] Invalid JWT payload structure:",
+                    decoded
+                );
+            }
             response.cookies.delete("jwt");
             return NextResponse.json(
                 { error: "Unauthorized: Invalid JWT structure" },
@@ -46,12 +64,15 @@ export function sessionMiddleware(req: NextRequest): NextResponse | undefined {
             );
         }
 
-        // Validate the token's expiration time
-        const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
-        const timeToExpire = decoded.exp ? decoded.exp - currentTime : 0;
-
+        // 3) Exp check
+        const currentTime = Math.floor(Date.now() / 1000);
+        const timeToExpire = (decoded.exp ?? 0) - currentTime;
         if (!decoded.exp || timeToExpire <= 0) {
-            console.warn("JWT token is expired or missing 'exp' field.");
+            if (isDev()) {
+                console.warn(
+                    "[SessionMiddleware] JWT token is expired or missing 'exp' field."
+                );
+            }
             response.cookies.delete("jwt");
             return NextResponse.json(
                 { error: "Unauthorized: JWT token has expired" },
@@ -59,10 +80,13 @@ export function sessionMiddleware(req: NextRequest): NextResponse | undefined {
             );
         }
 
-        // Refresh the token if it's nearing expiration
+        // 4) If near expiry, refresh
         if (timeToExpire < REFRESH_THRESHOLD) {
-            console.log("JWT is nearing expiration. Refreshing token...");
-
+            if (isDev()) {
+                console.log(
+                    "[SessionMiddleware] JWT is nearing expiration. Refreshing token..."
+                );
+            }
             const refreshedToken = jwt.sign(
                 {
                     sub: decoded.sub || "anonymous",
@@ -71,37 +95,60 @@ export function sessionMiddleware(req: NextRequest): NextResponse | undefined {
                 JWT_SECRET,
                 { expiresIn: JWT_EXPIRES_IN }
             );
-
             response.cookies.set({
                 name: "jwt",
                 value: refreshedToken,
                 httpOnly: true,
-                secure,
+                secure, // depends on environment
                 sameSite: "strict",
                 path: "/",
                 maxAge: JWT_EXPIRES_IN,
             });
         }
-    } catch (error: any) {
-        console.error("Error in sessionMiddleware:", error);
 
-        if (error.name === "TokenExpiredError") {
-            response.cookies.delete("jwt");
+        // 5) All good → allow request to continue
+        return response;
+    } catch (error) {
+        // 6) More detailed error handling
+        if (isDev()) {
+            console.error("[SessionMiddleware] JWT verification error:", error);
+        }
+        response.cookies.delete("jwt");
+
+        if (error instanceof TokenExpiredError) {
             return NextResponse.json(
                 { error: "Unauthorized: JWT token has expired" },
                 { status: 401 }
             );
+        } else if (error instanceof NotBeforeError) {
+            return NextResponse.json(
+                { error: "Unauthorized: JWT not active yet" },
+                { status: 401 }
+            );
+        } else if (error instanceof JsonWebTokenError) {
+            return NextResponse.json(
+                { error: "Unauthorized: Invalid JWT token" },
+                { status: 401 }
+            );
+        } else {
+            // Some unknown error
+            if (isDev()) {
+                console.error("[SessionMiddleware] Unexpected error:", error);
+            }
+            return NextResponse.json(
+                { error: "Internal Server Error" },
+                { status: 500 }
+            );
         }
-
-        response.cookies.delete("jwt");
-        return NextResponse.json(
-            { error: "Unauthorized: Invalid JWT token" },
-            { status: 401 }
-        );
     }
-
-    return response;
 }
+
+process.env.JWT_SECRET = TEST_SECRET;
+Object.defineProperty(process.env, "NODE_ENV", {
+    value: "production",
+    configurable: true,
+}); // "production" or "development"でもOK
+process.env.USE_HTTP_DEV = "true";
 
 // --- sample code for Node.js env ---
 // import { NextResponse, NextRequest } from "next/server";

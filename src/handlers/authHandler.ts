@@ -2,10 +2,10 @@ import "@/containers/diContainer";
 import { NextAuthConfig } from "next-auth";
 import GoogleProvider from "@auth/core/providers/google";
 import { container } from "tsyringe";
-import type { ILoggerService } from "@/interfaces/services/ILoggerService";
 import { CustomFirestoreAdapter } from "@/adapters/customFirestoreAdapter";
 import { TSYRINGE_TOKENS } from "@/constants/tsyringe-tokens";
 import { CustomFirestoreAdapterWrapper } from "@/adapters/customFirestoreAdapterWrapper";
+import { sendVerificationEmail } from "@/lib/sendVerificationEmail";
 
 const adapter = container.resolve<CustomFirestoreAdapter>(
     TSYRINGE_TOKENS.CustomFirestoreAdapter
@@ -48,68 +48,104 @@ export const authOptions: NextAuthConfig = {
     },
     secret: process.env.AUTH_SECRET,
     callbacks: {
-        /**
-         * サインイン処理
-         */
         async signIn({ user, account }) {
-            // コールバック関数内で依存関係を解決
-            const logger = container.resolve<ILoggerService>(
-                TSYRINGE_TOKENS.ILoggerService
+            if (!account || account.provider !== "google") {
+                console.warn(
+                    "現在、Googleアカウント以外の認証はサポートされていません。"
+                );
+                return "/signIn?error=unsupportedProvider";
+            }
+
+            if (!user.email) {
+                console.error(
+                    "サインイン失敗: メールアドレスが提供されていません。"
+                );
+                return "/signIn?error=noEmail";
+            }
+            console.log(`user.email: ${user.email}`);
+            if (!user.email.endsWith("@gmail.com")) {
+                console.error(
+                    "サインイン失敗: 許容規格：...@gmail.com 以外のメールアドレスです。"
+                );
+                return "/signIn?error=invalidEmail";
+            }
+
+            const email = user.email;
+            console.log(
+                `debugging signIn callback: user: ${JSON.stringify(
+                    user,
+                    null,
+                    2
+                )}`
+            );
+            console.log(
+                `debugging signIn callback: account: ${JSON.stringify(
+                    account,
+                    null,
+                    2
+                )}`
             );
 
-            logger.info("signIn callback started");
-
             try {
-                // Googleプロバイダー以外をブロック
-                if (!account || account.provider !== "google") {
-                    logger.warn(
-                        "現在、Googleアカウント以外の認証はサポートされていません。"
-                    );
-                    return "/signIn?error=unsupportedProvider";
+                const adapter = CustomFirestoreAdapterWrapper();
+                const existingUser = await adapter.getUserByEmail!(email);
+                if (existingUser && existingUser.emailVerified === null) {
+                    await sendVerificationEmail(email);
+                    return false;
                 }
-
-                // メールアドレスの検証
-                if (!user.email) {
-                    logger.error(
-                        "サインイン失敗: メールアドレスが提供されていません。"
-                    );
-                    return "/signIn?error=noEmail";
-                }
-                if (!user.email.endsWith("@gmail.com")) {
-                    logger.error(
-                        "サインイン失敗: 許容規格：...@gmail.com 以外のメールアドレスです。"
-                    );
-                    return "/signIn?error=invalidEmail";
-                }
-
-                logger.info(`Sign-in allowed for email: ${user.email}`);
-                return true;
             } catch (error) {
-                logger.error("サインイン処理中にエラーが発生しました", {
-                    error,
-                });
-                return "/signIn?error=serverError"; // エラー時にリダイレクト先を指定
+                if (error instanceof Error) {
+                    console.error(
+                        "サインイン処理中にエラーが発生しました:",
+                        error.message
+                    );
+                    return false;
+                } else {
+                    console.error(
+                        "サインイン中に予期せぬエラーが発生しました。",
+                        error
+                    );
+                    return false;
+                }
             }
+            return true;
         },
-
-        /**
-         * JWT トークン生成時の処理
-         */
+        // JWTトークン生成時の処理
         async jwt({ token, user }) {
-            if (user) {
-                token.role = "user";
-                token.subscriptionType = "free";
-                token.id = user.id;
+            console.log("JWTコールバック開始:", { token }); // TODO (修正)account:undefined
+            console.log(`debug: user: ${JSON.stringify(user, null, 2)}`);
+            // if(user) {
+            token.role = "user";
+            token.subscriptionType = "free";
+            // token.id = user.id;
+            // token.id = user?.id;
+            // }
+            console.log(`costomized JWT: ${JSON.stringify(token, null, 2)}`);
+
+            if (token.exp === undefined) {
+                console.error("Invalid token, you must not  ");
+                // return token;
             }
+
+            // if(Date.now() < token.exp!) {
+
+            // }
             return token;
         },
-
-        /**
-         * セッション生成時の処理
-         */
         async session({ session, token }) {
-            // session.user.role = token.role as string;
-            session.user.id = token.id as string;
+            console.log("セッションコールバック:", { session, token });
+
+            // セッションにトークン情報をコピー
+            // session.user.email = token.email as string;
+            // session.user.name = token.name;
+            // session.user.image = token.picture;
+            session.user.role = "user";
+            session.user.id = (token.id as string) ?? undefined;
+
+            // 必要に応じてトークンデータを追加
+            // session.accessToken = token.accessToken;
+            // session.refreshToken = token.refreshToken;
+
             return session;
         },
     },
